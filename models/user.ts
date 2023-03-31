@@ -8,7 +8,7 @@ import {
 } from "drizzle-orm/pg-core";
 import { InferModel } from "drizzle-orm";
 
-export const patient = pgTable("patient", {
+export const user = pgTable("user", {
   id: serial("id").primaryKey(),
   fullName: text("full_name").notNull(),
   phone: varchar("phone", { length: 20 }).notNull(),
@@ -21,5 +21,5 @@ export const patient = pgTable("patient", {
   medHistory: text("med_history").notNull(),
 });
 
-export type patient = InferModel<typeof patient>;
-export type Newpatient = InferModel<typeof patient, "insert">;
+export type User = InferModel<typeof user>;
+export type NewUser = InferModel<typeof user, "insert">;

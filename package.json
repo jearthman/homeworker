@@ -17,7 +17,6 @@
     "eslint-config-next": "13.2.4",
     "material-icons": "^1.13.3",
     "next": "13.2.4",
-    "next-auth": "^4.20.1",
     "pg": "^8.10.0",
     "react": "18.2.0",
     "react-dom": "18.2.0",
