@@ -1,6 +1,6 @@
 import { cva, VariantProps } from "cva";
 
-const cardStyles = cva("px-2 py-1 rounded-lg shadow-md", {
+const cardStyles = cva("rounded-lg shadow-md flex flex-col", {
   variants: {
     intent: {
       primary: "bg-slate",
@@ -20,8 +20,14 @@ const cardStyles = cva("px-2 py-1 rounded-lg shadow-md", {
 
 export interface Props extends VariantProps<typeof cardStyles> {
   children: React.ReactNode;
+  className?: string;
 }
 
-export function Card({ fullWidth, flat, children }: Props) {
-  return <div className={cardStyles({ fullWidth, flat })}>{children}</div>;
+export function Card({ fullWidth, flat, children, className = "" }: Props) {
+  const computedClassNames = `${cardStyles({
+    fullWidth,
+    flat,
+  })} ${className}`.trim();
+
+  return <div className={computedClassNames}>{children}</div>;
 }

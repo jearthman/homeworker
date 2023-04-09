@@ -33,21 +33,19 @@ export default function Landing() {
             What kind of therapy are you looking for?
           </div>
           <div className="flex justify-center gap-8">
-            <div className="px-3 py-3 rounded-lg shadow-lg bg-gradient-to-b from-emerald-800 to-emerald-600 text-white w-1/4 hover:shadow-xl hover:shadow-emerald-500 hover:cursor-pointer transition ease-in-out duration-500">
+            <div className="px-2 py-2 rounded-lg shadow-lg bg-gradient-to-b from-emerald-800 to-emerald-600 text-white w-1/5 hover:shadow-xl hover:shadow-emerald-500/50 hover:cursor-pointer transition ease-in-out duration-500">
               <div className="text-2xl font-bold">For Myself</div>
               <div className="">
-                Get paired with a therapist that will fit your needs. Schedule
-                one-on-one sessions at your convenience.
+                Get paired with a therapist that will fit your needs.
               </div>
             </div>
-            <div className="px-2 py-1 rounded-lg shadow-lg bg-gradient-to-b from-sky-800 to-sky-600 text-white w-1/4 hover:shadow-xl hover:shadow-sky-500 hover:cursor-pointer transition ease-in-out duration-500">
+            <div className="px-2 py-2 rounded-lg shadow-lg bg-gradient-to-b from-sky-800 to-sky-600 text-white w-1/5 hover:shadow-xl hover:shadow-sky-500/50 hover:cursor-pointer transition ease-in-out duration-500">
               <div className="text-2xl font-bold">For My Relationship</div>
               <div className="">
-                Find one of our couples councelors that can address your
-                specific wants and needs for your relationship.
+                Find one of our couples councelors for your relationship.
               </div>
             </div>
-            <div className="px-2 py-1 rounded-lg shadow-lg bg-gradient-to-b from-amber-800 to-amber-600 text-white w-1/4 hover:shadow-xl hover:shadow-amber-500 hover:cursor-pointer transition ease-in-out duration-500">
+            <div className="px-2 py-2 rounded-lg shadow-lg bg-gradient-to-b from-amber-800 to-amber-600 text-white w-1/5 hover:shadow-xl hover:shadow-amber-500/50 hover:cursor-pointer transition ease-in-out duration-500">
               <div className="text-2xl font-bold">For My Child</div>
               <div className="">
                 Discover the ideal child therapist for your teen.
