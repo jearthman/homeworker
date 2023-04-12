@@ -13,7 +13,7 @@ export default function Header() {
               Log in
             </Button>
           </Link>
-          <Link href="api/auth/login">
+          <Link href="/signup">
             <Button intent="secondary" fullWidth>
               Sign up
             </Button>

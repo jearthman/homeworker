@@ -14,18 +14,6 @@ export default function Landing() {
     <>
       <div className="flex flex-col h-screen bg-slate-500">
         <Header></Header>
-        {/* <div className="flex justify-center"> */}
-        {/* <div className="flex flex-col">
-            <Image
-              src="/img/therapy.jpg"
-              alt="Woman therpist talks with girl."
-              width={700}
-              height={700}
-            ></Image>
-            <p className="text-center text-xs">
-              Image by pch.vector on Freepik
-            </p>
-          </div> */}
         <div className="flex flex-col h-4/5 place-content-center gap-14">
           <div
             className={`${playfairDisplay.variable} font-sans text-6xl text-white text-center`}
