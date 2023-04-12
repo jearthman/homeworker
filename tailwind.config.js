@@ -1,6 +1,7 @@
 /** @type {import('tailwindcss').Config} */
 
 const { fontFamily } = require("tailwindcss/defaultTheme");
+const plugin = require("tailwindcss/plugin");
 
 module.exports = {
   content: [
@@ -16,7 +17,22 @@ module.exports = {
       fontFamily: {
         sans: ["var(--font-playfairDisplay)", ...fontFamily.sans],
       },
+      keyframes: {
+        letterFadeIn: {
+          "0%": { opacity: 0 },
+          "100%": { opacity: 1 },
+        },
+      },
     },
   },
-  plugins: [],
+  plugins: [
+    plugin(function ({ addUtilities }) {
+      const newUtilities = {
+        ".letter-fade-in": {
+          animation: "letterFadeIn 1s both",
+        },
+      };
+      addUtilities(newUtilities);
+    }),
+  ],
 };
