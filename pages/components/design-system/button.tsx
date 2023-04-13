@@ -2,7 +2,7 @@ import { cva, VariantProps } from "cva";
 import React from "react";
 
 const buttonStyles = cva(
-  "flex items-center justify-center px-2 py-1 rounded font-medium transition duration-500 ease-in-out",
+  "flex items-center justify-center rounded font-medium transition duration-500 ease-in-out",
   {
     variants: {
       intent: {
@@ -13,10 +13,16 @@ const buttonStyles = cva(
       fullWidth: {
         true: "w-full",
       },
+      size: {
+        small: "text-base px-2 py-1",
+        medium: "text-lg px-3 py-1.5",
+        large: "text-xl px-4 py-2",
+      },
     },
     defaultVariants: {
       intent: "primary",
       fullWidth: false,
+      size: "medium",
     },
   }
 );
@@ -31,6 +37,7 @@ export interface Props
 export function Button({
   intent,
   fullWidth,
+  size,
   children,
   className = "",
   ...rest
@@ -38,6 +45,7 @@ export function Button({
   const computedClassNames = `${buttonStyles({
     intent,
     fullWidth,
+    size,
   })} ${className}`.trim();
   return (
     <button className={computedClassNames} {...rest}>

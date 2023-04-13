@@ -3,14 +3,29 @@ import { useEffect, useState } from "react";
 export interface Props {
   text: string;
   className?: string;
+  onFadeInComplete?: () => void;
+  isReady: boolean;
 }
 
-export function FadeInText({ text, className }: Props) {
+export function FadeInText({
+  text,
+  className,
+  onFadeInComplete,
+  isReady,
+}: Props) {
   const [isMounted, setIsMounted] = useState(false);
 
   useEffect(() => {
-    setIsMounted(true);
-  }, []);
+    if (isReady) {
+      setIsMounted(true);
+    }
+  }, [isReady]);
+
+  const checkLastLetter = (index: number) => {
+    if (index === text.length - 1 && onFadeInComplete) {
+      onFadeInComplete();
+    }
+  };
 
   return (
     <div className={className + " fade-in-text-container"}>
@@ -20,7 +35,8 @@ export function FadeInText({ text, className }: Props) {
           className={`transition-opacity duration-1000 ${
             isMounted ? "opacity-100" : "opacity-0"
           }`}
-          style={{ transitionDelay: `${index / 10}s` }}
+          style={{ transitionDelay: `${index / Math.max(text.length, 10)}s` }}
+          onTransitionEnd={() => checkLastLetter(index)}
         >
           {letter}
         </span>

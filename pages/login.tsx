@@ -39,10 +39,10 @@ export default function Login() {
   };
 
   return (
-    <>
+    <div className="flex flex-col h-screen bg-slate-500">
       <Header></Header>
-      <div className="bg-slate-500 h-screen flex flex-col items-center">
-        <Card className="bg-slate-700 w-1/3 text-white mt-16 p-8">
+      <div className="flex flex-col items-center">
+        <Card className="w-1/3 mt-16" intent="primary">
           <div className="text-5xl text-center mb-3">Welcome back.</div>
           <Label htmlFor="username">Username</Label>
           <Input
@@ -70,6 +70,6 @@ export default function Login() {
           </Button>
         </Card>
       </div>
-    </>
+    </div>
   );
 }
