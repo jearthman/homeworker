@@ -1,6 +1,6 @@
 import { cva, VariantProps } from "cva";
 
-const cardStyles = cva("rounded-lg shadow-md flex flex-col", {
+const cardStyles = cva("flex flex-col", {
   variants: {
     intent: {
       primary: "bg-slate-700 text-white p-8",
@@ -11,10 +11,17 @@ const cardStyles = cva("rounded-lg shadow-md flex flex-col", {
     flat: {
       true: "shadow-none",
     },
+    size: {
+      small: "rounded-lg shadow-md",
+      medium: "rounded-xl shadow-lg",
+      large: "rounded-2xl shadow-xl",
+    },
   },
   defaultVariants: {
     flat: false,
     fullWidth: false,
+    intent: "primary",
+    size: "medium",
   },
 });
 
@@ -27,6 +34,7 @@ export function Card({
   intent,
   fullWidth,
   flat,
+  size,
   children,
   className = "",
 }: Props) {
@@ -34,6 +42,7 @@ export function Card({
     intent,
     fullWidth,
     flat,
+    size,
   })} ${className}`.trim();
 
   return <div className={computedClassNames}>{children}</div>;

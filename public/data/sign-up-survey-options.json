@@ -1,0 +1,39 @@
+[
+  {
+    "question": "How are you feeling?",
+    "options": [
+      {
+        "value": "anxiety",
+        "text": "I'm feeling anxious and worried most of the time."
+      },
+      {
+        "value": "depression",
+        "text": "I'm struggling with sadness, hopelessness, and low energy."
+      },
+      {
+        "value": "trauma",
+        "text": "I've experienced something traumatic and can't seem to move past it."
+      },
+      {
+        "value": "self-esteem",
+        "text": "I struggle to feel good about myself and my abilities."
+      },
+      {
+        "value": "grief",
+        "text": "I'm having a hard time coping with the loss of someone or something important."
+      },
+      {
+        "value": "stress",
+        "text": "I feel stressed-out and unable to cope with my current situation."
+      },
+      {
+        "value": "identity",
+        "text": "I'm struggling with issues related to my identity or sense of self."
+      },
+      {
+        "value": "life-changes",
+        "text": "I'm going through a big change or transition and need support."
+      }
+    ]
+  }
+]
