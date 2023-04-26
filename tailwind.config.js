@@ -68,9 +68,9 @@ module.exports = {
           950: "#3e2b4a",
         },
       },
-      fontFamily: {
-        sans: ["var(--font-playfairDisplay)", ...fontFamily.sans],
-      },
+      // fontFamily: {
+      //   sans: ["var(--font-playfairDisplay)", ...fontFamily.sans],
+      // },
       keyframes: {
         letterFadeIn: {
           "0%": { opacity: 0 },

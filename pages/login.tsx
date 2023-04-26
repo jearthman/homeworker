@@ -5,6 +5,7 @@ import { useState } from "react";
 import { FormEvent } from "react";
 import { Label } from "@ds/label";
 import { Button } from "@ds/button";
+import { Checkbox } from "@ds/checkbox";
 
 export default function Login() {
   const [username, setUsername] = useState<string>("");
@@ -65,6 +66,7 @@ export default function Login() {
           {passwordError && (
             <div className="text-red-500 mb-3">{passwordError}</div>
           )}
+          <Checkbox className="mt-3" label="Remember this device?"></Checkbox>
           <Button onClick={handleLogin} className="text-xl px-5 mt-6">
             Log in
           </Button>
