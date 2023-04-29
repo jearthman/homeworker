@@ -10,6 +10,7 @@ import { Button } from "@ds/button";
 export default function Signup() {
   const [welcomeTextIndex, setWelcomeTextIndex] = useState(0);
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
+  const [fadeOut, setFadeOut] = useState(false);
 
   const textData = [
     { text: "Hello", className: "text-peach-300 text-6xl drop-shadow-2xl" },
@@ -24,6 +25,39 @@ export default function Signup() {
 
   function handleWelcomeFadeInComplete() {
     setWelcomeTextIndex((prevIndex) => prevIndex + 1);
+    if (welcomeTextIndex === textData.length) {
+    }
+  }
+
+  function getQuestionClass(index: number, currentQuestionIndex: number) {
+    if (index === currentQuestionIndex) {
+      if (fadeOut) {
+        return "opacity-0";
+      } else {
+        return "opacity-100";
+      }
+    } else {
+      return "opacity-0 invisible";
+    }
+  }
+
+  function pushOptions(options: string[]) {
+    changeQuestion(1);
+
+    if (options.length === 1) {
+      selectedSurveyOptions.push(options[0]);
+      return;
+    }
+
+    selectedSurveyOptions.push(options);
+  }
+
+  function changeQuestion(direction: number) {
+    setFadeOut(true);
+    setTimeout(() => {
+      setCurrentQuestionIndex((prevIndex) => prevIndex + direction);
+      setFadeOut(false);
+    }, 500);
   }
 
   return (
@@ -41,27 +75,58 @@ export default function Signup() {
             />
           ))}
         </div>
-        <Card className="mt-16 p-0 text-center" intent="primary" size="large">
+        <Card
+          className={`relative mt-16 transition-opacity duration-[2000ms] ease-in-out ${
+            welcomeTextIndex === textData.length ? "opacity-100" : "opacity-0"
+          }`}
+          intent="primary"
+          size="large"
+        >
           {surveyOptions.map((question, index) => (
             <div
               key={index}
-              className={`${
-                index === currentQuestionIndex ? "opacity-100" : "opacity-0"
-              } transition-opacity duration-500`}
+              className={`${getQuestionClass(
+                index,
+                currentQuestionIndex
+              )} transition-opacity duration-500 absolute`}
             >
-              <div className="flex items-center mb-5">
-                <span className="material-icons">arrow_back</span>
-                <div className="text-2xl text-matcha-300" key={index}>
-                  {question.question}
+              <div
+                className={`${
+                  index === currentQuestionIndex ? "opacity-100" : "opacity-0"
+                } transition-opacity duration-500`}
+              >
+                {index > 0 && (
+                  <div
+                    title="Go Back"
+                    className="material-icons cursor-default hover:text-peach-300 hover:cursor-pointer transition-colors duration-500 ease-in-out"
+                    onClick={() => changeQuestion(-1)}
+                  >
+                    arrow_back
+                  </div>
+                )}
+                <div className="flex items-center relative mb-5">
+                  <div
+                    className="text-2xl text-matcha-300 flex-grow text-center"
+                    key={index}
+                  >
+                    {question.question}
+                  </div>
                 </div>
+                {question.type === "button" && (
+                  <ButtonGroup>
+                    {question.options.map((option, index) => (
+                      <Button
+                        fullWidth
+                        intent="neutral-outline"
+                        key={index}
+                        onClick={() => pushOptions([option.value])}
+                      >
+                        {option.text}
+                      </Button>
+                    ))}
+                  </ButtonGroup>
+                )}
               </div>
-              <ButtonGroup>
-                {question.options.map((option, index) => (
-                  <Button fullWidth intent="neutral-outline" key={index}>
-                    {option.text}
-                  </Button>
-                ))}
-              </ButtonGroup>
             </div>
           ))}
         </Card>

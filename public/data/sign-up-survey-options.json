@@ -1,5 +1,23 @@
 [
   {
+    "question": "What kind of help are you looking for?",
+    "options": [
+      {
+        "value": "individual",
+        "text": "Individual therapy."
+      },
+      {
+        "value": "couples",
+        "text": "Couples therapy."
+      },
+      {
+        "value": "psychiatric",
+        "text": "Psychiatric therapy."
+      }
+    ],
+    "type": "button"
+  },
+  {
     "question": "How are you feeling?",
     "options": [
       {
@@ -34,6 +52,7 @@
         "value": "life-changes",
         "text": "I'm going through a big change or transition and need support."
       }
-    ]
+    ],
+    "type": "button"
   }
 ]
