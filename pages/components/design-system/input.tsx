@@ -1,7 +1,7 @@
 import { cva, VariantProps } from "cva";
 
 const inputStyles = cva(
-  "text-lg py-3 px-4 rounded-md bg-slate-600 focus:outline-none focus:ring-2 focus:ring-slate-500",
+  "border-2 border-slate-700 text-white text-lg py-3 px-4 rounded-md bg-slate-600 focus:outline-none focus:ring-2 focus:ring-slate-500",
   {
     variants: {},
   }
