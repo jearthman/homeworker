@@ -7,7 +7,7 @@ const configuration = new Configuration({
 const openai = new OpenAIApi(configuration);
 
 export default async function (req, res) {
-  const message = req.body.message || {};
+  const message = req.body || '';
 
   if (!message) {
     return res.status(400).json({
