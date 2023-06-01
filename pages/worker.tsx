@@ -48,7 +48,7 @@ export default function Worker() {
       <div className="flex h-screen bg-slate-400">
         <div className="flex flex-col w-2/5">test1</div>
         <div className="flex flex-col w-3/5">
-          <div className="flex flex-col h-4/5 overflow-y-scroll px-5 justify-end">
+          <div className="flex flex-col h-4/5 overflow-y-auto px-5 justify-end">
             {chatLog.map((chatMessage, index) => (
               <>
                 {chatMessage.type === "input" && (
