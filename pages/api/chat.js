@@ -7,7 +7,7 @@ const configuration = new Configuration({
 const openai = new OpenAIApi(configuration);
 
 export default async function (req, res) {
-  const message = req.body || '';
+  const message = req.body || "";
 
   if (!message) {
     return res.status(400).json({
@@ -19,7 +19,7 @@ export default async function (req, res) {
   if (message === "demo") {
     return res.status(200).json({
       message:
-        "The sun slowly sank below the horizon, casting a kaleidoscope of colors across the sky, as a gentle breeze rustled through the verdant leaves of the ancient oak tree. In the distance, the rhythmic sound of waves crashing against the shore filled the air with a sense of serenity. A curious fox cautiously emerged from the underbrush, its amber eyes reflecting the fading light, and began to explore the twilight world. The aroma of a distant campfire mingled with the earthy scent of the forest, creating a symphony of sensations. As the first stars began to twinkle in the ever-darkening sky, the world seemed to hold its breath, waiting for the mysteries of the night to unfold.",
+        "The sun slowly sank below the horizon, casting a kaleidoscope of colors across the sky, as a gentle breeze rustled through the verdant leaves of the ancient oak tree. In the distance, the rhythmic sound of waves crashing against the shore filled the air with a sense of serenity. A curious fox cautiously emerged from the underbrush, its amber eyes reflecting the fading light, and began to explore the twilight world. The aroma of a distant campfire mingled with the earthy scent of the forest, creating a symphony of sensations. As the first stars began to twinkle in the ever-darkening sky, the world seemed to hold its breath, waiting for the mysteries of the night to unfold. \n\n The sun slowly sank below the horizon, casting a kaleidoscope of colors across the sky, as a gentle breeze rustled through the verdant leaves of the ancient oak tree. In the distance, the rhythmic sound of waves crashing against the shore filled the air with a sense of serenity. A curious fox cautiously emerged from the underbrush, its amber eyes reflecting the fading light, and began to explore the twilight world. The aroma of a distant campfire mingled with the earthy scent of the forest, creating a symphony of sensations. As the first stars began to twinkle in the ever-darkening sky, the world seemed to hold its breath, waiting for the mysteries of the night to unfold",
     });
   }
 
