@@ -11,6 +11,11 @@ export default function Worker() {
     text: string | string[][];
   }
 
+  interface Sentence {
+    words: string[];
+    text: string;
+  }
+
   interface ResponseWord {
     text: string;
     sentenceIndex: number;
@@ -21,6 +26,7 @@ export default function Worker() {
   const [chatLog, setChatLog] = useState<ChatMessage[]>([]);
   const [responseWords, setResponseWords] = useState<ResponseWord[]>([]);
   const [currentSentenceIndex, setCurrentSentenceIndex] = useState<number>(0);
+  const [responseSentences, setResponseSentences] = useState<Sentence[]>([]);
 
   async function sendMessage(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -46,22 +52,19 @@ export default function Worker() {
     }
 
     const paragraphs = data.message.split(/\n+/);
-    const wordsInParagraphs = paragraphs.map((paragraph: string) => {
+
+    const sentencesInParagraphs = paragraphs.map((paragraph: string) => {
       const sentences: string[] = paragraph.split(/(?<=\.|\?|\!)\s/);
-      const wordsInSentences = sentences.map((sentence, sentenceIndex) => {
-        const words = sentence
-          .split(/(?<!\n) +(?!\n)|(\n)/)
-          .filter(Boolean)
-          .map((text) => ({
-            text,
-            sentenceIndex,
-          }));
-
-        return words;
+      return sentences.map((sentence) => {
+        const words = sentence.split(/(?<!\n) +(?!\n)|(\n)/).filter(Boolean);
+        return {
+          words,
+          text: sentence,
+        };
       });
-
-      return wordsInSentences.flat();
     });
+
+    setResponseSentences(sentencesInParagraphs.flat());
 
     setChatLog((prevChatLog) => [
       ...prevChatLog,
@@ -71,29 +74,32 @@ export default function Worker() {
 
   return (
     <>
-      <div className="flex h-screen bg-slate-500">
-        <div className="flex flex-col w-2/5">test1</div>
-        <div className="flex flex-col w-3/5">
+      <div className="flex justify-center w-screen h-screen bg-white">
+        <div className="flex flex-col xl:w-1/5">test1</div>
+        {/* desktop worker col */}
+        <div className="flex flex-col max-w-3xl w-full">
+          {/* chat */}
           <div className="flex flex-col h-4/5 overflow-y-auto px-5 justify-end">
             {chatLog.map((chatMessage, index) => (
               <>
                 {chatMessage.type === "input" && (
-                  <div key={index} className="mb-3 inline-flex text-matcha-300">
+                  <div key={index} className="mb-3 inline-flex text-blue-600">
                     {chatMessage.text}
                   </div>
                 )}
                 {chatMessage.type === "response" && (
-                  <div className="flex flex-wrap cursor-pointer text-slate-300">
-                    {responseWords.map((word: ResponseWord, j: number) => (
-                      <React.Fragment key={`word--${j}`}>
-                        {word.text !== "\n" && (
-                          <>
-                            <span className="hover:underline">{word.text}</span>
-                            <span>&nbsp;</span>
-                          </>
-                        )}
-                        {word.text === "\n" && <div className="w-full"></div>}
-                      </React.Fragment>
+                  <div className="cursor-pointer text-black leading-tight">
+                    {responseSentences.map((sentence: Sentence, i: number) => (
+                      <span key={`sentence-${i}`} className="hover:bg-red-200">
+                        {sentence.words.map((word: string, j: number) => (
+                          <span
+                            key={`word-${j}`}
+                            className="mr-1 hover:underline decoration-red-500 inline-block leading-tight"
+                          >
+                            {word}
+                          </span>
+                        ))}
+                      </span>
                     ))}
                   </div>
                 )}
