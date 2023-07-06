@@ -2,7 +2,7 @@ import "material-icons/iconfont/material-icons.css";
 import Header from "./components/header";
 import Image from "next/image";
 import { Playfair_Display } from "next/font/google";
-import { Card } from "@ds/card";
+import { Card } from "@/pages/components/design-system/card";
 
 const playfairDisplay = Playfair_Display({
   subsets: ["latin"],

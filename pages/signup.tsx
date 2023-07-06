@@ -1,11 +1,11 @@
 import axios from "axios";
 import Header from "./components/header";
-import { FadeInText } from "@ds/fade-in-text";
+import { FadeInText } from "@/pages/components/design-system/fade-in-text";
 import { useState } from "react";
-import { Card } from "@ds/card";
+import { Card } from "@/pages/components/design-system/card";
 import surveyOptions from "../public/data/sign-up-survey-options.json";
-import { ButtonGroup } from "@ds/button-group";
-import { Button } from "@ds/button";
+import { ButtonGroup } from "@/pages/components/design-system/button-group";
+import { Button } from "@/pages/components/design-system/button";
 
 export default function Signup() {
   const [welcomeTextIndex, setWelcomeTextIndex] = useState(0);

@@ -1,6 +1,6 @@
 import Link from "next/link";
 
-import { Button } from "@ds/button";
+import { Button } from "@/pages/components/design-system/button";
 
 export default function Header() {
   return (

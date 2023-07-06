@@ -1,9 +1,10 @@
 import { useState, FormEvent } from "react";
-import { Input } from "@ds/input";
-import { Button } from "@ds/button";
+import { Input } from "@/pages/components/design-system/input";
+import { Button } from "@/pages/components/design-system/button";
 import { type } from "os";
 import { FadeInText } from "./components/design-system/fade-in-text";
 import React from "react";
+import { ToggleSwitch } from "./components/design-system/toggle-switch";
 
 export default function Worker() {
   interface ChatMessage {
@@ -27,6 +28,7 @@ export default function Worker() {
   const [responseWords, setResponseWords] = useState<ResponseWord[]>([]);
   const [currentSentenceIndex, setCurrentSentenceIndex] = useState<number>(0);
   const [responseSentences, setResponseSentences] = useState<Sentence[]>([]);
+  const [darkModeOn, setDarkModeOn] = useState<boolean>(false);
 
   async function sendMessage(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -72,10 +74,16 @@ export default function Worker() {
     ]);
   }
 
+  function toggleDarkMode() {
+    setDarkModeOn((prevDarkModeOn) => !prevDarkModeOn);
+  }
+
   return (
     <>
       <div className="flex justify-center w-screen h-screen bg-white">
-        <div className="flex flex-col xl:w-1/5">test1</div>
+        <div className="flex flex-col xl:w-1/5">
+          <ToggleSwitch isChecked={darkModeOn} onChange={toggleDarkMode} />
+        </div>
         {/* desktop worker col */}
         <div className="flex flex-col max-w-3xl w-full">
           {/* chat */}
