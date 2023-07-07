@@ -2,22 +2,11 @@ import { cva, VariantProps } from "cva";
 import React from "react";
 
 const toggleSwitchStyles = cva(
-  "relative w-10 h-4 transition duration-300 ease-in-out",
-  {
-    variants: {
-      isChecked: {
-        true: "bg-green-400",
-        false: "bg-gray-400",
-      },
-    },
-    defaultVariants: {
-      isChecked: false,
-    },
-  }
+  "relative w-14 h-8 transition duration-300 ease-in-out bg-black dark:bg-white"
 );
 
 const toggleSwitchDotStyles = cva(
-  "absolute w-6 h-6 bg-white rounded-full shadow inset-y-0 left-0 transition-all duration-300 ease-in-out",
+  "absolute ml-1 mt-1 w-6 h-6 bg-white dark:bg-black dark:text-white shadow inset-y-0 left-0 transition-all duration-300 ease-in-out",
   {
     variants: {
       isChecked: {
@@ -36,12 +25,20 @@ export interface Props
     React.InputHTMLAttributes<HTMLInputElement> {
   className?: string;
   isChecked: boolean;
+  checkedIcon?: React.ReactNode;
+  uncheckedIcon?: React.ReactNode;
 }
 
-export function ToggleSwitch({ isChecked, className = "", ...rest }: Props) {
-  const computedSwitchClassNames = `${toggleSwitchStyles({
-    isChecked,
-  })} ${className}`.trim();
+export function ToggleSwitch({
+  isChecked,
+  className = "",
+  checkedIcon,
+  uncheckedIcon,
+  ...rest
+}: Props) {
+  const computedSwitchClassNames = `${toggleSwitchStyles(
+    {}
+  )} ${className}`.trim();
 
   const computedDotClassNames = toggleSwitchDotStyles({
     isChecked,
@@ -51,7 +48,9 @@ export function ToggleSwitch({ isChecked, className = "", ...rest }: Props) {
     <label className="flex items-center cursor-pointer">
       <input type="checkbox" className="hidden" {...rest} />
       <div className={computedSwitchClassNames}>
-        <div className={computedDotClassNames}></div>
+        <div className={computedDotClassNames}>
+          {isChecked ? checkedIcon : uncheckedIcon}
+        </div>
       </div>
     </label>
   );

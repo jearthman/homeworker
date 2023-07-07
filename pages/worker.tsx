@@ -5,6 +5,9 @@ import { type } from "os";
 import { FadeInText } from "./components/design-system/fade-in-text";
 import React from "react";
 import { ToggleSwitch } from "./components/design-system/toggle-switch";
+import { useDispatch, useSelector } from "react-redux";
+import { switchTheme } from "../redux/slices/themeSlice";
+import { RootState } from "../redux/store";
 
 export default function Worker() {
   interface ChatMessage {
@@ -29,6 +32,21 @@ export default function Worker() {
   const [currentSentenceIndex, setCurrentSentenceIndex] = useState<number>(0);
   const [responseSentences, setResponseSentences] = useState<Sentence[]>([]);
   const [darkModeOn, setDarkModeOn] = useState<boolean>(false);
+
+  const dispatch = useDispatch();
+  const currentTheme = useSelector((state: RootState) => state.theme.value);
+
+  const handleThemeChange = () => {
+    // Add a class to disable transitions
+    document.documentElement.classList.add("transition-none");
+
+    dispatch(switchTheme());
+
+    // After a short delay, remove the class to re-enable transitions
+    setTimeout(() => {
+      document.documentElement.classList.remove("transition-none");
+    }, 100);
+  };
 
   async function sendMessage(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -76,13 +94,20 @@ export default function Worker() {
 
   function toggleDarkMode() {
     setDarkModeOn((prevDarkModeOn) => !prevDarkModeOn);
+    handleThemeChange();
   }
 
   return (
     <>
-      <div className="flex justify-center w-screen h-screen bg-white">
+      <div className="flex justify-center w-screen h-screen bg-white dark:bg-black">
         <div className="flex flex-col xl:w-1/5">
-          <ToggleSwitch isChecked={darkModeOn} onChange={toggleDarkMode} />
+          <ToggleSwitch
+            className="mt-5"
+            isChecked={darkModeOn}
+            onChange={toggleDarkMode}
+            checkedIcon={<span className="material-icons">dark_mode</span>}
+            uncheckedIcon={<span className="material-icons">light_mode</span>}
+          />
         </div>
         {/* desktop worker col */}
         <div className="flex flex-col max-w-3xl w-full">
@@ -91,18 +116,24 @@ export default function Worker() {
             {chatLog.map((chatMessage, index) => (
               <>
                 {chatMessage.type === "input" && (
-                  <div key={index} className="mb-3 inline-flex text-blue-600">
+                  <div
+                    key={index}
+                    className="mb-3 inline-flex text-blue-600 dark:text-blue-400"
+                  >
                     {chatMessage.text}
                   </div>
                 )}
                 {chatMessage.type === "response" && (
-                  <div className="cursor-pointer text-black leading-tight">
+                  <div className="cursor-pointer text-black dark:text-white">
                     {responseSentences.map((sentence: Sentence, i: number) => (
-                      <span key={`sentence-${i}`} className="hover:bg-red-200">
+                      <span
+                        key={`sentence-${i}`}
+                        className="border border-transparent hover:border-b-green-600 dark:hover:border-b-green-400"
+                      >
                         {sentence.words.map((word: string, j: number) => (
                           <span
                             key={`word-${j}`}
-                            className="mr-1 hover:underline decoration-red-500 inline-block leading-tight"
+                            className="mr-1 hover:text-green-600 dark:hover:text-green-400 inline-block"
                           >
                             {word}
                           </span>

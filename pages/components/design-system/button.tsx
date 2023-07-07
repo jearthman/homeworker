@@ -17,7 +17,7 @@ const buttonStyles = cva(
         "neutral-outline":
           "bg-transparent text-white border-2 border-gray-300 hover:bg-gray-300 hover:bg-opacity-10",
         "inner-form":
-          "bg-white text-green-600 hover:text-green-700 border-2 border-black",
+          "bg-white dark:bg-black text-green-600 dark:text-green-400 hover:text-green-700 dark:hover:text-green-500 border-2 border-black dark:border-white",
       },
       fullWidth: {
         true: "w-full",

@@ -3,15 +3,22 @@ import { createSlice, PayloadAction } from '@reduxjs/toolkit';
 
 type Theme = 'light' | 'dark';
 
-const storedTheme = localStorage.getItem('color-theme') as Theme || 'light';
+let storedTheme: Theme | string = 'light'; // Default to 'light' theme
+
+if (typeof window !== 'undefined') {
+  const item = localStorage.getItem('color-theme');
+  if (item === 'light' || item === 'dark') {
+    storedTheme = item as Theme;
+  }
+}
 
 interface ThemeState {
   value: Theme;
 }
 
-const initialState: ThemeState = {
-  value: storedTheme,
-};
+  const initialState: ThemeState = {
+    value: storedTheme as Theme,
+  };
 
 export const themeSlice = createSlice({
   name: 'theme',

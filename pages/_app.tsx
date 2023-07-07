@@ -5,14 +5,21 @@ import { Provider } from "react-redux";
 import { store, RootState } from "../redux/store";
 import { useSelector } from "react-redux";
 
-function MyApp({ Component, pageProps }: AppProps) {
-  const theme = useSelector((state: RootState) => state.theme.value);
+interface ThemeProviderProps {
+  children: React.ReactNode;
+}
 
+const ThemeProvider = ({ children }: ThemeProviderProps) => {
+  const theme = useSelector((state: RootState) => state.theme.value);
+  return <div className={theme}>{children}</div>;
+};
+
+function MyApp({ Component, pageProps }: AppProps) {
   return (
     <Provider store={store}>
-      <div className="{theme}">
+      <ThemeProvider>
         <Component {...pageProps} />
-      </div>
+      </ThemeProvider>
     </Provider>
   );
 }
