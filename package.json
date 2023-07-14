@@ -9,7 +9,6 @@
     "lint": "next lint"
   },
   "dependencies": {
-    "@next/font": "^13.2.4",
     "@reduxjs/toolkit": "^1.9.5",
     "@types/node": "18.15.10",
     "@types/react": "18.0.29",
