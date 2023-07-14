@@ -1,4 +1,4 @@
-import { useState, FormEvent } from "react";
+import { useState, useEffect, FormEvent } from "react";
 import { Input } from "@/pages/components/design-system/input";
 import { Button } from "@/pages/components/design-system/button";
 import { type } from "os";
@@ -8,6 +8,7 @@ import { ToggleSwitch } from "./components/design-system/toggle-switch";
 import { useDispatch, useSelector } from "react-redux";
 import { switchTheme } from "../redux/slices/themeSlice";
 import { RootState } from "../redux/store";
+import { Dropdown } from "./components/design-system/dropdown";
 
 export default function Worker() {
   interface ChatMessage {
@@ -32,6 +33,30 @@ export default function Worker() {
   const [currentSentenceIndex, setCurrentSentenceIndex] = useState<number>(0);
   const [responseSentences, setResponseSentences] = useState<Sentence[]>([]);
   const [darkModeOn, setDarkModeOn] = useState<boolean>(false);
+  const dropdownRef = React.useRef<HTMLDivElement>(null);
+  const [showDropdown, setShowDropdown] = useState(false);
+  const [dropdownPosition, setDropdownPosition] = useState({ x: 0, y: 0 });
+  const [wordRefs, setWordRefs] = useState<React.RefObject<HTMLSpanElement>[]>(
+    []
+  );
+
+  // Create refs for new words when they are added to the response
+  useEffect(() => {
+    const newWordRefs = responseSentences.flatMap((sentence, i) =>
+      sentence.words.map((word, j) => React.createRef<HTMLSpanElement>())
+    );
+    setWordRefs(newWordRefs);
+  }, [responseSentences]);
+
+  // This function will be called when a word is clicked
+  const handleWordClick = (
+    event: React.MouseEvent<HTMLSpanElement, MouseEvent>
+  ) => {
+    const rect = dropdownRef.current?.getBoundingClientRect();
+    if (rect) {
+      setShowDropdown(true); // show the dropdown
+    }
+  };
 
   const dispatch = useDispatch();
   const currentTheme = useSelector((state: RootState) => state.theme.value);
@@ -134,8 +159,19 @@ export default function Worker() {
                           <span
                             key={`word-${j}`}
                             className="mr-1 hover:text-green-600 dark:hover:text-green-400 inline-block"
+                            ref={wordRefs[i * sentence.words.length + j]}
+                            onClick={handleWordClick}
                           >
                             {word}
+                            {showDropdown && (
+                              <Dropdown
+                                triggerRef={
+                                  wordRefs[i * sentence.words.length + j]
+                                }
+                              >
+                                <div></div>
+                              </Dropdown>
+                            )}
                           </span>
                         ))}
                       </span>
