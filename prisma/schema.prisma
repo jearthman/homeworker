@@ -1,0 +1,59 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model users {
+  id            Int        @id @default(autoincrement())
+  username      String     @unique @db.VarChar(255)
+  password_hash String     @db.VarChar(255)
+  email         String     @unique @db.VarChar(255)
+  created_at    DateTime?  @default(now()) @db.Timestamp(6)
+  last_login    DateTime?  @db.Timestamp(6)
+  students      students[]
+}
+
+model disabilities {
+  id                   Int                    @id @default(autoincrement())
+  name                 String                 @unique @db.VarChar(255)
+  student_disabilities student_disabilities[]
+}
+
+model languages {
+  id                Int                 @id @default(autoincrement())
+  name              String              @unique @db.VarChar(255)
+  student_languages student_languages[]
+}
+
+model student_disabilities {
+  student_id    Int
+  disability_id Int
+  disabilities  disabilities @relation(fields: [disability_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  students      students     @relation(fields: [student_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+
+  @@id([student_id, disability_id])
+}
+
+model student_languages {
+  student_id  Int
+  language_id Int
+  languages   languages @relation(fields: [language_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  students    students  @relation(fields: [student_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+
+  @@id([student_id, language_id])
+}
+
+model students {
+  id                   Int                    @id @default(autoincrement())
+  user_id              Int?
+  grade_level          String?                @db.VarChar(50)
+  reading_level        String?                @db.VarChar(50)
+  native_language      String?                @db.VarChar(255)
+  student_disabilities student_disabilities[]
+  student_languages    student_languages[]
+  users                users?                 @relation(fields: [user_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+}
