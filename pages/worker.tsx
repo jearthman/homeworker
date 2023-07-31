@@ -1,4 +1,4 @@
-import { useState, useEffect, FormEvent } from "react";
+import { useState, useEffect, useRef, FormEvent } from "react";
 import { Input } from "@/pages/components/design-system/input";
 import { Button } from "@/pages/components/design-system/button";
 import { type } from "os";
@@ -6,9 +6,9 @@ import { FadeInText } from "./components/design-system/fade-in-text";
 import React from "react";
 import { ToggleSwitch } from "./components/design-system/toggle-switch";
 import { useDispatch, useSelector } from "react-redux";
-import { switchTheme } from "../redux/slices/themeSlice";
+import { toggleTheme } from "../redux/slices/themeSlice";
 import { RootState } from "../redux/store";
-import { Dropdown } from "./components/design-system/dropdown";
+import styles from "./worker.module.css";
 
 export default function Worker() {
   interface ChatMessage {
@@ -30,64 +30,111 @@ export default function Worker() {
   const [response, setResponse] = useState<string>("");
   const [chatLog, setChatLog] = useState<ChatMessage[]>([]);
   const [responseWords, setResponseWords] = useState<ResponseWord[]>([]);
-  const [currentSentenceIndex, setCurrentSentenceIndex] = useState<number>(0);
   const [responseSentences, setResponseSentences] = useState<Sentence[]>([]);
   const [darkModeOn, setDarkModeOn] = useState<boolean>(false);
-  const dropdownRef = React.useRef<HTMLDivElement>(null);
-  const [showDropdown, setShowDropdown] = useState(false);
-  const [dropdownPosition, setDropdownPosition] = useState({ x: 0, y: 0 });
-  const [wordRefs, setWordRefs] = useState<React.RefObject<HTMLSpanElement>[]>(
-    []
+  const [showPopover, setShowPopover] = useState(false);
+  const [popoverPosition, setPopoverPosition] = useState({ x: 0, y: 0 });
+  const [clickedSentenceKey, setclickedSentenceKey] = useState<string | null>(
+    null
   );
+  const [clickedWordKey, setclickedWordKey] = useState<string | null>(null);
 
-  // Create refs for new words when they are added to the response
-  useEffect(() => {
-    const newWordRefs = responseSentences.flatMap((sentence, i) =>
-      sentence.words.map((word, j) => React.createRef<HTMLSpanElement>())
-    );
-    setWordRefs(newWordRefs);
-  }, [responseSentences]);
+  const popoverRef = useRef<HTMLDivElement | null>(null);
+
+  // useEffect(() => {
+  // }, [responseSentences]);
 
   // This function will be called when a word is clicked
-  const handleWordClick = (
-    event: React.MouseEvent<HTMLSpanElement, MouseEvent>
-  ) => {
-    const rect = dropdownRef.current?.getBoundingClientRect();
-    if (rect) {
-      setShowDropdown(true); // show the dropdown
+  function handleWordClick(
+    event: React.MouseEvent<HTMLSpanElement, MouseEvent>,
+    messageIndex: number,
+    sentenceIndex: number,
+    wordIndex: number
+  ) {
+    event.stopPropagation(); // stop the event from bubbling up to the document
+    // get the position of the clicked word
+    const wordPosition = event.currentTarget.getBoundingClientRect();
+    const wordPositionX = wordPosition.x;
+    const wordPositionY = wordPosition.y;
+    const wordPositionWidth = wordPosition.width;
+    const wordPositionHeight = wordPosition.height;
+    const popoverPositionX = wordPositionX + wordPositionWidth / 2;
+    const popoverPositionY = wordPositionY + wordPositionHeight + 5;
+    setPopoverPosition({ x: popoverPositionX, y: popoverPositionY }); // set the popover position
+    setShowPopover(true); // show the popover
+
+    // set the clicked sentence key
+    setclickedSentenceKey(parseSentenceIndex(messageIndex, sentenceIndex));
+    // set the clicked word key
+    setclickedWordKey(parseWordIndex(messageIndex, sentenceIndex, wordIndex));
+  }
+
+  function handleClickOutside(event: MouseEvent) {
+    // If the click is outside the popover, hide the popover
+    if (
+      showPopover &&
+      popoverRef.current &&
+      !popoverRef.current.contains(event.target as Node)
+    ) {
+      setShowPopover(false);
+      // reset the clicked sentence key and clicked word key
+      setclickedSentenceKey(null);
+      setclickedWordKey(null);
     }
-  };
+  }
+
+  useEffect(() => {
+    // Add event listener when the popover is shown
+    if (showPopover) {
+      document.addEventListener("click", handleClickOutside);
+    } else {
+      document.removeEventListener("click", handleClickOutside);
+    }
+
+    // Cleanup on unmount
+    return () => {
+      document.removeEventListener("click", handleClickOutside);
+    };
+  }, [showPopover]);
 
   const dispatch = useDispatch();
   const currentTheme = useSelector((state: RootState) => state.theme.value);
+  useEffect(() => {
+    setDarkModeOn(currentTheme === "dark");
+  }, [currentTheme]);
 
-  const handleThemeChange = () => {
+  function handleThemeChange() {
     // Add a class to disable transitions
     document.documentElement.classList.add("transition-none");
 
-    dispatch(switchTheme());
+    dispatch(toggleTheme());
 
     // After a short delay, remove the class to re-enable transitions
     setTimeout(() => {
       document.documentElement.classList.remove("transition-none");
     }, 100);
-  };
+  }
 
   async function sendMessage(event: FormEvent<HTMLFormElement>) {
+    // Prevent the form from refreshing the page
     event.preventDefault();
 
+    // Add the input to the chat log
     setChatLog((prevChatLog) => [
       ...prevChatLog,
       { type: "input", text: input },
     ]);
 
+    // Send the input to the server
     const response = await fetch("/api/chat", {
       method: "POST",
       body: input,
     });
 
+    // Clear the input
     setInput("");
 
+    // Throw an error if the response status is not 200
     const data = await response.json();
 
     if (response.status !== 200) {
@@ -96,6 +143,7 @@ export default function Worker() {
       );
     }
 
+    // Add the response to the chat log
     const paragraphs = data.message.split(/\n+/);
 
     const sentencesInParagraphs = paragraphs.map((paragraph: string) => {
@@ -122,6 +170,24 @@ export default function Worker() {
     handleThemeChange();
   }
 
+  function parseSentenceIndex(messageIndex: number, sentenceIndex: number) {
+    return messageIndex.toString() + "-" + sentenceIndex.toString();
+  }
+
+  function parseWordIndex(
+    messageIndex: number,
+    sentenceIndex: number,
+    wordIndex: number
+  ) {
+    return (
+      messageIndex.toString() +
+      "-" +
+      sentenceIndex.toString() +
+      "-" +
+      wordIndex.toString()
+    );
+  }
+
   return (
     <>
       <div className="flex justify-center w-screen h-screen bg-white dark:bg-black">
@@ -136,52 +202,96 @@ export default function Worker() {
         </div>
         {/* desktop worker col */}
         <div className="flex flex-col max-w-3xl w-full">
+          {/* popover */}
+          {showPopover && (
+            <div
+              ref={popoverRef}
+              className={`${styles.caretUp} absolute z-10 bg-white dark:bg-black shadow-lg border-2 border-black dark:border-white left-1/2 transform -translate-x-1/2 cursor-pointer`}
+              style={{
+                top: popoverPosition.y,
+                left: popoverPosition.x,
+              }}
+              onClick={(e) => e.stopPropagation()}
+            >
+              <div className="flex flex-col">
+                {/* <div
+                  className="cursor-pointer text-black dark:text-white margin-auto"
+                  onClick={() => setShowPopover(false)}
+                >
+                  <span className="material-icons">close</span>
+                </div> */}
+                <span className="dark:text-white border-b border-black dark:border-white p-1 hover:bg-gray-200 dark:hover:bg-gray-800">
+                  Define
+                </span>
+                <span className="dark:text-white border-b border-black dark:border-white p-1 hover:bg-gray-200 dark:hover:bg-gray-800">
+                  Pronunciation
+                </span>
+                <span className="dark:text-white border-b border-black dark:border-white p-1 hover:bg-gray-200 dark:hover:bg-gray-800">
+                  Synonym
+                </span>
+                <span className="dark:text-white border-b border-black dark:border-white p-1 hover:bg-gray-200 dark:hover:bg-gray-800">
+                  Etymology
+                </span>
+              </div>
+            </div>
+          )}
           {/* chat */}
-          <div className="flex flex-col h-4/5 overflow-y-auto px-5 justify-end">
-            {chatLog.map((chatMessage, index) => (
-              <>
+          <div className="flex flex-col h-5/6 overflow-y-auto px-5 justify-end">
+            {chatLog.map((chatMessage, messageIndex) => (
+              <div key={messageIndex}>
                 {chatMessage.type === "input" && (
-                  <div
-                    key={index}
-                    className="mb-3 inline-flex text-blue-600 dark:text-blue-400"
-                  >
+                  <div className="mb-3 inline-flex text-blue-600 dark:text-blue-400">
                     {chatMessage.text}
                   </div>
                 )}
                 {chatMessage.type === "response" && (
                   <div className="cursor-pointer text-black dark:text-white">
-                    {responseSentences.map((sentence: Sentence, i: number) => (
-                      <span
-                        key={`sentence-${i}`}
-                        className="border border-transparent hover:border-b-green-600 dark:hover:border-b-green-400"
-                      >
-                        {sentence.words.map((word: string, j: number) => (
-                          <span
-                            key={`word-${j}`}
-                            className="mr-1 hover:text-green-600 dark:hover:text-green-400 inline-block"
-                            ref={wordRefs[i * sentence.words.length + j]}
-                            onClick={handleWordClick}
-                          >
-                            {word}
-                            {showDropdown && (
-                              <Dropdown
-                                triggerRef={
-                                  wordRefs[i * sentence.words.length + j]
+                    {responseSentences.map(
+                      (sentence: Sentence, sentenceIndex: number) => (
+                        <span
+                          key={`sentence-${sentenceIndex}`}
+                          className={`border border-transparent ${
+                            parseSentenceIndex(messageIndex, sentenceIndex) ===
+                            clickedSentenceKey
+                              ? "border-b-green-600 dark:border-b-green-400"
+                              : "hover:border-b-green-600 dark:hover:border-b-green-400"
+                          }`}
+                        >
+                          {sentence.words.map(
+                            (word: string, wordIndex: number) => (
+                              <span
+                                key={`word-${sentenceIndex}-${wordIndex}`}
+                                className={`mr-1 inline-block ${
+                                  parseWordIndex(
+                                    messageIndex,
+                                    sentenceIndex,
+                                    wordIndex
+                                  ) === clickedWordKey
+                                    ? "text-green-600 dark:text-green-400"
+                                    : "hover:text-green-600 dark:hover:text-green-400"
+                                }`}
+                                onClick={(event) =>
+                                  handleWordClick(
+                                    event,
+                                    messageIndex,
+                                    sentenceIndex,
+                                    wordIndex
+                                  )
                                 }
                               >
-                                <div></div>
-                              </Dropdown>
-                            )}
-                          </span>
-                        ))}
-                      </span>
-                    ))}
+                                {word}
+                              </span>
+                            )
+                          )}
+                        </span>
+                      )
+                    )}
                   </div>
                 )}
-              </>
+              </div>
             ))}
           </div>
-          <div className="flex flex-col h-1/5 justify-center">
+          <div className="flex flex-col h-1/6 justify-center">
             <form className="flex px-5" onSubmit={sendMessage}>
               <Input
                 type="text"

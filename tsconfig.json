@@ -14,9 +14,10 @@
     "isolatedModules": true,
     "jsx": "preserve",
     "incremental": true,
+    "sourceMap": true,
     "paths": {
       "@/*": ["./*"],
-      "@ds/*": ["pages/components/design-system/*"]
+      "@ds/*": ["./pages/components/design-system/*"]
     },
     "types": ["next", "next/types/global", "@types/node", "@types/react"]
   },
