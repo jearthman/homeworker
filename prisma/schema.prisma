@@ -7,53 +7,55 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-model users {
-  id            Int        @id @default(autoincrement())
-  username      String     @unique @db.VarChar(255)
-  password_hash String     @db.VarChar(255)
-  email         String     @unique @db.VarChar(255)
-  created_at    DateTime?  @default(now()) @db.Timestamp(6)
-  last_login    DateTime?  @db.Timestamp(6)
-  students      students[]
+model User {
+  id         Int       @id @default(autoincrement())
+  username   String    @unique @db.VarChar(255)
+  password   String    @db.VarChar(255)
+  email      String    @unique @db.VarChar(255)
+  created_at DateTime  @default(now()) @db.Timestamp(6)
+  last_login DateTime? @db.Timestamp(6)
+  students   Student[]
 }
 
-model disabilities {
-  id                   Int                    @id @default(autoincrement())
-  name                 String                 @unique @db.VarChar(255)
-  student_disabilities student_disabilities[]
+model Disability {
+  id                  Int                 @id @default(autoincrement())
+  name                String              @unique @db.VarChar(255)
+  studentDisabilities StudentDisability[]
 }
 
-model languages {
-  id                Int                 @id @default(autoincrement())
-  name              String              @unique @db.VarChar(255)
-  student_languages student_languages[]
+model Language {
+  id               Int               @id @default(autoincrement())
+  name             String            @unique @db.VarChar(255)
+  studentLanguages StudentLanguage[]
+  nativeSpeakers   Student[]
 }
 
-model student_disabilities {
+model StudentDisability {
   student_id    Int
   disability_id Int
-  disabilities  disabilities @relation(fields: [disability_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
-  students      students     @relation(fields: [student_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  disability    Disability @relation(fields: [disability_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  student       Student    @relation(fields: [student_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
 
   @@id([student_id, disability_id])
 }
 
-model student_languages {
+model StudentLanguage {
   student_id  Int
   language_id Int
-  languages   languages @relation(fields: [language_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
-  students    students  @relation(fields: [student_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  language    Language @relation(fields: [language_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  student     Student  @relation(fields: [student_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
 
   @@id([student_id, language_id])
 }
 
-model students {
-  id                   Int                    @id @default(autoincrement())
-  user_id              Int?
-  grade_level          String?                @db.VarChar(50)
-  reading_level        String?                @db.VarChar(50)
-  native_language      String?                @db.VarChar(255)
-  student_disabilities student_disabilities[]
-  student_languages    student_languages[]
-  users                users?                 @relation(fields: [user_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+model Student {
+  id                  Int                 @id @default(autoincrement())
+  user_id             Int
+  grade_level         String              @db.VarChar(50)
+  reading_level       String              @db.VarChar(50)
+  native_language_id  Int?
+  studentDisabilities StudentDisability[]
+  studentLanguages    StudentLanguage[]
+  user                User?               @relation(fields: [user_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  nativeLanguage      Language?           @relation(fields: [native_language_id], references: [id])
 }
