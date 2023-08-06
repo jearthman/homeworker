@@ -10,7 +10,7 @@ export default function Register() {
   const [nativeLanguage, setNativeLanguage] = useState("");
 
   const registerStudent = () => {
-    return (event) => {
+    return (event: React.FormEvent<HTMLFormElement>) => {
       event.preventDefault();
       console.log(firstName, gradeLevel, nativeLanguage);
     };
