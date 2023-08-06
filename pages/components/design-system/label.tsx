@@ -1,6 +1,6 @@
 import { cva, VariantProps } from "cva";
 
-const labelStyles = cva("text-sm font-medium text-white text-opacity-70", {
+const labelStyles = cva("text-sm font-medium text-opacity-70", {
   variants: {},
 });
 

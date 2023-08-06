@@ -2,7 +2,7 @@ import { cva, VariantProps } from "cva";
 import React from "react";
 
 const buttonStyles = cva(
-  "flex items-center justify-center rounded font-medium transition duration-500 ease-in-out",
+  "flex items-center justify-center rounded-lg font-medium transition duration-500 ease-in-out",
   {
     variants: {
       intent: {

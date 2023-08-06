@@ -1,8 +1,6 @@
 -- CreateTable
 CREATE TABLE "User" (
     "id" SERIAL NOT NULL,
-    "username" VARCHAR(255) NOT NULL,
-    "password" VARCHAR(255) NOT NULL,
     "email" VARCHAR(255) NOT NULL,
     "created_at" TIMESTAMP(6) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "last_login" TIMESTAMP(6),
@@ -47,14 +45,10 @@ CREATE TABLE "Student" (
     "id" SERIAL NOT NULL,
     "user_id" INTEGER NOT NULL,
     "grade_level" VARCHAR(50) NOT NULL,
-    "reading_level" VARCHAR(50) NOT NULL,
     "native_language_id" INTEGER,
 
     CONSTRAINT "Student_pkey" PRIMARY KEY ("id")
 );
-
--- CreateIndex
-CREATE UNIQUE INDEX "User_username_key" ON "User"("username");
 
 -- CreateIndex
 CREATE UNIQUE INDEX "User_email_key" ON "User"("email");
@@ -82,4 +76,3 @@ ALTER TABLE "Student" ADD CONSTRAINT "Student_user_id_fkey" FOREIGN KEY ("user_i
 
 -- AddForeignKey
 ALTER TABLE "Student" ADD CONSTRAINT "Student_native_language_id_fkey" FOREIGN KEY ("native_language_id") REFERENCES "Language"("id") ON DELETE SET NULL ON UPDATE CASCADE;
-
