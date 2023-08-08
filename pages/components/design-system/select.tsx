@@ -38,5 +38,9 @@ export function Select({
   const computedClassNames = `${selectStyles({
     sizeVariant,
   })} ${className}`.trim();
-  return <select className={computedClassNames}>{children}</select>;
+  return (
+    <select className={computedClassNames} {...rest}>
+      {children}
+    </select>
+  );
 }

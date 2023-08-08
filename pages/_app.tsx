@@ -4,6 +4,7 @@ import "material-icons/iconfont/material-icons.css";
 import { Provider } from "react-redux";
 import { store, RootState } from "../redux/store";
 import { useSelector } from "react-redux";
+import { SessionProvider } from "next-auth/react";
 
 interface ThemeProviderProps {
   children: React.ReactNode;
@@ -16,11 +17,13 @@ const ThemeProvider = ({ children }: ThemeProviderProps) => {
 
 function MyApp({ Component, pageProps }: AppProps) {
   return (
-    <Provider store={store}>
-      <ThemeProvider>
-        <Component {...pageProps} />
-      </ThemeProvider>
-    </Provider>
+    <SessionProvider session={pageProps.session}>
+      <Provider store={store}>
+        <ThemeProvider>
+          <Component {...pageProps} />
+        </ThemeProvider>
+      </Provider>
+    </SessionProvider>
   );
 }
 

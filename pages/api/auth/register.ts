@@ -1,36 +1,74 @@
-import { NextApiRequest, NextApiResponse } from 'next'  
-import jwt from 'jsonwebtoken';
-import { PrismaClient } from '@prisma/client'
-import bcrypt from 'bcrypt'
+import { NextApiRequest, NextApiResponse } from "next";
+import jwt from "jsonwebtoken";
+import { PrismaClient } from "@prisma/client";
+import bcrypt from "bcrypt";
 
 const prisma = new PrismaClient();
 
-export default async function handler(req: NextApiRequest, res: NextApiResponse) {
-  const { username, email, password } = req.body
+export default async function handler(
+  req: NextApiRequest,
+  res: NextApiResponse
+) {
+  const { email, firstName, gradeLevel, nativeLanguage } = req.body;
 
-  if (!email || !password) {
-    res.status(400).json({ message: 'Email and password are required' })
-    return
+  if (!email || !firstName || !gradeLevel || !nativeLanguage) {
+    res.status(400).json({ message: "Invalid request data" });
+    return;
   }
 
   try {
-    const hashedPassword = await bcrypt.hash(password, 10);
+    let existingUser = await prisma.user.findUnique({
+      where: { email: email },
+    });
 
-    const user = await prisma.user.create({
-      data: {
-        username,
-        email,
-        password: hashedPassword,
-      }
-    })
-    
-    if (!process.env.JWT_SECRET) {
-        throw new Error("JWT_SECRET is not defined in the environment variables.");
+    if (!existingUser) {
+      existingUser = await prisma.user.create({
+        data: {
+          email, // Your user creation data here
+        },
+      });
     }
-    const token = jwt.sign({ userId: user.id }, process.env.JWT_SECRET);
 
-    res.status(200).json({ token });
-  } catch (error : any) {
+    const existingLanguage = await prisma.language.findUnique({
+      where: { name: nativeLanguage },
+    });
+
+    let nativeLanguageObject;
+
+    // If the language exists, use its ID to connect it
+    if (existingLanguage) {
+      nativeLanguageObject = {
+        connect: { id: existingLanguage.id },
+      };
+    } else {
+      // If the language doesn't exist, create a new record
+      nativeLanguageObject = {
+        create: { name: nativeLanguage },
+      };
+    }
+
+    const createdStudent = await prisma.student.create({
+      data: {
+        firstName,
+        gradeLevel,
+        nativeLanguage: nativeLanguageObject,
+        user: {
+          connect: {
+            id: existingUser.id,
+          },
+        },
+      },
+    });
+
+    await prisma.user.update({
+      where: { id: existingUser.id },
+      data: {
+        studentId: createdStudent.id,
+      },
+    });
+
+    res.status(200).json({ message: "User created successfully" });
+  } catch (error: any) {
     res.status(400).json({ message: error.message });
   }
-} 
+}

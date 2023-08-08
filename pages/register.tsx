@@ -3,18 +3,49 @@ import { Input } from "@ds/input";
 import { Select } from "@ds/select";
 import { useState } from "react";
 import { Button } from "@ds/button";
+import { useSession } from "next-auth/react";
+import { useRouter } from "next/router";
 
 export default function Register() {
   const [firstName, setFirstName] = useState("");
-  const [gradeLevel, setGradeLevel] = useState("");
+  const [gradeLevel, setGradeLevel] = useState("2");
   const [nativeLanguage, setNativeLanguage] = useState("");
 
-  const registerStudent = () => {
-    return (event: React.FormEvent<HTMLFormElement>) => {
+  const { data: session } = useSession();
+  const router = useRouter();
+
+  function registerStudent() {
+    return async (event: React.FormEvent<HTMLFormElement>) => {
       event.preventDefault();
       console.log(firstName, gradeLevel, nativeLanguage);
+
+      const email = session?.user?.email;
+
+      const response = await fetch("/api/auth/register", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          email,
+          firstName,
+          gradeLevel,
+          nativeLanguage,
+        }),
+      });
+
+      const data = await response.json();
+
+      if (response.status !== 200) {
+        throw (
+          data.error ||
+          new Error(`Request failed with status ${response.status}`)
+        );
+      }
+
+      router.push("/portal");
     };
-  };
+  }
 
   return (
     <>
@@ -33,7 +64,9 @@ export default function Register() {
           <Label className="text-black block mt-4">Grade Level</Label>
           <Select
             value={gradeLevel}
-            onChange={(event) => setGradeLevel(event.currentTarget.value)}
+            onChange={(event) =>
+              setGradeLevel((event.target as HTMLSelectElement).value)
+            }
           >
             <option value="2">2nd</option>
             <option value="4">4th</option>
@@ -45,7 +78,9 @@ export default function Register() {
             value={nativeLanguage}
             onChange={(event) => setNativeLanguage(event.currentTarget.value)}
           ></Input>
-          <Button className="mt-4">Create Student</Button>
+          <Button formAction="submit" className="mt-4">
+            Create Student
+          </Button>
         </form>
       </div>
     </>

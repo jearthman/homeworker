@@ -10,7 +10,9 @@ const roboto = Roboto_Flex({
 export function GoogleSignInButton() {
   return (
     <button
-      onClick={() => signIn("google")}
+      onClick={() =>
+        signIn("google", { callbackUrl: `${window.location.origin}/portal` })
+      }
       className={`${roboto.className} flex items-center justify-center py-2 px-2 bg-white border border-gray-300 rounded shadow hover:bg-gray-100 focus:outline-none focus:ring focus:ring-blue-200 focus:ring-opacity-50`}
     >
       <svg
