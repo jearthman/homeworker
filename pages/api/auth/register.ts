@@ -67,6 +67,25 @@ export default async function handler(
       },
     });
 
+    // create StudentAssignment records for each assignment of the student's grade level
+    const assignments = await prisma.assignment.findMany({
+      where: {
+        gradeLevel,
+      },
+    });
+
+    const studentAssignments = assignments.map((assignment) => {
+      return {
+        studentId: createdStudent.id,
+        assignmentId: assignment.id,
+        status: "NOT STARTED",
+      };
+    });
+
+    await prisma.studentAssignment.createMany({
+      data: studentAssignments,
+    });
+
     res.status(200).json({ message: "User created successfully" });
   } catch (error: any) {
     res.status(400).json({ message: error.message });
