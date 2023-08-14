@@ -38,9 +38,10 @@ export async function getServerSideProps(context: GetServerSidePropsContext) {
 
   const session = await getSession(context);
   const email = session?.user?.email;
+  let student = null;
 
   if (email) {
-    const student = await fetchStudent(email, baseUrl);
+    student = await fetchStudent(email, baseUrl);
 
     if (!student) {
       return {
@@ -53,29 +54,22 @@ export async function getServerSideProps(context: GetServerSidePropsContext) {
   }
 
   return {
-    props: { baseUrl },
+    props: { baseUrl, student },
   };
 }
 
 type PortalProps = {
   baseUrl: string;
+  student: Student;
 };
 
-export default function Portal({ baseUrl }: PortalProps) {
+export default function Portal({ baseUrl, student }: PortalProps) {
   // const [loading, setLoading] = useState(true);
-  const [student, setStudent] = useState<Student | null>(null);
+  const router = useRouter();
   const [assignments, setAssignments] = useState([]);
 
   const { data: session } = useSession();
   // const router = useRouter();
-
-  useEffect(() => {
-    if (session && session.user && session.user.email) {
-      fetchStudent(session.user.email, baseUrl).then((student) => {
-        setStudent(student);
-      });
-    }
-  }, [session, baseUrl]);
 
   useEffect(() => {
     if (student) {
@@ -84,6 +78,12 @@ export default function Portal({ baseUrl }: PortalProps) {
       });
     }
   }, [student, baseUrl]);
+
+  function selectAssignment(assignment: Assignment) {
+    router.push(
+      `/worker?studentId=${student?.id}&assignmentId=${assignment.id}`
+    );
+  }
 
   return (
     <>
@@ -101,14 +101,15 @@ export default function Portal({ baseUrl }: PortalProps) {
               {assignments.map((assignment: Assignment) => (
                 <div
                   key={assignment.id}
-                  className="bg-gray-100 rounded-lg shadow-lg cursor-pointer hover:bg-white hover:shadow-xl transition-colors ease-in"
+                  className="bg-gray-100 rounded-lg shadow-lg cursor-pointer hover:bg-white hover:shadow-xl transition ease-in"
+                  onClick={() => selectAssignment(assignment)}
                 >
                   <div className="flex flex-col p-4">
                     <div className="text-lg font-semibold">
                       {assignment.title}
                     </div>
                     <div className="text-sm font-semibold mt-2">
-                      Due: {assignment.subject}
+                      Subject: {assignment.subject}
                     </div>
 
                     <div className="text-sm font-semibold mt-2">

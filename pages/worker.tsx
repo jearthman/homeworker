@@ -1,4 +1,6 @@
 import { useState, useEffect, useRef, FormEvent } from "react";
+import { GetServerSidePropsContext } from "next";
+import { useRouter } from "next/router";
 import { Input } from "@/pages/components/design-system/input";
 import { Button } from "@/pages/components/design-system/button";
 import { type } from "os";
@@ -9,6 +11,40 @@ import { useDispatch, useSelector } from "react-redux";
 import { toggleTheme } from "../redux/slices/themeSlice";
 import { RootState } from "../redux/store";
 import styles from "./worker.module.css";
+
+export async function getServerSideProps(context: GetServerSidePropsContext) {
+  const { studentId, assignmentId } = context.query;
+
+  const { req } = context;
+  const protocol = req.headers["x-forwarded-proto"] || "http";
+  const host = req.headers["host"];
+  const baseUrl = `${protocol}://${host}`;
+
+  // Fetch the student and assignment from the DB using studentId and assignmentId
+  const studentRes = await fetch(`${baseUrl}/api/student-by-id/`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({ studentId }),
+  });
+
+  const student = await studentRes.json();
+
+  const assignmentRes = await fetch(`${baseUrl}/api/assignment-by-id/`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({ assignmentId }),
+  });
+
+  const assignment = await assignmentRes.json();
+
+  return {
+    props: { student, assignment },
+  };
+}
 
 export default function Worker() {
   interface ChatMessage {
@@ -25,6 +61,10 @@ export default function Worker() {
     text: string;
     sentenceIndex: number;
   }
+
+  const router = useRouter();
+  const studentId = router.query.studentId;
+  const assignmentId = router.query.assignmentId;
 
   const [input, setInput] = useState<string>("");
   const [response, setResponse] = useState<string>("");
@@ -190,8 +230,8 @@ export default function Worker() {
 
   return (
     <>
-      <div className="flex justify-center w-screen h-screen bg-white dark:bg-black">
-        <div className="flex flex-col xl:w-1/5">
+      <div className="flex justify-center w-screen h-screen bg-gray-100 dark:bg-black">
+        <div className="flex flex-col w-1/3">
           <ToggleSwitch
             className="mt-5"
             isChecked={darkModeOn}
@@ -201,7 +241,7 @@ export default function Worker() {
           />
         </div>
         {/* desktop worker col */}
-        <div className="flex flex-col max-w-3xl w-full">
+        <div className="flex flex-col w-1/3">
           {/* popover */}
           {showPopover && (
             <div
