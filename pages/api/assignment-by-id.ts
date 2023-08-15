@@ -17,7 +17,7 @@ export default async function handler(
   try {
     const assignment = await prisma.assignment.findUnique({
       where: {
-        id: assignmentId,
+        id: parseInt(assignmentId),
       },
     });
 

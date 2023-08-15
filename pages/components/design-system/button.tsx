@@ -2,14 +2,14 @@ import { cva, VariantProps } from "cva";
 import React from "react";
 
 const buttonStyles = cva(
-  "flex items-center justify-center rounded-lg font-medium transition duration-500 ease-in-out",
+  "flex items-center justify-center rounded-lg font-medium transition duration-500 ease-in-out border-2",
   {
     variants: {
       intent: {
         primary:
-          "bg-peach-600 dark:bg-peach-300 text-gray-100 dark:text-gray-700 hover:bg-peach-700 dark:hover:bg-peach-400",
+          "border-peach-900 bg-peach-600 dark:bg-peach-300 text-gray-100 dark:text-gray-700 hover:bg-peach-500 dark:hover:bg-peach-400",
         secondary:
-          "bg-matcha-600 dark:bg-matcha-300 text-gray-100 dark:text-gray-700 hover:bg-matcha-700 dark:hover:bg-matcha-400",
+          "border-matcha-900 bg-matcha-600 dark:bg-matcha-300 text-gray-100 dark:text-gray-700 hover:bg-matcha-500 dark:hover:bg-matcha-400",
         danger: "bg-red-400 text-gray-900 hover:bg-red-500 focus:ring-red-500",
         neutral: "bg-gray-300 text-gray-900 hover:bg-gray-400",
         "primary-outline":

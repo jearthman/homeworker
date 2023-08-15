@@ -1,3 +1,6 @@
+-- CreateEnum
+CREATE TYPE "MessageRole" AS ENUM ('system', 'user', 'assistent');
+
 -- CreateTable
 CREATE TABLE "User" (
     "id" SERIAL NOT NULL,
@@ -47,7 +50,7 @@ CREATE TABLE "Student" (
     "userId" INTEGER NOT NULL,
     "firstName" VARCHAR(50) NOT NULL,
     "gradeLevel" VARCHAR(50) NOT NULL,
-    "nativeLanguageId" INTEGER,
+    "nativeLanguageId" INTEGER NOT NULL,
 
     CONSTRAINT "Student_pkey" PRIMARY KEY ("id")
 );
@@ -68,10 +71,30 @@ CREATE TABLE "Assignment" (
 CREATE TABLE "StudentAssignment" (
     "studentId" INTEGER NOT NULL,
     "assignmentId" INTEGER NOT NULL,
+    "chatId" INTEGER,
     "status" VARCHAR(50) NOT NULL,
     "grade" INTEGER,
 
     CONSTRAINT "StudentAssignment_pkey" PRIMARY KEY ("studentId","assignmentId")
+);
+
+-- CreateTable
+CREATE TABLE "Chat" (
+    "id" SERIAL NOT NULL,
+    "createdAt" TIMESTAMP(6) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+
+    CONSTRAINT "Chat_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
+CREATE TABLE "Message" (
+    "id" SERIAL NOT NULL,
+    "role" "MessageRole" NOT NULL,
+    "content" TEXT NOT NULL,
+    "timestamp" TIMESTAMP(6) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "chatId" INTEGER NOT NULL,
+
+    CONSTRAINT "Message_pkey" PRIMARY KEY ("id")
 );
 
 -- CreateIndex
@@ -89,6 +112,9 @@ CREATE UNIQUE INDEX "Language_name_key" ON "Language"("name");
 -- CreateIndex
 CREATE UNIQUE INDEX "Student_userId_key" ON "Student"("userId");
 
+-- CreateIndex
+CREATE UNIQUE INDEX "StudentAssignment_chatId_key" ON "StudentAssignment"("chatId");
+
 -- AddForeignKey
 ALTER TABLE "StudentDisability" ADD CONSTRAINT "StudentDisability_disabilityId_fkey" FOREIGN KEY ("disabilityId") REFERENCES "Disability"("id") ON DELETE NO ACTION ON UPDATE NO ACTION;
 
@@ -105,10 +131,16 @@ ALTER TABLE "StudentLanguage" ADD CONSTRAINT "StudentLanguage_studentId_fkey" FO
 ALTER TABLE "Student" ADD CONSTRAINT "Student_userId_fkey" FOREIGN KEY ("userId") REFERENCES "User"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "Student" ADD CONSTRAINT "Student_nativeLanguageId_fkey" FOREIGN KEY ("nativeLanguageId") REFERENCES "Language"("id") ON DELETE SET NULL ON UPDATE CASCADE;
+ALTER TABLE "Student" ADD CONSTRAINT "Student_nativeLanguageId_fkey" FOREIGN KEY ("nativeLanguageId") REFERENCES "Language"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "StudentAssignment" ADD CONSTRAINT "StudentAssignment_studentId_fkey" FOREIGN KEY ("studentId") REFERENCES "Student"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "StudentAssignment" ADD CONSTRAINT "StudentAssignment_assignmentId_fkey" FOREIGN KEY ("assignmentId") REFERENCES "Assignment"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "StudentAssignment" ADD CONSTRAINT "StudentAssignment_chatId_fkey" FOREIGN KEY ("chatId") REFERENCES "Chat"("id") ON DELETE SET NULL ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "Message" ADD CONSTRAINT "Message_chatId_fkey" FOREIGN KEY ("chatId") REFERENCES "Chat"("id") ON DELETE RESTRICT ON UPDATE CASCADE;

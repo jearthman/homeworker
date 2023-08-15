@@ -15,6 +15,10 @@ module.exports = {
   darkMode: 'class', // or 'media' or false
   theme: {
     extend: {
+      fontFamily: {
+        sans: ["Noto Sans", "sans-serif"],
+        serif: ["Merriweather", "serif"],
+      },
       colors: {
         peach: {
           50: "#fff5eb",

@@ -52,11 +52,11 @@ model Student {
   userId              Int                 @unique
   firstName           String              @db.VarChar(50)
   gradeLevel          String              @db.VarChar(50)
-  nativeLanguageId    Int?
+  nativeLanguageId    Int
   studentDisabilities StudentDisability[]
   studentLanguages    StudentLanguage[]
   user                User                @relation(fields: [userId], references: [id])
-  nativeLanguage      Language?           @relation(fields: [nativeLanguageId], references: [id])
+  nativeLanguage      Language            @relation(fields: [nativeLanguageId], references: [id])
   studentAssignments  StudentAssignment[]
 }
 
@@ -73,10 +73,35 @@ model Assignment {
 model StudentAssignment {
   studentId    Int
   assignmentId Int
+  chatId       Int?
   status       String     @db.VarChar(50) // e.g., "completed", "in progress"
   grade        Int?
   student      Student    @relation(fields: [studentId], references: [id])
   assignment   Assignment @relation(fields: [assignmentId], references: [id])
+  chat         Chat?      @relation(fields: [chatId], references: [id])
 
   @@id([studentId, assignmentId])
+  @@unique([chatId])
+}
+
+model Chat {
+  id                Int                @id @default(autoincrement())
+  createdAt         DateTime           @default(now()) @db.Timestamp(6)
+  messages          Message[]
+  studentAssignment StudentAssignment? @relation()
+}
+
+enum MessageRole {
+  system
+  user
+  assistent
+}
+
+model Message {
+  id        Int         @id @default(autoincrement())
+  role      MessageRole
+  content   String      @db.Text
+  timestamp DateTime    @default(now()) @db.Timestamp(6)
+  chatId    Int
+  chat      Chat        @relation(fields: [chatId], references: [id])
 }

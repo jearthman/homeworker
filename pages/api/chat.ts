@@ -1,12 +1,17 @@
 /* eslint-disable import/no-anonymous-default-export */
 import { Configuration, OpenAIApi } from "openai";
+import { NextApiRequest, NextApiResponse } from "next";
+import { convertTextFileToMessageString } from "../../utils/completionHelpers";
 
 const configuration = new Configuration({
   apiKey: process.env.OPENAI_API_KEY,
 });
 const openai = new OpenAIApi(configuration);
 
-export default async function (req, res) {
+export default async function handler(
+  req: NextApiRequest,
+  res: NextApiResponse
+) {
   const message = req.body || "";
 
   if (!message) {
@@ -29,6 +34,6 @@ export default async function (req, res) {
   });
 
   return res.status(200).json({
-    message: completion.data.choices[0].text,
+    message: completion.data.choices[0],
   });
 }

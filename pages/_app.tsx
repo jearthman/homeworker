@@ -5,7 +5,12 @@ import { Provider } from "react-redux";
 import { store, RootState } from "../redux/store";
 import { useSelector } from "react-redux";
 import { SessionProvider } from "next-auth/react";
+import { Noto_Sans } from "next/font/google";
 
+const notoSans = Noto_Sans({
+  subsets: ["latin"],
+  weight: ["400"],
+});
 interface ThemeProviderProps {
   children: React.ReactNode;
 }
@@ -20,7 +25,9 @@ function MyApp({ Component, pageProps }: AppProps) {
     <SessionProvider session={pageProps.session}>
       <Provider store={store}>
         <ThemeProvider>
-          <Component {...pageProps} />
+          <div className={notoSans.className}>
+            <Component {...pageProps} />
+          </div>
         </ThemeProvider>
       </Provider>
     </SessionProvider>

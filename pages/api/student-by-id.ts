@@ -17,7 +17,7 @@ export default async function handler(
   try {
     const student = await prisma.student.findUnique({
       where: {
-        id: studentId,
+        id: parseInt(studentId),
       },
     });
 

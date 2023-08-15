@@ -11,6 +11,13 @@ import { useDispatch, useSelector } from "react-redux";
 import { toggleTheme } from "../redux/slices/themeSlice";
 import { RootState } from "../redux/store";
 import styles from "./worker.module.css";
+import { Student, Assignment } from "@prisma/client";
+import { Noto_Serif } from "next/font/google";
+
+const notoSerif = Noto_Serif({
+  subsets: ["latin"],
+  weight: ["400"],
+});
 
 export async function getServerSideProps(context: GetServerSidePropsContext) {
   const { studentId, assignmentId } = context.query;
@@ -29,7 +36,17 @@ export async function getServerSideProps(context: GetServerSidePropsContext) {
     body: JSON.stringify({ studentId }),
   });
 
-  const student = await studentRes.json();
+  if (studentRes.status !== 200) {
+    return {
+      redirect: {
+        destination: "/404",
+        permanent: false,
+      },
+    };
+  }
+
+  const studentResJson = await studentRes.json();
+  const student = studentResJson.student;
 
   const assignmentRes = await fetch(`${baseUrl}/api/assignment-by-id/`, {
     method: "POST",
@@ -39,14 +56,29 @@ export async function getServerSideProps(context: GetServerSidePropsContext) {
     body: JSON.stringify({ assignmentId }),
   });
 
-  const assignment = await assignmentRes.json();
+  if (assignmentRes.status !== 200) {
+    return {
+      redirect: {
+        destination: "/404",
+        permanent: false,
+      },
+    };
+  }
+
+  const assignmentResJson = await assignmentRes.json();
+  const assignment = assignmentResJson.assignment;
 
   return {
     props: { student, assignment },
   };
 }
 
-export default function Worker() {
+type WorkerProps = {
+  student: Student;
+  assignment: Assignment;
+};
+
+export default function Worker({ student, assignment }: WorkerProps) {
   interface ChatMessage {
     type: "input" | "response";
     text: string | string[][];
@@ -230,8 +262,8 @@ export default function Worker() {
 
   return (
     <>
-      <div className="flex justify-center w-screen h-screen bg-gray-100 dark:bg-black">
-        <div className="flex flex-col w-1/3">
+      <div className="flex justify-center w-screen h-screen bg-gray-200 dark:bg-black">
+        <div className="flex flex-col w-1/3 p-5">
           <ToggleSwitch
             className="mt-5"
             isChecked={darkModeOn}
@@ -239,6 +271,21 @@ export default function Worker() {
             checkedIcon={<span className="material-icons">dark_mode</span>}
             uncheckedIcon={<span className="material-icons">light_mode</span>}
           />
+          <div className="my-auto w-full">
+            <div className="border-2 border-black rounded-lg bg-white p-3">
+              <div className="font-lg font-bold">{assignment.title}</div>
+              <div className="mt-2">{assignment.description}</div>
+            </div>
+            <textarea
+              className={`${notoSerif.className} mt-4 w-full border-2 border-black rounded-lg bg-white p-3 focus:outline-none focus:border-blue-500`}
+            ></textarea>
+            <div className="flex gap-2">
+              <Button size="small" intent="secondary">
+                Check
+              </Button>
+              <Button size="small">Submit</Button>
+            </div>
+          </div>
         </div>
         {/* desktop worker col */}
         <div className="flex flex-col w-1/3">
@@ -280,7 +327,9 @@ export default function Worker() {
             {chatLog.map((chatMessage, messageIndex) => (
               <div key={messageIndex}>
                 {chatMessage.type === "input" && (
-                  <div className="mb-3 inline-flex text-blue-600 dark:text-blue-400">
+                  <div
+                    className={`${notoSerif.className} mb-3 inline-flex text-blue-600 dark:text-blue-400`}
+                  >
                     {chatMessage.text}
                   </div>
                 )}
@@ -301,7 +350,9 @@ export default function Worker() {
                             (word: string, wordIndex: number) => (
                               <span
                                 key={`word-${sentenceIndex}-${wordIndex}`}
-                                className={`mr-1 inline-block ${
+                                className={`${
+                                  notoSerif.className
+                                } mr-1 inline-block ${
                                   parseWordIndex(
                                     messageIndex,
                                     sentenceIndex,
@@ -337,7 +388,7 @@ export default function Worker() {
                 type="text"
                 value={input}
                 onChange={(event) => setInput(event.currentTarget.value)}
-                className="border-r-0 rounded-r-none w-full"
+                className={`${notoSerif.className} border-r-0 rounded-r-none w-full`}
               ></Input>
               <Button
                 type="submit"
