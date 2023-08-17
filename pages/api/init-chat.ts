@@ -17,54 +17,61 @@ export default async function handler(
   //Create Chat and system Message
   const chat = await prisma.chat.create({});
 
-  // Add Chat to StudentAssignment
-  await prisma.studentAssignment.update({
-    where: {
-      studentId_assignmentId: {
-        studentId: studentId,
-        assignmentId: assignmentId,
-      },
-    },
-    data: {
-      chat: {
-        connect: {
-          id: chat.id,
+  try {
+    // Add Chat to StudentAssignment
+    await prisma.studentAssignment.update({
+      where: {
+        studentId_assignmentId: {
+          studentId: studentId,
+          assignmentId: assignmentId,
         },
       },
-    },
-  });
+      data: {
+        chat: {
+          connect: {
+            id: chat.id,
+          },
+        },
+      },
+    });
 
-  // Create system message
-  const systemMessageString = await constructSystemMessage(
-    studentId,
-    assignmentId
-  );
+    // Create system message
+    const systemMessageString = await constructSystemMessage(
+      studentId,
+      assignmentId
+    );
 
-  if (!systemMessageString) {
-    return res.status(400).json({ error: "Error creating system message" });
+    if (!systemMessageString) {
+      return res.status(400).json({ error: "Error creating system message" });
+    }
+
+    const systemMessage = await prisma.message.create({
+      data: {
+        chatId: chat.id,
+        role: "system",
+        content: systemMessageString,
+      },
+    });
+
+    // Add system message to chat
+    await prisma.chat.update({
+      where: {
+        id: chat.id,
+      },
+      data: {
+        messages: {
+          connect: {
+            id: systemMessage.id,
+          },
+        },
+      },
+    });
+
+    return res.status(200).json({ chat: chat });
+  } catch (error: any) {
+    console.log(error);
+    return res.status(400).json({ error: error.message });
   }
-
-  const systemMessage = await prisma.message.create({
-    data: {
-      chatId: chat.id,
-      role: "system",
-      content: systemMessageString,
-    },
-  });
-
-  // Add system message to chat
-  await prisma.chat.update({
-    where: {
-      id: chat.id,
-    },
-    data: {
-      messages: {
-        connect: {
-          id: systemMessage.id,
-        },
-      },
-    },
-  });
 }
 
 async function constructSystemMessage(studentId: number, assignmentId: number) {

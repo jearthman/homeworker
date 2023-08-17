@@ -11,7 +11,7 @@ import { useDispatch, useSelector } from "react-redux";
 import { toggleTheme } from "../redux/slices/themeSlice";
 import { RootState } from "../redux/store";
 import styles from "./worker.module.css";
-import { Student, Assignment } from "@prisma/client";
+import { Student, Assignment, Chat } from "@prisma/client";
 import { Noto_Serif } from "next/font/google";
 
 const notoSerif = Noto_Serif({
@@ -68,31 +68,68 @@ export async function getServerSideProps(context: GetServerSidePropsContext) {
   const assignmentResJson = await assignmentRes.json();
   const assignment = assignmentResJson.assignment;
 
+  // Get StudentAssignment from DB
+  const studentAssignmentRes = await fetch(
+    `${baseUrl}/api/student-assignment-by-id/`,
+    {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ studentId, assignmentId }),
+    }
+  );
+
+  const studentAssignmentResJson = await studentAssignmentRes.json();
+  const studentAssignment = studentAssignmentResJson.studentAssignment;
+
+  let chat = studentAssignment.chat;
+
+  // If the chat does not exist, create a new chat
+  if (!chat) {
+    const chatRes = await fetch(`${baseUrl}/api/init-chat/`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ studentId, assignmentId }),
+    });
+
+    const chatResJson = await chatRes.json();
+    chat = chatResJson.chat;
+  }
+
   return {
-    props: { student, assignment },
+    props: { student, assignment, chat },
   };
 }
 
 type WorkerProps = {
   student: Student;
   assignment: Assignment;
+  chat: Chat;
 };
 
-export default function Worker({ student, assignment }: WorkerProps) {
-  interface ChatMessage {
-    type: "input" | "response";
-    text: string | string[][];
-  }
+export default function Worker({ student, assignment, chat }: WorkerProps) {
+  type ChatMessage =
+    | {
+        type: "input";
+        text: string;
+      }
+    | {
+        type: "response";
+        text: Sentence[];
+      };
 
-  interface Sentence {
+  type Sentence = {
     words: string[];
     text: string;
-  }
+  };
 
-  interface ResponseWord {
+  type ResponseWord = {
     text: string;
     sentenceIndex: number;
-  }
+  };
 
   const router = useRouter();
   const studentId = router.query.studentId;
@@ -169,6 +206,7 @@ export default function Worker({ student, assignment }: WorkerProps) {
     };
   }, [showPopover]);
 
+  // Redux
   const dispatch = useDispatch();
   const currentTheme = useSelector((state: RootState) => state.theme.value);
   useEffect(() => {
@@ -216,7 +254,11 @@ export default function Worker({ student, assignment }: WorkerProps) {
     }
 
     // Add the response to the chat log
-    const paragraphs = data.message.split(/\n+/);
+    addResponse(data.message);
+  }
+
+  function addResponse(message: string) {
+    const paragraphs = message.split(/\n+/);
 
     const sentencesInParagraphs = paragraphs.map((paragraph: string) => {
       const sentences: string[] = paragraph.split(/(?<=\.|\?|\!)\s/);
@@ -229,11 +271,11 @@ export default function Worker({ student, assignment }: WorkerProps) {
       });
     });
 
-    setResponseSentences(sentencesInParagraphs.flat());
+    const parsedResponse = sentencesInParagraphs.flat();
 
     setChatLog((prevChatLog) => [
       ...prevChatLog,
-      { type: "response", text: data.message },
+      { type: "response", text: parsedResponse },
     ]);
   }
 
@@ -335,7 +377,7 @@ export default function Worker({ student, assignment }: WorkerProps) {
                 )}
                 {chatMessage.type === "response" && (
                   <div className="cursor-pointer text-black dark:text-white">
-                    {responseSentences.map(
+                    {chatMessage.text.map(
                       (sentence: Sentence, sentenceIndex: number) => (
                         <span
                           key={`sentence-${sentenceIndex}`}
