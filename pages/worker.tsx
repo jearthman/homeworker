@@ -11,13 +11,26 @@ import { useDispatch, useSelector } from "react-redux";
 import { toggleTheme } from "../redux/slices/themeSlice";
 import { RootState } from "../redux/store";
 import styles from "./worker.module.css";
-import { Student, Assignment, Chat } from "@prisma/client";
+import {
+  Prisma,
+  Student,
+  Assignment,
+  StudentAssignment,
+  Message,
+} from "@prisma/client";
 import { Noto_Serif } from "next/font/google";
+import { userMessageIsContextual } from "../utils/clientHelpers";
 
 const notoSerif = Noto_Serif({
   subsets: ["latin"],
   weight: ["400"],
 });
+
+const chatWithMessages = Prisma.validator<Prisma.ChatDefaultArgs>()({
+  include: { messages: true },
+});
+
+type ChatWithMessages = Prisma.ChatGetPayload<typeof chatWithMessages>;
 
 export async function getServerSideProps(context: GetServerSidePropsContext) {
   const { studentId, assignmentId } = context.query;
@@ -81,18 +94,32 @@ export async function getServerSideProps(context: GetServerSidePropsContext) {
   );
 
   const studentAssignmentResJson = await studentAssignmentRes.json();
-  const studentAssignment = studentAssignmentResJson.studentAssignment;
+  const studentAssignment: StudentAssignment =
+    studentAssignmentResJson.studentAssignment;
 
-  let chat = studentAssignment.chat;
+  const chatId = studentAssignment.chatId;
 
   // If the chat does not exist, create a new chat
-  if (!chat) {
+  let chat: ChatWithMessages;
+
+  if (!chatId) {
     const chatRes = await fetch(`${baseUrl}/api/init-chat/`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
       },
       body: JSON.stringify({ studentId, assignmentId }),
+    });
+
+    const chatResJson = await chatRes.json();
+    chat = chatResJson.chat;
+  } else {
+    const chatRes = await fetch(`${baseUrl}/api/get-chat/`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ chatId }),
     });
 
     const chatResJson = await chatRes.json();
@@ -107,17 +134,18 @@ export async function getServerSideProps(context: GetServerSidePropsContext) {
 type WorkerProps = {
   student: Student;
   assignment: Assignment;
-  chat: Chat;
+  chat: ChatWithMessages;
 };
 
 export default function Worker({ student, assignment, chat }: WorkerProps) {
+  // types
   type ChatMessage =
     | {
-        type: "input";
+        type: "user";
         text: string;
       }
     | {
-        type: "response";
+        type: "assistant";
         text: Sentence[];
       };
 
@@ -126,20 +154,15 @@ export default function Worker({ student, assignment, chat }: WorkerProps) {
     text: string;
   };
 
-  type ResponseWord = {
-    text: string;
-    sentenceIndex: number;
-  };
+  // type ResponseWord = {
+  //   text: string;
+  //   sentenceIndex: number;
+  // };
 
+  // hooks
   const router = useRouter();
-  const studentId = router.query.studentId;
-  const assignmentId = router.query.assignmentId;
-
-  const [input, setInput] = useState<string>("");
-  const [response, setResponse] = useState<string>("");
+  const [userMessage, setUserMessage] = useState<string>("");
   const [chatLog, setChatLog] = useState<ChatMessage[]>([]);
-  const [responseWords, setResponseWords] = useState<ResponseWord[]>([]);
-  const [responseSentences, setResponseSentences] = useState<Sentence[]>([]);
   const [darkModeOn, setDarkModeOn] = useState<boolean>(false);
   const [showPopover, setShowPopover] = useState(false);
   const [popoverPosition, setPopoverPosition] = useState({ x: 0, y: 0 });
@@ -150,8 +173,68 @@ export default function Worker({ student, assignment, chat }: WorkerProps) {
 
   const popoverRef = useRef<HTMLDivElement | null>(null);
 
-  // useEffect(() => {
-  // }, [responseSentences]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  useEffect(() => {
+    if (!chat.messages) {
+      console.log("chat is null");
+      return;
+    }
+    // Add the chat messages to the chat log
+    const chatMessages: ChatMessage[] = chat.messages
+      .filter(
+        (message: Message) =>
+          (message.role === "user" || message.role === "assistant") &&
+          !userMessageIsContextual(message.content)
+      )
+      .map((message: Message) => {
+        if (message.role === "user") {
+          return { type: "user", text: message.content };
+        } else if (message.role === "assistant") {
+          const paragraphs = message.content.split(/\n+/);
+
+          const sentencesInParagraphs = paragraphs.map((paragraph: string) => {
+            const sentences: string[] = paragraph.split(/(?<=\.|\?|\!)\s/);
+            return sentences.map((sentence) => {
+              const words = sentence
+                .split(/(?<!\n) +(?!\n)|(\n)/)
+                .filter(Boolean);
+              return {
+                words,
+                text: sentence,
+              };
+            });
+          });
+
+          const parsedResponse = sentencesInParagraphs.flat();
+
+          return { type: "assistant", text: parsedResponse };
+        } else {
+          console.log("Invalid message role", message.role);
+          throw new Error("Invalid message role");
+        }
+      });
+
+    setChatLog(chatMessages);
+
+    // If the chat is empty, prompt LLM with a greeting
+    if (chatMessages.length === 0) {
+      sendMessage("<GREETING>Hello");
+    }
+  }, []);
+
+  useEffect(() => {
+    // Add event listener when the popover is shown
+    if (showPopover) {
+      document.addEventListener("click", handleClickOutside);
+    } else {
+      document.removeEventListener("click", handleClickOutside);
+    }
+
+    // Cleanup on unmount
+    return () => {
+      document.removeEventListener("click", handleClickOutside);
+    };
+  }, [showPopover]);
 
   // This function will be called when a word is clicked
   function handleWordClick(
@@ -192,23 +275,10 @@ export default function Worker({ student, assignment, chat }: WorkerProps) {
     }
   }
 
-  useEffect(() => {
-    // Add event listener when the popover is shown
-    if (showPopover) {
-      document.addEventListener("click", handleClickOutside);
-    } else {
-      document.removeEventListener("click", handleClickOutside);
-    }
-
-    // Cleanup on unmount
-    return () => {
-      document.removeEventListener("click", handleClickOutside);
-    };
-  }, [showPopover]);
-
   // Redux
   const dispatch = useDispatch();
   const currentTheme = useSelector((state: RootState) => state.theme.value);
+
   useEffect(() => {
     setDarkModeOn(currentTheme === "dark");
   }, [currentTheme]);
@@ -225,39 +295,75 @@ export default function Worker({ student, assignment, chat }: WorkerProps) {
     }, 100);
   }
 
-  async function sendMessage(event: FormEvent<HTMLFormElement>) {
+  async function handleChatSubmit(event: FormEvent<HTMLFormElement>) {
     // Prevent the form from refreshing the page
     event.preventDefault();
 
-    // Add the input to the chat log
-    setChatLog((prevChatLog) => [
-      ...prevChatLog,
-      { type: "input", text: input },
-    ]);
+    if (userMessage.length > 0) {
+      setChatLog((prevChatLog) => [
+        ...prevChatLog,
+        { type: "user", text: userMessage },
+      ]);
 
+      sendMessage(userMessage);
+    }
+  }
+
+  async function sendMessage(message: string) {
     // Send the input to the server
     const response = await fetch("/api/chat", {
       method: "POST",
-      body: input,
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ chatId: chat.id, content: message }),
     });
 
-    // Clear the input
-    setInput("");
+    if (response.ok) {
+      const reader = response.body?.getReader();
 
-    // Throw an error if the response status is not 200
-    const data = await response.json();
+      const processStream = async (reader: ReadableStreamDefaultReader) => {
+        let currentSentence = "";
 
-    if (response.status !== 200) {
-      throw (
-        data.error || new Error(`Request failed with status ${response.status}`)
-      );
+        while (true) {
+          try {
+            const { done, value } = await reader.read();
+            const readString = new TextDecoder("utf-8").decode(value);
+
+            if (done) {
+              break;
+            }
+
+            currentSentence += readString;
+
+            // Splitting by words while keeping punctuation
+            const words = currentSentence.match(/\S+|\s/g) || [];
+            currentSentence = words.pop() || ""; // Keep the last unfinished word or space
+
+            words.forEach((word) => {
+              updateLastResponse(word);
+            });
+          } catch (err) {
+            console.log("Error reading from stream: ", err);
+            break;
+          }
+        }
+
+        if (currentSentence) {
+          updateLastResponse(currentSentence); // Send any remaining content
+        }
+      };
+
+      if (reader) {
+        processStream(reader);
+      }
     }
 
-    // Add the response to the chat log
-    addResponse(data.message);
+    // Clear the input
+    setUserMessage("");
   }
 
-  function addResponse(message: string) {
+  function parseResponse(message: string) {
     const paragraphs = message.split(/\n+/);
 
     const sentencesInParagraphs = paragraphs.map((paragraph: string) => {
@@ -271,12 +377,56 @@ export default function Worker({ student, assignment, chat }: WorkerProps) {
       });
     });
 
-    const parsedResponse = sentencesInParagraphs.flat();
+    return sentencesInParagraphs.flat();
+  }
 
+  function addResponse(message: string) {
+    const parsedResponse = parseResponse(message);
     setChatLog((prevChatLog) => [
       ...prevChatLog,
-      { type: "response", text: parsedResponse },
+      { type: "assistant", text: parsedResponse },
     ]);
+  }
+
+  function updateLastResponse(word: string) {
+    setChatLog((prevChatLog) => {
+      // If there are no previous messages or the last one is from the user, add a new response
+      if (
+        prevChatLog.length === 0 ||
+        prevChatLog[prevChatLog.length - 1].type === "user"
+      ) {
+        return [
+          ...prevChatLog,
+          { type: "assistant", text: [{ words: [word], text: word }] },
+        ];
+      }
+
+      let newChatLog = [...prevChatLog];
+      let lastMessage = newChatLog[newChatLog.length - 1];
+
+      // Type guard to ensure lastMessage is of type assistant
+      if (lastMessage.type === "assistant") {
+        let lastSentence = lastMessage.text[lastMessage.text.length - 1];
+
+        // If the word is a space, add it to the last word; otherwise, create a new word
+        if (/\s/.test(word)) {
+          lastSentence.words[lastSentence.words.length - 1] += word;
+          lastSentence.text += word;
+        } else {
+          lastSentence.words.push(word);
+          lastSentence.text += word;
+        }
+
+        // If the word is a full stop, question mark, or exclamation mark, create a new sentence
+        if (/[\.\?\!]/.test(word)) {
+          lastMessage.text.push({ words: [], text: "" });
+        }
+
+        newChatLog[newChatLog.length - 1] = lastMessage;
+      }
+
+      return newChatLog;
+    });
   }
 
   function toggleDarkMode() {
@@ -300,6 +450,15 @@ export default function Worker({ student, assignment, chat }: WorkerProps) {
       "-" +
       wordIndex.toString()
     );
+  }
+
+  function isLastChatFromAssistant() {
+    if (chatLog.length === 0) {
+      return false; // Return false if chatLog is empty
+    }
+
+    const lastMessage = chatLog[chatLog.length - 1];
+    return lastMessage.type === "assistant";
   }
 
   return (
@@ -335,7 +494,7 @@ export default function Worker({ student, assignment, chat }: WorkerProps) {
           {showPopover && (
             <div
               ref={popoverRef}
-              className={`${styles.caretUp} absolute z-10 bg-white dark:bg-black shadow-lg border-2 border-black dark:border-white left-1/2 transform -translate-x-1/2 cursor-pointer`}
+              className={`${styles.caretUp} absolute z-10 rounded-lg bg-white dark:bg-black shadow-lg border-2 border-black dark:border-white left-1/2 transform -translate-x-1/2 cursor-pointer`}
               style={{
                 top: popoverPosition.y,
                 left: popoverPosition.x,
@@ -368,14 +527,14 @@ export default function Worker({ student, assignment, chat }: WorkerProps) {
           <div className="flex flex-col h-5/6 overflow-y-auto px-5 justify-end">
             {chatLog.map((chatMessage, messageIndex) => (
               <div key={messageIndex}>
-                {chatMessage.type === "input" && (
+                {chatMessage.type === "user" && (
                   <div
                     className={`${notoSerif.className} mb-3 inline-flex text-blue-600 dark:text-blue-400`}
                   >
                     {chatMessage.text}
                   </div>
                 )}
-                {chatMessage.type === "response" && (
+                {chatMessage.type === "assistant" && (
                   <div className="cursor-pointer text-black dark:text-white">
                     {chatMessage.text.map(
                       (sentence: Sentence, sentenceIndex: number) => (
@@ -425,11 +584,12 @@ export default function Worker({ student, assignment, chat }: WorkerProps) {
             ))}
           </div>
           <div className="flex flex-col h-1/6 justify-center">
-            <form className="flex px-5" onSubmit={sendMessage}>
+            <form className="flex px-5" onSubmit={handleChatSubmit}>
               <Input
+                name="userInput"
                 type="text"
-                value={input}
-                onChange={(event) => setInput(event.currentTarget.value)}
+                value={userMessage}
+                onChange={(event) => setUserMessage(event.currentTarget.value)}
                 className={`${notoSerif.className} border-r-0 rounded-r-none w-full`}
               ></Input>
               <Button

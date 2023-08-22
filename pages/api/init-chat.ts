@@ -1,6 +1,6 @@
 import { NextApiRequest, NextApiResponse } from "next";
 import { PrismaClient } from "@prisma/client";
-import { convertTextFileToMessageString } from "../../utils/completionHelpers";
+import { convertTextFileToMessageString } from "../../utils/serverHelpers";
 
 const prisma = new PrismaClient();
 
@@ -14,16 +14,23 @@ export default async function handler(
     return res.status(400).json({ error: "Missing required field" });
   }
 
+  const parsedStudentId = parseInt(studentId);
+  const parsedAssignmentId = parseInt(assignmentId);
+
+  if (isNaN(parsedStudentId) || isNaN(parsedAssignmentId)) {
+    return res.status(400).json({ error: "Invalid studentId or assignmentId" });
+  }
+
   //Create Chat and system Message
-  const chat = await prisma.chat.create({});
+  let chat = await prisma.chat.create({});
 
   try {
     // Add Chat to StudentAssignment
     await prisma.studentAssignment.update({
       where: {
         studentId_assignmentId: {
-          studentId: studentId,
-          assignmentId: assignmentId,
+          studentId: parsedStudentId,
+          assignmentId: parsedAssignmentId,
         },
       },
       data: {
@@ -37,8 +44,8 @@ export default async function handler(
 
     // Create system message
     const systemMessageString = await constructSystemMessage(
-      studentId,
-      assignmentId
+      parsedStudentId,
+      parsedAssignmentId
     );
 
     if (!systemMessageString) {
@@ -54,7 +61,7 @@ export default async function handler(
     });
 
     // Add system message to chat
-    await prisma.chat.update({
+    chat = await prisma.chat.update({
       where: {
         id: chat.id,
       },
@@ -64,6 +71,9 @@ export default async function handler(
             id: systemMessage.id,
           },
         },
+      },
+      include: {
+        messages: true,
       },
     });
 
@@ -122,7 +132,7 @@ async function constructSystemMessage(studentId: number, assignmentId: number) {
   systemMessageString += "Title: " + assignment.title + "\n";
   systemMessageString += "Description: " + assignment.description + "\n";
   systemMessageString += "Subject: " + assignment.subject + "\n";
-  systemMessageString += "Grading Criteria " + assignment.gradingCriteria;
+  systemMessageString += "Grading Criteria: " + assignment.gradingCriteria;
 
   return systemMessageString;
 }

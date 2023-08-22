@@ -9,23 +9,36 @@ export default async function handler(
 ) {
   const { chatId } = req.body;
 
+  if (!chatId) {
+    return res.status(400).json({ error: "Missing required field" });
+  }
+
+  // Parsing and validating chatId
+  const parsedChatId = parseInt(chatId);
+  if (isNaN(parsedChatId)) {
+    return res.status(400).json({ error: "Invalid chatId" });
+  }
+
+  const chat = await findUniqueChat(parsedChatId);
+
+  if (!chat) {
+    return res.status(404).json({ error: "Chat not found" });
+  }
+
+  return res.status(200).json({ chat });
+}
+
+export async function findUniqueChat(chatId: number) {
   try {
     const chat = await prisma.chat.findUnique({
-      where: {
-        id: parseInt(chatId),
-      },
-      include: {
-        messages: true,
-      },
+      where: { id: chatId },
+      include: { messages: true },
     });
 
-    if (!chat) {
-      res.status(404).json({ message: "Chat not found" });
-      return;
-    }
-
-    res.status(200).json({ chat });
+    return chat;
   } catch (error: any) {
-    res.status(400).json({ message: error.message });
+    // Log the error for debugging purposes
+    console.error("Error finding unique chat:", error.message);
+    return null;
   }
 }

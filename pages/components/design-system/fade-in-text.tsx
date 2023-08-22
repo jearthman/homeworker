@@ -5,6 +5,7 @@ export interface Props {
   className?: string;
   onFadeInComplete?: () => void;
   isReady: boolean;
+  children?: React.ReactNode;
 }
 
 export function FadeInText({
@@ -12,6 +13,7 @@ export function FadeInText({
   className,
   onFadeInComplete,
   isReady,
+  children,
 }: Props) {
   const [isMounted, setIsMounted] = useState(false);
 

@@ -17,8 +17,8 @@ export default async function handler(
     const studentAssignment = await prisma.studentAssignment.findUnique({
       where: {
         studentId_assignmentId: {
-          studentId: studentId,
-          assignmentId: assignmentId,
+          studentId: parseInt(studentId),
+          assignmentId: parseInt(assignmentId),
         },
       },
       include: {
@@ -33,6 +33,8 @@ export default async function handler(
     if (!studentAssignment) {
       return res.status(404).json({ error: "Student assignment not found" });
     }
+
+    return res.status(200).json({ studentAssignment });
   } catch (error: any) {
     res.status(400).json({ message: error.message });
   }

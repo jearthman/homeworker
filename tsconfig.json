@@ -21,6 +21,6 @@
     },
     "types": ["next", "next/types/global", "@types/node", "@types/react"]
   },
-  "include": ["next-env.d.ts", "**/*.ts", "**/*.tsx"],
+  "include": ["next-env.d.ts", "**/*.ts", "**/*.tsx", "pages/api/chat.js"],
   "exclude": ["node_modules"]
 }

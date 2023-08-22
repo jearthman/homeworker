@@ -1,5 +1,5 @@
 -- CreateEnum
-CREATE TYPE "MessageRole" AS ENUM ('system', 'user', 'assistent');
+CREATE TYPE "MessageRole" AS ENUM ('system', 'user', 'assistant');
 
 -- CreateTable
 CREATE TABLE "User" (

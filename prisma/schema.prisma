@@ -94,7 +94,7 @@ model Chat {
 enum MessageRole {
   system
   user
-  assistent
+  assistant
 }
 
 model Message {
