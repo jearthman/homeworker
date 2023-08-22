@@ -41,7 +41,11 @@ export async function getServerSideProps(context: GetServerSidePropsContext) {
   let student = null;
 
   if (email) {
-    student = await fetchStudent(email, baseUrl);
+    try {
+      student = await fetchStudent(email, baseUrl);
+    } catch (error) {
+      throw new Error(error);
+    }
 
     if (!student) {
       return {

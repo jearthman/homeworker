@@ -181,11 +181,16 @@ export default function Worker({ student, assignment, chat }: WorkerProps) {
     }
     // Add the chat messages to the chat log
     const chatMessages: ChatMessage[] = chat.messages
-      .filter(
-        (message: Message) =>
+      .filter((message: Message) => {
+        console.log(message);
+        console.log(message.role === "user" || message.role === "assistant");
+        console.log(message.content, typeof message.content);
+        console.log(!userMessageIsContextual(message.content));
+        return (
           (message.role === "user" || message.role === "assistant") &&
           !userMessageIsContextual(message.content)
-      )
+        );
+      })
       .map((message: Message) => {
         if (message.role === "user") {
           return { type: "user", text: message.content };
@@ -380,13 +385,13 @@ export default function Worker({ student, assignment, chat }: WorkerProps) {
     return sentencesInParagraphs.flat();
   }
 
-  function addResponse(message: string) {
-    const parsedResponse = parseResponse(message);
-    setChatLog((prevChatLog) => [
-      ...prevChatLog,
-      { type: "assistant", text: parsedResponse },
-    ]);
-  }
+  // function addResponse(message: string) {
+  //   const parsedResponse = parseResponse(message);
+  //   setChatLog((prevChatLog) => [
+  //     ...prevChatLog,
+  //     { type: "assistant", text: parsedResponse },
+  //   ]);
+  // }
 
   function updateLastResponse(word: string) {
     setChatLog((prevChatLog) => {
