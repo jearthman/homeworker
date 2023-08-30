@@ -4,11 +4,14 @@ import { Configuration, OpenAIApi } from "openai";
 import { createMessage } from "./add-message";
 import { findUniqueChat } from "./get-chat";
 import { userMessageIsContextual } from "../../utils/serverHelpers";
+import {callCompletionFunction} from "../../utils/completion-function-factory"
 
 const configuration = new Configuration({
   apiKey: process.env.OPENAI_API_KEY,
 });
 const openai = new OpenAIApi(configuration);
+
+const functions = require("../../public/data/functions.json");
 
 export default async function handler(
   req,
@@ -16,19 +19,17 @@ export default async function handler(
 ) {
   const { chatId, content } = req.body || "";
 
+  if (!chatId) {
+    return res.status(400).json({
+      error: "Missing chat id",
+    });
+  }
+
   if (!content) {
     return res.status(400).json({
       error: "Missing chat message",
     });
   }
-
-  // test
-  // if (content === "demo") {
-  //   return res.status(200).json({
-  //     message:
-  //       "The sun slowly sank below the horizon, casting a kaleidoscope of colors across the sky, as a gentle breeze rustled through the verdant leaves of the ancient oak tree. In the distance, the rhythmic sound of waves crashing against the shore filled the air with a sense of serenity. A curious fox cautiously emerged from the underbrush, its amber eyes reflecting the fading light, and began to explore the twilight world. The aroma of a distant campfire mingled with the earthy scent of the forest, creating a symphony of sensations. As the first stars began to twinkle in the ever-darkening sky, the world seemed to hold its breath, waiting for the mysteries of the night to unfold. \n\n The sun slowly sank below the horizon, casting a kaleidoscope of colors across the sky, as a gentle breeze rustled through the verdant leaves of the ancient oak tree. In the distance, the rhythmic sound of waves crashing against the shore filled the air with a sense of serenity. A curious fox cautiously emerged from the underbrush, its amber eyes reflecting the fading light, and began to explore the twilight world. The aroma of a distant campfire mingled with the earthy scent of the forest, creating a symphony of sensations. As the first stars began to twinkle in the ever-darkening sky, the world seemed to hold its breath, waiting for the mysteries of the night to unfold",
-  //   });
-  // }
 
   let messages = await parseMessagesFromChat(chatId);
 
@@ -43,27 +44,57 @@ export default async function handler(
     content: content,
   });
 
+  getCompletion(res, chatId, content, messages);
+}
+
+async function getCompletion(res, chatId, userContent, messages){
+
   let assistantResContent = "";
+  let functionArgumentsString = "";
+  let functionNameFromGPT = "";
 
   const completion = openai.createChatCompletion({
     model: "gpt-3.5-turbo-16k-0613",
     messages: messages,
     stream: true,
+    functions: functions,
+    // function_call: functionName ? {'name': functionName} : "auto",
+    function_call: "auto",
   }, {responseType: "stream"});
 
   completion.then((comp) => {
     comp.data.on("data", async data => {
       data.toString().split("\n").forEach(async (dataObjString) => {
         if (dataObjString) {
-          console.log(dataObjString);
           dataObjString = dataObjString.replace("data: ", "");
           if(dataObjString === "[DONE]"){
-            res.end();
-            await createMessage(chatId, "user", content);
-            await createMessage(chatId, "assistant", assistantResContent);
+            if(functionNameFromGPT === "" && functionArgumentsString === ""){
+              res.end();
+              await createMessage(chatId, "user", userContent);
+              await createMessage(chatId, "assistant", assistantResContent);
+            }
             return;
           }
           const dataObj = JSON.parse(dataObjString);
+          if(dataObj.choices[0].finish_reason === "function_call"){
+            //call completion again with function response
+            const functionResponse = await callCompletionFunction(functionNameFromGPT, functionArgumentsString);
+            messages.push({
+              role: "function",
+              name: functionNameFromGPT,
+              content: functionResponse,
+            });
+            await createMessage(chatId, "function", functionResponse, functionNameFromGPT);
+            getCompletion(res, chatId, userContent, messages);
+          }
+          if(dataObj.choices[0].delta.function_call){
+            if(dataObj.choices[0].delta.function_call.name && functionNameFromGPT === ""){
+              functionNameFromGPT = dataObj.choices[0].delta.function_call.name;
+            }
+            if(dataObj.choices[0].delta.function_call.arguments.length > 0){
+              functionArgumentsString += dataObj.choices[0].delta.function_call.arguments;
+            }
+          }
           if(dataObj.choices[0].delta.role){
             return;
           }
@@ -74,6 +105,10 @@ export default async function handler(
         }
       });
     });
+  }).catch((error) => {
+    console.error(error);
+    res.status(500).json({ error: 'An error occurred when processing completion' });
+    res.end();
   });
   
 
@@ -82,10 +117,6 @@ export default async function handler(
       error: "Error getting completion",
     });
   }
-
-  // return res.status(200).json({
-  //   message: completion.data,
-  // });
 }
 
 export async function parseMessagesFromChat(chatId) {

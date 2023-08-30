@@ -1,0 +1,16 @@
+[
+  {
+    "name": "getDefinitions",
+    "description": "Get a list definitions for a word using the Merriam-Webster Dictionary API",
+    "parameters": {
+      "type": "object",
+      "properties": {
+        "word": {
+          "type": "string",
+          "description": "The word that needs to be defined and get the definitions for"
+        }
+      },
+      "required": ["word"]
+    }
+  }
+]

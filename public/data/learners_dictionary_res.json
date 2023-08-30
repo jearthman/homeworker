@@ -1,0 +1,790 @@
+[
+  {
+    "meta": {
+      "id": "pot:1",
+      "uuid": "e73464a2-64e6-4364-bf73-fa685651c4eb",
+      "src": "learners",
+      "section": "alpha",
+      "highlight": "yes",
+      "stems": ["pot", "pots", "a watched pot never boils", "go to pot"],
+      "app-shortdef": {
+        "hw": "pot:1",
+        "fl": "noun",
+        "def": [
+          "{bc} a deep, round container that is used for cooking",
+          "{bc} a container that is used for storing or holding something",
+          "{bc} the amount of something held by a pot"
+        ]
+      },
+      "offensive": false
+    },
+    "hom": 1,
+    "hwi": {
+      "hw": "pot",
+      "prs": [
+        { "ipa": "\u02c8p\u0251\u02d0t", "sound": { "audio": "pot00001" } }
+      ]
+    },
+    "fl": "noun",
+    "ins": [{ "il": "plural", "if": "pots" }],
+    "def": [
+      {
+        "sseq": [
+          [
+            ["sen", { "sn": "1", "sgram": "count" }],
+            [
+              "sense",
+              {
+                "sn": "a",
+                "dt": [
+                  [
+                    "text",
+                    "{bc}a deep, round container that is used for cooking "
+                  ],
+                  [
+                    "vis",
+                    [
+                      { "t": "a soup {it}pot{/it}" },
+                      { "t": "He scrubbed the {it}pots{/it} and pans." }
+                    ]
+                  ],
+                  ["text", "{dx}see picture at {dxt|kitchen||}{/dx}"]
+                ]
+              }
+            ],
+            [
+              "sense",
+              {
+                "sn": "b",
+                "dt": [
+                  [
+                    "text",
+                    "{bc}a container that is used for storing or holding something "
+                  ],
+                  [
+                    "vis",
+                    [
+                      { "t": "clay {it}pots{/it}" },
+                      { "t": "({it}Brit{/it}) a yogurt/paint {it}pot{/it}" },
+                      { "t": "He is growing tomato plants in {it}pots{/it}." }
+                    ]
+                  ],
+                  [
+                    "text",
+                    "{dx}see also {dxt|chamber pot||} {dxt|chimney pot||} {dxt|coffeepot||} {dxt|flowerpot||} {dxt|lobster pot||} {dxt|melting pot||} {dxt|stockpot||} {dxt|teapot||}{/dx}"
+                  ]
+                ]
+              }
+            ]
+          ],
+          [
+            [
+              "sense",
+              {
+                "sn": "2",
+                "sgram": "count",
+                "dt": [
+                  ["text", "{bc}the amount of something held by a pot"],
+                  [
+                    "uns",
+                    [
+                      [
+                        ["text", "often + {it}of{/it} "],
+                        ["vis", [{ "t": "She made a {it}pot of{/it} tea." }]]
+                      ]
+                    ]
+                  ]
+                ]
+              }
+            ]
+          ],
+          [
+            [
+              "sense",
+              {
+                "sn": "3",
+                "sgram": "count",
+                "sls": ["informal"],
+                "dt": [
+                  ["text", "{bc}a large amount of something"],
+                  [
+                    "uns",
+                    [
+                      [
+                        ["text", "usually + {it}of{/it} "],
+                        [
+                          "vis",
+                          [
+                            {
+                              "t": "She earned a {it}pot of{/it} money on that job."
+                            },
+                            {
+                              "t": "His comments have stirred up a {it}pot of{/it} trouble."
+                            }
+                          ]
+                        ]
+                      ],
+                      [
+                        ["text", "often plural "],
+                        ["vis", [{ "t": "She earned {it}pots of{/it} money." }]]
+                      ]
+                    ]
+                  ]
+                ]
+              }
+            ]
+          ],
+          [
+            ["sen", { "sn": "4", "bnote": "the pot", "sls": ["chiefly US"] }],
+            [
+              "sense",
+              {
+                "sn": "a",
+                "dt": [
+                  [
+                    "text",
+                    "{bc}the total amount of money that can be won in a card game and that is made up of all the bets put together {bc}{sx|kitty||} "
+                  ],
+                  [
+                    "vis",
+                    [
+                      {
+                        "t": "He took {it}the pot{/it}. [=he won all the money that was bet]"
+                      },
+                      { "t": "There is over $100 in {it}the pot{/it}." }
+                    ]
+                  ]
+                ]
+              }
+            ],
+            [
+              "sense",
+              {
+                "sn": "b",
+                "dt": [
+                  [
+                    "text",
+                    "{bc}the total amount of money that has been gathered from many people for some purpose {bc}{sx|kitty||} "
+                  ],
+                  [
+                    "vis",
+                    [
+                      {
+                        "t": "A donor added $1,000 to {it}the pot{/it} in support of the theater company."
+                      }
+                    ]
+                  ]
+                ]
+              }
+            ]
+          ],
+          [
+            [
+              "sense",
+              {
+                "sn": "5",
+                "sgram": "count",
+                "sls": ["informal"],
+                "dt": [
+                  ["text", "{bc}{sx|potbelly||}"],
+                  [
+                    "uns",
+                    [
+                      [
+                        ["text", "usually singular "],
+                        [
+                          "vis",
+                          [
+                            {
+                              "t": "I\u0027m so out of shape\u2014look at this {it}pot{/it}!"
+                            }
+                          ]
+                        ]
+                      ]
+                    ]
+                  ]
+                ]
+              }
+            ]
+          ],
+          [
+            [
+              "sense",
+              {
+                "sn": "6",
+                "sgram": "count",
+                "sls": ["informal"],
+                "dt": [
+                  ["text", "{bc}{sx|toilet||}"],
+                  [
+                    "uns",
+                    [
+                      [
+                        ["text", "usually singular "],
+                        ["vis", [{ "t": "sat on the {it}pot{/it}" }]]
+                      ]
+                    ]
+                  ]
+                ]
+              }
+            ]
+          ],
+          [
+            [
+              "sense",
+              {
+                "sn": "7",
+                "sgram": "count",
+                "sls": ["British"],
+                "dt": [
+                  [
+                    "text",
+                    "{bc}a shot that causes a ball to fall into a pocket in games like snooker and pool"
+                  ]
+                ]
+              }
+            ]
+          ]
+        ]
+      }
+    ],
+    "dros": [
+      {
+        "drp": "a watched pot never boils",
+        "def": [
+          {
+            "sseq": [
+              [["sense", { "dt": [["text", "{dx}see {dxt|boil:1||}{/dx}"]] }]]
+            ]
+          }
+        ]
+      },
+      {
+        "drp": "go to pot",
+        "def": [
+          {
+            "sseq": [
+              [
+                [
+                  "sense",
+                  {
+                    "sls": ["informal"],
+                    "dt": [
+                      ["text", "{bc}to be ruined {bc}to fail "],
+                      [
+                        "vis",
+                        [{ "t": "Their business is {it}going to pot{/it}." }]
+                      ]
+                    ]
+                  }
+                ]
+              ]
+            ]
+          }
+        ]
+      }
+    ],
+    "dxnls": ["compare {dxt|pot:2||}"],
+    "shortdef": [
+      "a deep, round container that is used for cooking",
+      "a container that is used for storing or holding something",
+      "the amount of something held by a pot\u2014often + of"
+    ]
+  },
+  {
+    "meta": {
+      "id": "pot:2",
+      "uuid": "64515984-4cb1-444f-878c-480659a89af8",
+      "src": "learners",
+      "section": "alpha",
+      "stems": ["pot", "pots"],
+      "app-shortdef": {
+        "hw": "pot:2",
+        "fl": "noun",
+        "def": ["{it}informal{/it}"]
+      },
+      "offensive": false
+    },
+    "hom": 2,
+    "hwi": { "hw": "pot", "altprs": [{ "ipa": "\u02c8p\u0251\u02d0t" }] },
+    "fl": "noun",
+    "gram": "noncount",
+    "def": [
+      {
+        "sseq": [
+          [
+            [
+              "sense",
+              {
+                "sls": ["informal"],
+                "dt": [
+                  ["text", "{bc}{sx|marijuana||} "],
+                  [
+                    "vis",
+                    [
+                      { "t": "an ounce of {it}pot{/it}" },
+                      { "t": "a {it}pot{/it} smoker/plant" }
+                    ]
+                  ]
+                ]
+              }
+            ]
+          ]
+        ]
+      }
+    ],
+    "dxnls": ["compare {dxt|pot:1||}"],
+    "shortdef": ["marijuana"]
+  },
+  {
+    "meta": {
+      "id": "pot:3",
+      "uuid": "050dc6f2-aabf-407d-a301-462475ba695f",
+      "src": "learners",
+      "section": "alpha",
+      "target": {
+        "tuuid": "e3b60cf4-5b70-4aa0-9679-433a39dbc7c8",
+        "tsrc": "collegiate"
+      },
+      "stems": ["pot", "pots", "potted", "potting"],
+      "app-shortdef": {
+        "hw": "pot:3",
+        "fl": "verb",
+        "def": [
+          "{bc} to plant (something) in a pot",
+          "{it}British{/it} {bc} to shoot (a ball) into a pocket in games like snooker and pool",
+          "{it}British{/it} {bc} to shoot and kill (an animal)"
+        ]
+      },
+      "offensive": false
+    },
+    "hom": 3,
+    "hwi": { "hw": "pot", "altprs": [{ "ipa": "\u02c8p\u0251\u02d0t" }] },
+    "fl": "verb",
+    "ins": [{ "if": "pots" }, { "if": "pot*ted" }, { "if": "pot*ting" }],
+    "gram": "+ obj",
+    "def": [
+      {
+        "sseq": [
+          [
+            [
+              "sense",
+              {
+                "sn": "1",
+                "dt": [
+                  ["text", "{bc}to plant (something) in a pot "],
+                  [
+                    "vis",
+                    [
+                      {
+                        "t": "She spent the afternoon {it}potting{/it} tulip bulbs."
+                      }
+                    ]
+                  ]
+                ]
+              }
+            ]
+          ],
+          [
+            [
+              "sense",
+              {
+                "sn": "2",
+                "sls": ["British"],
+                "dt": [
+                  [
+                    "text",
+                    "{bc}to shoot (a ball) into a pocket in games like snooker and pool "
+                  ],
+                  [
+                    "vis",
+                    [
+                      {
+                        "t": "He {it}potted{/it} [={it}pocketed, sank{/it}] the winning shot."
+                      }
+                    ]
+                  ]
+                ]
+              }
+            ]
+          ],
+          [
+            [
+              "sense",
+              {
+                "sn": "3",
+                "sls": ["British"],
+                "dt": [
+                  ["text", "{bc}to shoot and kill (an animal) "],
+                  ["vis", [{ "t": "She {it}potted{/it} a bird." }]]
+                ]
+              }
+            ]
+          ]
+        ]
+      }
+    ],
+    "shortdef": [
+      "to plant (something) in a pot",
+      "to shoot (a ball) into a pocket in games like snooker and pool",
+      "to shoot and kill (an animal)"
+    ]
+  },
+  {
+    "meta": {
+      "id": "pot plant",
+      "uuid": "c7d6b1c5-6aa5-45eb-8673-7897867c4e98",
+      "src": "learners",
+      "section": "alpha",
+      "stems": ["pot plant", "pot plants"],
+      "app-shortdef": {
+        "hw": "pot plant",
+        "fl": "noun",
+        "def": [
+          "{it}chiefly US{/it}, {it}informal{/it} {bc} a marijuana plant",
+          "{it}British{/it}"
+        ]
+      },
+      "offensive": false
+    },
+    "hwi": { "hw": "pot plant" },
+    "fl": "noun",
+    "ins": [{ "il": "plural", "ifc": "~ plants", "if": "pot plants" }],
+    "gram": "count",
+    "def": [
+      {
+        "sseq": [
+          [
+            [
+              "sense",
+              {
+                "sn": "1",
+                "sls": ["chiefly US", "informal"],
+                "dt": [["text", "{bc}a marijuana plant"]]
+              }
+            ]
+          ],
+          [
+            [
+              "sense",
+              {
+                "sn": "2",
+                "sls": ["British"],
+                "dt": [["text", "{bc}{sx|houseplant||}"]]
+              }
+            ]
+          ]
+        ]
+      }
+    ],
+    "shortdef": ["a marijuana plant", "houseplant"]
+  },
+  {
+    "meta": {
+      "id": "pot roast",
+      "uuid": "e0428c98-1770-4f40-b0da-d4568422bc2e",
+      "src": "learners",
+      "section": "alpha",
+      "target": {
+        "tuuid": "20bb5c46-8b02-406d-8c4b-f4c84474617e",
+        "tsrc": "collegiate"
+      },
+      "stems": ["pot roast", "pot roasts"],
+      "app-shortdef": {
+        "hw": "pot roast",
+        "fl": "noun",
+        "def": ["{bc} a piece of beef that is cooked slowly in a pot"]
+      },
+      "offensive": false
+    },
+    "hwi": { "hw": "pot roast" },
+    "fl": "noun",
+    "ins": [{ "il": "plural", "ifc": "~ roasts", "if": "pot roasts" }],
+    "gram": "count, noncount",
+    "def": [
+      {
+        "sseq": [
+          [
+            [
+              "sense",
+              {
+                "dt": [
+                  ["text", "{bc}a piece of beef that is cooked slowly in a pot"]
+                ]
+              }
+            ]
+          ]
+        ]
+      }
+    ],
+    "shortdef": ["a piece of beef that is cooked slowly in a pot"]
+  },
+  {
+    "meta": {
+      "id": "chamber pot",
+      "uuid": "af929093-9fe9-46cc-a257-7e880d6a0a6f",
+      "src": "learners",
+      "section": "alpha",
+      "target": {
+        "tuuid": "192e043a-49d8-4c34-861c-6e2a2a6c9978",
+        "tsrc": "collegiate"
+      },
+      "stems": ["chamber pot", "chamber pots"],
+      "app-shortdef": {
+        "hw": "chamber pot",
+        "fl": "noun",
+        "def": [
+          "{bc} a container that is kept in a bedroom and that is used as a toilet"
+        ]
+      },
+      "offensive": false
+    },
+    "hwi": { "hw": "chamber pot" },
+    "fl": "noun",
+    "ins": [{ "il": "plural", "ifc": "~ pots", "if": "chamber pots" }],
+    "gram": "count",
+    "def": [
+      {
+        "sseq": [
+          [
+            [
+              "sense",
+              {
+                "dt": [
+                  [
+                    "text",
+                    "{bc}a container that is kept in a bedroom and that is used as a toilet"
+                  ]
+                ]
+              }
+            ]
+          ]
+        ]
+      }
+    ],
+    "shortdef": [
+      "a container that is kept in a bedroom and that is used as a toilet"
+    ]
+  },
+  {
+    "meta": {
+      "id": "chimney pot",
+      "uuid": "55b43b78-78c7-4e16-928d-0ba6f447fdbf",
+      "src": "learners",
+      "section": "alpha",
+      "target": {
+        "tuuid": "3e3d754f-0136-48e1-986c-9d421b174140",
+        "tsrc": "collegiate"
+      },
+      "stems": ["chimney pot", "chimney pots"],
+      "app-shortdef": {
+        "hw": "chimney pot",
+        "fl": "noun",
+        "def": [
+          "{it}chiefly British{/it} {bc} a clay or metal pipe on top of a chimney"
+        ]
+      },
+      "offensive": false
+    },
+    "hwi": { "hw": "chimney pot" },
+    "fl": "noun",
+    "ins": [{ "il": "plural", "ifc": "~ pots", "if": "chimney pots" }],
+    "gram": "count",
+    "def": [
+      {
+        "sseq": [
+          [
+            [
+              "sense",
+              {
+                "sls": ["chiefly British"],
+                "dt": [["text", "{bc}a clay or metal pipe on top of a chimney"]]
+              }
+            ]
+          ]
+        ]
+      }
+    ],
+    "shortdef": ["a clay or metal pipe on top of a chimney"]
+  },
+  {
+    "meta": {
+      "id": "hot pot",
+      "uuid": "17118b61-29af-4779-bc99-351bada4ab4d",
+      "src": "learners",
+      "section": "alpha",
+      "target": {
+        "tuuid": "343ee4c1-9c82-4ae1-beb4-f2b40680f212",
+        "tsrc": "collegiate"
+      },
+      "stems": ["hot pot", "hot pots"],
+      "app-shortdef": {
+        "hw": "hot pot",
+        "fl": "noun",
+        "def": [
+          "{it}chiefly British{/it} {bc} a mixture of meat and vegetables cooked together with liquid in a single pot"
+        ]
+      },
+      "offensive": false
+    },
+    "hwi": { "hw": "hot pot" },
+    "fl": "noun",
+    "ins": [{ "il": "plural", "ifc": "~ pots", "if": "hot pots" }],
+    "gram": "count, noncount",
+    "def": [
+      {
+        "sseq": [
+          [
+            [
+              "sense",
+              {
+                "sls": ["chiefly British"],
+                "dt": [
+                  [
+                    "text",
+                    "{bc}a mixture of meat and vegetables cooked together with liquid in a single pot"
+                  ]
+                ]
+              }
+            ]
+          ]
+        ]
+      }
+    ],
+    "shortdef": [
+      "a mixture of meat and vegetables cooked together with liquid in a single pot"
+    ]
+  },
+  {
+    "meta": {
+      "id": "lobster pot",
+      "uuid": "7660577a-2bbc-40f6-aba6-519ceccc25ec",
+      "src": "learners",
+      "section": "alpha",
+      "target": {
+        "tuuid": "dd84b5a3-7750-4a80-8877-106284a3eef9",
+        "tsrc": "collegiate"
+      },
+      "stems": ["lobster pot", "lobster pots", "lobster trap"],
+      "app-shortdef": {
+        "hw": "lobster pot",
+        "fl": "noun",
+        "def": ["{bc} a trap for catching lobsters"]
+      },
+      "offensive": false
+    },
+    "hwi": { "hw": "lobster pot" },
+    "fl": "noun",
+    "ins": [{ "il": "plural", "ifc": "~ pots", "if": "lobster pots" }],
+    "gram": "count",
+    "def": [
+      {
+        "sseq": [
+          [["sense", { "dt": [["text", "{bc}a trap for catching lobsters"]] }]]
+        ]
+      }
+    ],
+    "shortdef": ["a trap for catching lobsters"]
+  },
+  {
+    "meta": {
+      "id": "melting pot",
+      "uuid": "ba4e0e88-add7-44fe-ac9e-e6fe48ed3e47",
+      "src": "learners",
+      "section": "alpha",
+      "target": {
+        "tuuid": "58175f04-ce20-49ce-a854-30ab8362faf6",
+        "tsrc": "collegiate"
+      },
+      "stems": [
+        "melting pot",
+        "melting pots",
+        "melting-pot",
+        "in the melting pot"
+      ],
+      "app-shortdef": {
+        "hw": "melting pot",
+        "fl": "noun",
+        "def": [
+          "{bc} a place (such as a city or country) where different types of people live together and gradually create one community"
+        ]
+      },
+      "offensive": false
+    },
+    "hwi": { "hw": "melting pot" },
+    "fl": "noun",
+    "ins": [{ "il": "plural", "ifc": "~ pots", "if": "melting pots" }],
+    "gram": "count",
+    "def": [
+      {
+        "sseq": [
+          [
+            [
+              "sense",
+              {
+                "dt": [
+                  [
+                    "text",
+                    "{bc}a place (such as a city or country) where different types of people live together and gradually create one community"
+                  ],
+                  [
+                    "uns",
+                    [
+                      [
+                        ["text", "usually singular "],
+                        [
+                          "vis",
+                          [
+                            {
+                              "t": "The city is a {it}melting pot{/it} of different cultures."
+                            }
+                          ]
+                        ]
+                      ]
+                    ]
+                  ]
+                ]
+              }
+            ]
+          ]
+        ]
+      }
+    ],
+    "dros": [
+      {
+        "drp": "in the melting pot",
+        "def": [
+          {
+            "sseq": [
+              [
+                [
+                  "sense",
+                  {
+                    "sls": ["British"],
+                    "dt": [
+                      [
+                        "text",
+                        "{bc}not yet certain or finally decided {bc}still changing or likely to change "
+                      ],
+                      [
+                        "vis",
+                        [
+                          {
+                            "t": "Our plans are still {it}in the melting pot{/it}."
+                          }
+                        ]
+                      ]
+                    ]
+                  }
+                ]
+              ]
+            ]
+          }
+        ]
+      }
+    ],
+    "shortdef": [
+      "a place (such as a city or country) where different types of people live together and gradually create one community\u2014usually singular"
+    ]
+  }
+]

@@ -101,6 +101,7 @@ model Message {
   id        Int         @id @default(autoincrement())
   role      MessageRole
   content   String      @db.Text
+  name      String?     @db.VarChar(255)
   timestamp DateTime    @default(now()) @db.Timestamp(6)
   chatId    Int
   chat      Chat        @relation(fields: [chatId], references: [id])

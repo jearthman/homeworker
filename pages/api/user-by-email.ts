@@ -1,13 +1,14 @@
-import {PrismaClient} from '@prisma/client';
-import {NextApiRequest, NextApiResponse} from 'next';
+import prisma from "../../utils/prisma";
+import { NextApiRequest, NextApiResponse } from "next";
 
-const prisma = new PrismaClient();
-
-export default async function handler(req: NextApiRequest, res: NextApiResponse) {
-  const {email} = req.body;
+export default async function handler(
+  req: NextApiRequest,
+  res: NextApiResponse
+) {
+  const { email } = req.body;
 
   if (!email) {
-    res.status(400).json({message: 'Invalid request data'});
+    res.status(400).json({ message: "Invalid request data" });
     return;
   }
 
@@ -18,8 +19,8 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       },
     });
 
-    res.status(200).json({user});
+    res.status(200).json({ user });
   } catch (error: any) {
-    res.status(400).json({message: error.message});
+    res.status(400).json({ message: error.message });
   }
 }

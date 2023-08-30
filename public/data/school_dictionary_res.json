@@ -1,0 +1,475 @@
+[
+  {
+    "meta": {
+      "id": "apple",
+      "uuid": "c9eaca9e-cd73-4592-b1df-3992b86bbe75",
+      "src": "sch_dict",
+      "section": "alpha",
+      "stems": ["apple", "apple of one\u0027s eye", "apples"],
+      "offensive": false
+    },
+    "hwi": {
+      "hw": "ap*ple",
+      "prs": [{ "mw": "\u02c8ap-\u0259l", "sound": { "audio": "apple001" } }]
+    },
+    "fl": "noun",
+    "def": [
+      {
+        "sseq": [
+          [
+            [
+              "sense",
+              {
+                "dt": [
+                  [
+                    "text",
+                    "{bc}a rounded fruit with a red, yellow, or green skin, firm white flesh, a seedy core, and a tart or mildly sweet taste"
+                  ]
+                ],
+                "sdsense": {
+                  "sd": "also",
+                  "dt": [
+                    [
+                      "text",
+                      "{bc}the tree of the rose family that bears this fruit"
+                    ]
+                  ]
+                }
+              }
+            ]
+          ]
+        ]
+      }
+    ],
+    "et": [["text", "Old English {it}\u00e6ppel{/it}"]],
+    "shortdef": [
+      "a rounded fruit with a red, yellow, or green skin, firm white flesh, a seedy core, and a tart or mildly sweet taste; also : the tree of the rose family that bears this fruit"
+    ]
+  },
+  {
+    "meta": {
+      "id": "apple-pie",
+      "uuid": "1ead43ac-b747-4027-8eb4-be8f02d4b36b",
+      "src": "sch_dict",
+      "section": "alpha",
+      "stems": ["apple-pie"],
+      "offensive": false
+    },
+    "hwi": {
+      "hw": "apple-pie",
+      "prs": [{ "mw": "\u02c8ap-\u0259l-\u02ccp\u012b" }]
+    },
+    "fl": "adjective",
+    "def": [
+      {
+        "sseq": [
+          [
+            [
+              "sense",
+              {
+                "sn": "1",
+                "dt": [
+                  ["text", "{bc}{sx|excellent||}, {sx|perfect||} "],
+                  ["vis", [{ "t": "in {it}apple-pie{/it} order" }]]
+                ]
+              }
+            ]
+          ],
+          [
+            [
+              "sense",
+              {
+                "sn": "2",
+                "dt": [
+                  [
+                    "text",
+                    "{bc}of or relating to traditional American values "
+                  ],
+                  ["vis", [{ "t": "{it}apple-pie{/it} wholesomeness" }]]
+                ]
+              }
+            ]
+          ]
+        ]
+      }
+    ],
+    "shortdef": [
+      "excellent, perfect",
+      "of or relating to traditional American values"
+    ]
+  },
+  {
+    "meta": {
+      "id": "Adam\u0027s apple",
+      "uuid": "65e5bf5f-d869-4233-8d48-caa6aea03f1f",
+      "src": "sch_dict",
+      "section": "alpha",
+      "stems": ["adam\u0027s apple", "adams apple", "adam\u0027s apples"],
+      "offensive": false
+    },
+    "hwi": {
+      "hw": "Ad*am\u0027s apple",
+      "prs": [{ "mw": "\u02c8ad-\u0259mz-" }]
+    },
+    "fl": "noun",
+    "def": [
+      {
+        "sseq": [
+          [
+            [
+              "sense",
+              {
+                "dt": [
+                  [
+                    "text",
+                    "{bc}the projection in the front of the neck formed by the largest cartilage of the larynx"
+                  ]
+                ]
+              }
+            ]
+          ]
+        ]
+      }
+    ],
+    "shortdef": [
+      "the projection in the front of the neck formed by the largest cartilage of the larynx"
+    ]
+  },
+  {
+    "meta": {
+      "id": "crab apple",
+      "uuid": "df68cf49-4709-446c-96cd-f9533b846350",
+      "src": "sch_dict",
+      "section": "alpha",
+      "stems": ["crab apple", "crab apples"],
+      "offensive": false
+    },
+    "hwi": { "hw": "crab apple" },
+    "fl": "noun",
+    "def": [
+      {
+        "sseq": [
+          [
+            [
+              "sense",
+              {
+                "dt": [
+                  [
+                    "text",
+                    "{bc}any of several cultivated or wild trees related to the apple tree and producing a small sour fruit"
+                  ]
+                ],
+                "sdsense": { "sd": "also", "dt": [["text", "{bc}the fruit"]] }
+              }
+            ]
+          ]
+        ]
+      }
+    ],
+    "shortdef": [
+      "any of several cultivated or wild trees related to the apple tree and producing a small sour fruit; also : the fruit"
+    ]
+  },
+  {
+    "meta": {
+      "id": "custard apple",
+      "uuid": "9a4e9785-88a0-4bc6-9d8a-1faf15aa803a",
+      "src": "sch_dict",
+      "section": "alpha",
+      "stems": ["custard apple", "custard apples"],
+      "offensive": false
+    },
+    "hwi": { "hw": "custard apple" },
+    "fl": "noun",
+    "def": [
+      {
+        "sseq": [
+          [
+            [
+              "sense",
+              {
+                "sn": "1",
+                "dt": [
+                  [
+                    "text",
+                    "{bc}any of several chiefly tropical American soft-fleshed edible fruits"
+                  ]
+                ],
+                "sdsense": {
+                  "sd": "also",
+                  "dt": [["text", "{bc}a tree or shrub bearing such fruit"]]
+                }
+              }
+            ]
+          ],
+          [["sense", { "sn": "2", "dt": [["text", "{bc}{sx|pawpaw||2}"]] }]]
+        ]
+      }
+    ],
+    "shortdef": [
+      "any of several chiefly tropical American soft-fleshed edible fruits; also : a tree or shrub bearing such fruit",
+      "pawpaw"
+    ]
+  },
+  {
+    "meta": {
+      "id": "love apple",
+      "uuid": "b50b8ec0-9bc9-44b6-9231-797f62336601",
+      "src": "sch_dict",
+      "section": "alpha",
+      "stems": ["love apple", "love apples"],
+      "offensive": false
+    },
+    "hwi": { "hw": "love apple" },
+    "fl": "noun",
+    "def": [
+      { "sseq": [[["sense", { "dt": [["text", "{bc}{sx|tomato||}"]] }]]] }
+    ],
+    "shortdef": ["tomato"]
+  },
+  {
+    "meta": {
+      "id": "oak apple",
+      "uuid": "6c90abe4-20bd-4a34-a83d-f30d11d10f51",
+      "src": "sch_dict",
+      "section": "alpha",
+      "stems": ["oak apple", "oak apples"],
+      "offensive": false
+    },
+    "hwi": { "hw": "oak apple" },
+    "fl": "noun",
+    "def": [
+      {
+        "sseq": [
+          [
+            [
+              "sense",
+              {
+                "dt": [
+                  [
+                    "text",
+                    "{bc}a large round gall produced on oak leaves by a gall wasp"
+                  ]
+                ]
+              }
+            ]
+          ]
+        ]
+      }
+    ],
+    "shortdef": ["a large round gall produced on oak leaves by a gall wasp"]
+  },
+  {
+    "meta": {
+      "id": "thorn apple",
+      "uuid": "ac12580c-e2d5-436d-bf13-ecb07cca01d8",
+      "src": "sch_dict",
+      "section": "alpha",
+      "stems": ["thorn apple", "thorn apples"],
+      "offensive": false
+    },
+    "hwi": { "hw": "thorn apple" },
+    "fl": "noun",
+    "def": [
+      {
+        "sseq": [
+          [["sense", { "sn": "1", "dt": [["text", "{bc}{sx|jimsonweed||}"]] }]],
+          [
+            [
+              "sense",
+              {
+                "sn": "2",
+                "dt": [["text", "{bc}the fruit of a hawthorn"]],
+                "sdsense": {
+                  "sd": "also",
+                  "dt": [["text", "{bc}{sx|hawthorn||}"]]
+                }
+              }
+            ]
+          ]
+        ]
+      }
+    ],
+    "shortdef": ["jimsonweed", "the fruit of a hawthorn; also : hawthorn"]
+  },
+  {
+    "meta": {
+      "id": "jimsonweed",
+      "uuid": "94b31c39-fd46-4a08-954a-f858f6a1afde",
+      "src": "sch_dict",
+      "section": "alpha",
+      "stems": ["jimsonweed", "jimsonweeds", "thorn apple"],
+      "offensive": false
+    },
+    "hwi": {
+      "hw": "jim*son*weed",
+      "prs": [
+        {
+          "mw": "\u02c8jim-s\u0259n-\u02ccw\u0113d",
+          "sound": { "audio": "jimson01" }
+        },
+        { "mw": "\u02c8jimp-" }
+      ]
+    },
+    "fl": "noun",
+    "lbs": ["often capitalized"],
+    "def": [
+      {
+        "sseq": [
+          [
+            [
+              "sense",
+              {
+                "dt": [
+                  [
+                    "text",
+                    "{bc}a poisonous tall annual weed of the nightshade family with rank-smelling foliage, large white or violet trumpet-shaped flowers, and a prickly fruit "
+                  ],
+                  [
+                    "ca",
+                    {
+                      "intro": "called also",
+                      "cats": [{ "cat": "thorn apple" }]
+                    }
+                  ]
+                ]
+              }
+            ]
+          ]
+        ]
+      }
+    ],
+    "et": [
+      [
+        "text",
+        "alteration of {it}Jamestown weed,{/it} from {it}Jamestown,{/it} Virginia"
+      ]
+    ],
+    "shortdef": [
+      "a poisonous tall annual weed of the nightshade family with rank-smelling foliage, large white or violet trumpet-shaped flowers, and a prickly fruit \u2014called also thorn apple"
+    ]
+  },
+  {
+    "meta": {
+      "id": "upset:1",
+      "uuid": "cc97dddf-3295-41de-a463-b0cd47963c94",
+      "src": "sch_dict",
+      "section": "alpha",
+      "stems": [
+        "upset",
+        "upset the apple cart",
+        "upsets",
+        "upsetter",
+        "upsetters",
+        "upsetting"
+      ],
+      "offensive": false
+    },
+    "hom": 1,
+    "hwi": {
+      "hw": "up*set",
+      "prs": [
+        { "mw": "\u02cc\u0259p-\u02c8set", "sound": { "audio": "upset001" } },
+        { "mw": "\u0259p-" }
+      ]
+    },
+    "fl": "verb",
+    "ins": [
+      { "ifc": "-set", "if": "up*set" },
+      { "ifc": "-set*ting", "if": "up*set*ting" }
+    ],
+    "def": [
+      {
+        "sseq": [
+          [
+            [
+              "sense",
+              {
+                "sn": "1",
+                "dt": [
+                  [
+                    "text",
+                    "{bc}to thicken and shorten (as a heated bar of iron) by hammering on the end {bc}{sx|swage||}"
+                  ]
+                ]
+              }
+            ]
+          ],
+          [
+            [
+              "sense",
+              {
+                "sn": "2",
+                "dt": [
+                  [
+                    "text",
+                    "{bc}to force or be forced out of the usual upright, level, or proper position {bc}{sx|overturn||}, {sx|capsize||}"
+                  ]
+                ]
+              }
+            ]
+          ],
+          [
+            [
+              "sense",
+              {
+                "sn": "3 a",
+                "dt": [
+                  ["text", "{bc}to trouble emotionally "],
+                  ["vis", [{ "t": "the news {it}upset{/it} me" }]]
+                ]
+              }
+            ],
+            [
+              "sense",
+              {
+                "sn": "b",
+                "dt": [
+                  ["text", "{bc}to make somewhat ill "],
+                  ["vis", [{ "t": "spicy food {it}upsets{/it} my stomach" }]]
+                ]
+              }
+            ]
+          ],
+          [
+            [
+              "sense",
+              {
+                "sn": "4 a",
+                "dt": [
+                  ["text", "{bc}to throw into disorder {bc}{sx|disarrange||}"]
+                ]
+              }
+            ],
+            [
+              "sense",
+              {
+                "sn": "b",
+                "dt": [
+                  ["text", "{bc}{sx|invalidate||} "],
+                  ["vis", [{ "t": "{it}upset{/it} a will" }]]
+                ]
+              }
+            ],
+            [
+              "sense",
+              {
+                "sn": "c",
+                "dt": [
+                  ["text", "{bc}to defeat unexpectedly "],
+                  ["vis", [{ "t": "was {it}upset{/it} in the primary" }]]
+                ]
+              }
+            ]
+          ]
+        ]
+      }
+    ],
+    "uros": [{ "ure": "up*set*ter", "fl": "noun" }],
+    "shortdef": [
+      "to thicken and shorten (as a heated bar of iron) by hammering on the end : swage",
+      "to force or be forced out of the usual upright, level, or proper position : overturn, capsize",
+      "to trouble emotionally"
+    ]
+  }
+]

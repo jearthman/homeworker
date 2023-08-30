@@ -18,13 +18,8 @@ import {
   StudentAssignment,
   Message,
 } from "@prisma/client";
-import { Noto_Serif } from "next/font/google";
-import { userMessageIsContextual } from "../utils/clientHelpers";
 
-const notoSerif = Noto_Serif({
-  subsets: ["latin"],
-  weight: ["400"],
-});
+import { userMessageIsContextual } from "../utils/clientHelpers";
 
 const chatWithMessages = Prisma.validator<Prisma.ChatDefaultArgs>()({
   include: { messages: true },
@@ -90,7 +85,7 @@ export async function getServerSideProps(context: GetServerSidePropsContext) {
         "Content-Type": "application/json",
       },
       body: JSON.stringify({ studentId, assignmentId }),
-    }
+    },
   );
 
   const studentAssignmentResJson = await studentAssignmentRes.json();
@@ -167,7 +162,7 @@ export default function Worker({ student, assignment, chat }: WorkerProps) {
   const [showPopover, setShowPopover] = useState(false);
   const [popoverPosition, setPopoverPosition] = useState({ x: 0, y: 0 });
   const [clickedSentenceKey, setclickedSentenceKey] = useState<string | null>(
-    null
+    null,
   );
   const [clickedWordKey, setclickedWordKey] = useState<string | null>(null);
 
@@ -246,7 +241,7 @@ export default function Worker({ student, assignment, chat }: WorkerProps) {
     event: React.MouseEvent<HTMLSpanElement, MouseEvent>,
     messageIndex: number,
     sentenceIndex: number,
-    wordIndex: number
+    wordIndex: number,
   ) {
     event.stopPropagation(); // stop the event from bubbling up to the document
     // get the position of the clicked word
@@ -325,6 +320,8 @@ export default function Worker({ student, assignment, chat }: WorkerProps) {
     });
 
     if (response.ok) {
+      // Clear the input
+      setUserMessage("");
       const reader = response.body?.getReader();
 
       const processStream = async (reader: ReadableStreamDefaultReader) => {
@@ -363,9 +360,6 @@ export default function Worker({ student, assignment, chat }: WorkerProps) {
         processStream(reader);
       }
     }
-
-    // Clear the input
-    setUserMessage("");
   }
 
   function parseResponse(message: string) {
@@ -446,7 +440,7 @@ export default function Worker({ student, assignment, chat }: WorkerProps) {
   function parseWordIndex(
     messageIndex: number,
     sentenceIndex: number,
-    wordIndex: number
+    wordIndex: number,
   ) {
     return (
       messageIndex.toString() +
@@ -468,143 +462,159 @@ export default function Worker({ student, assignment, chat }: WorkerProps) {
 
   return (
     <>
-      <div className="flex justify-center w-screen h-screen bg-gray-200 dark:bg-black">
-        <div className="flex flex-col w-1/3 p-5">
-          <ToggleSwitch
-            className="mt-5"
-            isChecked={darkModeOn}
-            onChange={toggleDarkMode}
-            checkedIcon={<span className="material-icons">dark_mode</span>}
-            uncheckedIcon={<span className="material-icons">light_mode</span>}
-          />
-          <div className="my-auto w-full">
-            <div className="border-2 border-black rounded-lg bg-white p-3">
-              <div className="font-lg font-bold">{assignment.title}</div>
-              <div className="mt-2">{assignment.description}</div>
-            </div>
-            <textarea
-              className={`${notoSerif.className} mt-4 w-full border-2 border-black rounded-lg bg-white p-3 focus:outline-none focus:border-blue-500`}
-            ></textarea>
-            <div className="flex gap-2">
-              <Button size="small" intent="secondary">
-                Check
-              </Button>
-              <Button size="small">Submit</Button>
+      <div className="h-screen w-screen bg-gray-200 dark:bg-gray-800">
+        <div className="flex h-full md:max-w-6xl lg:mx-auto">
+          <div className="flex flex-col justify-center p-5 md:w-5/12">
+            <ToggleSwitch
+              className="mb-5"
+              isChecked={darkModeOn}
+              onChange={toggleDarkMode}
+              checkedIcon={<span className="material-icons">dark_mode</span>}
+              uncheckedIcon={<span className="material-icons">light_mode</span>}
+            />
+            <div className="my-auto w-full">
+              <div className="rounded-lg bg-white p-3 shadow-lg">
+                <div className="font-lg font-bold">{assignment.title}</div>
+                <div className="mt-2">{assignment.description}</div>
+              </div>
+              <textarea
+                className="my-4 block w-full rounded-lg bg-white p-3 shadow-lg focus:outline-none"
+                placeholder="Write your answer here!"
+              ></textarea>
+              <div className="flex gap-2">
+                <Button size="small" intent="secondary">
+                  Check
+                </Button>
+                <Button size="small">Submit</Button>
+              </div>
             </div>
           </div>
-        </div>
-        {/* desktop worker col */}
-        <div className="flex flex-col w-1/3">
-          {/* popover */}
-          {showPopover && (
-            <div
-              ref={popoverRef}
-              className={`${styles.caretUp} absolute z-10 rounded-lg bg-white dark:bg-black shadow-lg border-2 border-black dark:border-white left-1/2 transform -translate-x-1/2 cursor-pointer`}
-              style={{
-                top: popoverPosition.y,
-                left: popoverPosition.x,
-              }}
-              onClick={(e) => e.stopPropagation()}
-            >
-              <div className="flex flex-col">
-                {/* <div
+          {/* desktop worker col */}
+          <div className="flex h-full flex-grow flex-col justify-end md:w-7/12">
+            {/* popover */}
+            {showPopover && (
+              <div
+                ref={popoverRef}
+                className={`${styles.caretUp} absolute left-1/2 z-10 -translate-x-1/2 transform cursor-pointer rounded border border-gray-400 bg-white py-1 shadow-lg dark:border-white dark:bg-black`}
+                style={{
+                  top: popoverPosition.y,
+                  left: popoverPosition.x,
+                }}
+                onClick={(e) => e.stopPropagation()}
+              >
+                <div className="flex flex-col">
+                  {/* <div
                   className="cursor-pointer text-black dark:text-white margin-auto"
                   onClick={() => setShowPopover(false)}
                 >
                   <span className="material-icons">close</span>
                 </div> */}
-                <span className="dark:text-white border-b border-black dark:border-white p-1 hover:bg-gray-200 dark:hover:bg-gray-800">
-                  Define
-                </span>
-                <span className="dark:text-white border-b border-black dark:border-white p-1 hover:bg-gray-200 dark:hover:bg-gray-800">
-                  Pronunciation
-                </span>
-                <span className="dark:text-white border-b border-black dark:border-white p-1 hover:bg-gray-200 dark:hover:bg-gray-800">
-                  Synonym
-                </span>
-                <span className="dark:text-white border-b border-black dark:border-white p-1 hover:bg-gray-200 dark:hover:bg-gray-800">
-                  Etymology
-                </span>
+                  <span className="border-b border-gray-400 p-1 hover:bg-gray-100 dark:border-white dark:text-white dark:hover:bg-gray-900">
+                    Define
+                  </span>
+                  <span className="border-b border-gray-400 p-1 hover:bg-gray-100 dark:border-white dark:text-white dark:hover:bg-gray-900">
+                    Pronunciation
+                  </span>
+                  <span className="border-b border-gray-400 p-1 hover:bg-gray-100 dark:border-white dark:text-white dark:hover:bg-gray-900">
+                    Synonym
+                  </span>
+                  <span className="p-1 hover:bg-gray-100 dark:text-white dark:hover:bg-gray-900">
+                    Etymology
+                  </span>
+                </div>
               </div>
+            )}
+            {/* chat */}
+            <div className="flex flex-col-reverse overflow-y-auto px-5">
+              {[...chatLog].reverse().map((chatMessage, messageIndex) => (
+                <div key={messageIndex} className="flex gap-4">
+                  {chatMessage.type === "user" && (
+                    <div role="img" aria-label="user" className="mt-2 text-2xl">
+                      👤
+                    </div>
+                  )}
+                  {chatMessage.type === "assistant" && (
+                    <div
+                      role="img"
+                      aria-label="assistant"
+                      className="mt-2 text-2xl"
+                    >
+                      🤖
+                    </div>
+                  )}
+                  {chatMessage.type === "user" && (
+                    <div className="my-3 inline-flex text-black dark:text-white">
+                      {chatMessage.text}
+                    </div>
+                  )}
+                  {chatMessage.type === "assistant" && (
+                    <div className="my-3 cursor-pointer text-sky-900 dark:text-sky-100">
+                      {chatMessage.text.map(
+                        (sentence: Sentence, sentenceIndex: number) => (
+                          <span
+                            key={`sentence-${sentenceIndex}`}
+                            className={`border border-transparent ${
+                              parseSentenceIndex(
+                                messageIndex,
+                                sentenceIndex,
+                              ) === clickedSentenceKey
+                                ? "border-b-green-600 dark:border-b-green-400"
+                                : "hover:border-b-green-600 dark:hover:border-b-green-400"
+                            }`}
+                          >
+                            {sentence.words.map(
+                              (word: string, wordIndex: number) => (
+                                <span
+                                  key={`word-${sentenceIndex}-${wordIndex}`}
+                                  className={`mr-1 inline-block ${
+                                    parseWordIndex(
+                                      messageIndex,
+                                      sentenceIndex,
+                                      wordIndex,
+                                    ) === clickedWordKey
+                                      ? "text-green-600 dark:text-green-400"
+                                      : "hover:text-green-600 dark:hover:text-green-400"
+                                  }`}
+                                  onClick={(event) =>
+                                    handleWordClick(
+                                      event,
+                                      messageIndex,
+                                      sentenceIndex,
+                                      wordIndex,
+                                    )
+                                  }
+                                >
+                                  {word}
+                                </span>
+                              ),
+                            )}
+                          </span>
+                        ),
+                      )}
+                    </div>
+                  )}
+                </div>
+              ))}
             </div>
-          )}
-          {/* chat */}
-          <div className="flex flex-col h-5/6 overflow-y-auto px-5 justify-end">
-            {chatLog.map((chatMessage, messageIndex) => (
-              <div key={messageIndex}>
-                {chatMessage.type === "user" && (
-                  <div
-                    className={`${notoSerif.className} mb-3 inline-flex text-blue-600 dark:text-blue-400`}
-                  >
-                    {chatMessage.text}
-                  </div>
-                )}
-                {chatMessage.type === "assistant" && (
-                  <div className="cursor-pointer text-black dark:text-white">
-                    {chatMessage.text.map(
-                      (sentence: Sentence, sentenceIndex: number) => (
-                        <span
-                          key={`sentence-${sentenceIndex}`}
-                          className={`border border-transparent ${
-                            parseSentenceIndex(messageIndex, sentenceIndex) ===
-                            clickedSentenceKey
-                              ? "border-b-green-600 dark:border-b-green-400"
-                              : "hover:border-b-green-600 dark:hover:border-b-green-400"
-                          }`}
-                        >
-                          {sentence.words.map(
-                            (word: string, wordIndex: number) => (
-                              <span
-                                key={`word-${sentenceIndex}-${wordIndex}`}
-                                className={`${
-                                  notoSerif.className
-                                } mr-1 inline-block ${
-                                  parseWordIndex(
-                                    messageIndex,
-                                    sentenceIndex,
-                                    wordIndex
-                                  ) === clickedWordKey
-                                    ? "text-green-600 dark:text-green-400"
-                                    : "hover:text-green-600 dark:hover:text-green-400"
-                                }`}
-                                onClick={(event) =>
-                                  handleWordClick(
-                                    event,
-                                    messageIndex,
-                                    sentenceIndex,
-                                    wordIndex
-                                  )
-                                }
-                              >
-                                {word}
-                              </span>
-                            )
-                          )}
-                        </span>
-                      )
-                    )}
-                  </div>
-                )}
-              </div>
-            ))}
-          </div>
-          <div className="flex flex-col h-1/6 justify-center">
-            <form className="flex px-5" onSubmit={handleChatSubmit}>
-              <Input
-                name="userInput"
-                type="text"
-                value={userMessage}
-                onChange={(event) => setUserMessage(event.currentTarget.value)}
-                className={`${notoSerif.className} border-r-0 rounded-r-none w-full`}
-              ></Input>
-              <Button
-                type="submit"
-                intent="inner-form"
-                className="border-l-0 rounded-l-none"
+            <div className="flex flex-col justify-center">
+              <form
+                className="m-5 flex items-center rounded-lg bg-white p-3 shadow-lg"
+                onSubmit={handleChatSubmit}
               >
-                <span className="material-icons">send</span>
-              </Button>
-            </form>
+                <textarea
+                  name="userInput"
+                  value={userMessage}
+                  onChange={(event) =>
+                    setUserMessage(event.currentTarget.value)
+                  }
+                  className="h-6 max-h-24 w-full resize-none overflow-y-hidden bg-transparent focus:outline-none"
+                  autoComplete="off"
+                ></textarea>
+                <Button type="submit" intent="link" className="h-6 w-6">
+                  <span className="material-icons">send</span>
+                </Button>
+              </form>
+            </div>
           </div>
         </div>
       </div>

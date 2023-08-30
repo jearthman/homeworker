@@ -1,12 +1,11 @@
 import { NextApiRequest, NextApiResponse } from "next";
-import { MessageRole, PrismaClient } from "@prisma/client";
+import prisma from "../../utils/prisma";
 import { convertTextFileToMessageString } from "../../utils/serverHelpers";
-
-const prisma = new PrismaClient();
+import { MessageRole } from "@prisma/client";
 
 export default async function handler(
   req: NextApiRequest,
-  res: NextApiResponse
+  res: NextApiResponse,
 ) {
   const { chatId, role, content } = req.body;
 
@@ -26,7 +25,8 @@ export default async function handler(
 export async function createMessage(
   chatId: number,
   role: MessageRole,
-  content: string
+  content: string,
+  name?: string,
 ) {
   try {
     const message = await prisma.message.create({
@@ -34,6 +34,7 @@ export async function createMessage(
         chatId: chatId,
         role: role,
         content: content,
+        name: name,
       },
     });
 
