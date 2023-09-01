@@ -2,21 +2,21 @@ import { cva, VariantProps } from "cva";
 import React from "react";
 
 const selectStyles = cva(
-  " bg-white border-2 border-black hover:border-gray-500 rounded-lg shadow leading-tight focus:outline-none focus:shadow-outline",
+  " focus:shadow-outline rounded-lg bg-white leading-tight shadow-lg focus:outline-none",
   {
     variants: {
       sizeVariant: {
-        small: "text-base px-2 py-1",
-        medium: "text-lg px-3 py-1.5",
-        large: "text-xl px-4 py-2",
-        xlarge: "text-2xl px-5 py-2.5",
-        xxlarge: "text-3xl px-6 py-3",
+        small: "px-2 py-1 text-base",
+        medium: "px-3 py-1.5 text-lg",
+        large: "px-4 py-2 text-xl",
+        xlarge: "px-5 py-2.5 text-2xl",
+        xxlarge: "px-6 py-3 text-3xl",
       },
     },
     defaultVariants: {
       sizeVariant: "medium",
     },
-  }
+  },
 );
 
 const caretStyles =

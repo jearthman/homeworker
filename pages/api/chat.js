@@ -5,6 +5,7 @@ import { createMessage } from "./add-message";
 import { findUniqueChat } from "./get-chat";
 import { userMessageIsContextual } from "../../utils/serverHelpers";
 import {callCompletionFunction} from "../../utils/completion-function-factory"
+import { getInteractionContentString } from "../../utils/interaction-content-strings";
 
 const configuration = new Configuration({
   apiKey: process.env.OPENAI_API_KEY,
@@ -17,7 +18,7 @@ export default async function handler(
   req,
   res
 ) {
-  const { chatId, content } = req.body || "";
+  let { chatId, content, interactionType } = req.body || "";
 
   if (!chatId) {
     return res.status(400).json({
@@ -39,15 +40,19 @@ export default async function handler(
     });
   }
 
+  if(interactionType){
+    content = getInteractionContentString(interactionType, content);
+  };
+
   messages.push({
     role: "user",
     content: content,
   });
 
-  getCompletion(res, chatId, content, messages);
+  getCompletion(res, chatId, content, messages, interactionType ? true : false);
 }
 
-async function getCompletion(res, chatId, userContent, messages){
+async function getCompletion(res, chatId, userContent, messages, isInteraction){
 
   let assistantResContent = "";
   let functionArgumentsString = "";
@@ -70,8 +75,8 @@ async function getCompletion(res, chatId, userContent, messages){
           if(dataObjString === "[DONE]"){
             if(functionNameFromGPT === "" && functionArgumentsString === ""){
               res.end();
-              await createMessage(chatId, "user", userContent);
-              await createMessage(chatId, "assistant", assistantResContent);
+              await createMessage(chatId, "user", userContent, isInteraction);
+              await createMessage(chatId, "assistant", assistantResContent, isInteraction);
             }
             return;
           }
@@ -84,8 +89,8 @@ async function getCompletion(res, chatId, userContent, messages){
               name: functionNameFromGPT,
               content: functionResponse,
             });
-            await createMessage(chatId, "function", functionResponse, functionNameFromGPT);
-            getCompletion(res, chatId, userContent, messages);
+            await createMessage(chatId, "function", functionResponse, isInteraction, functionNameFromGPT);
+            getCompletion(res, chatId, userContent, messages, isInteraction);
           }
           if(dataObj.choices[0].delta.function_call){
             if(dataObj.choices[0].delta.function_call.name && functionNameFromGPT === ""){
@@ -113,9 +118,10 @@ async function getCompletion(res, chatId, userContent, messages){
   
 
   if (!completion) {
-    return res.status(400).json({
+    res.status(400).json({
       error: "Error getting completion",
     });
+    res.end();
   }
 }
 

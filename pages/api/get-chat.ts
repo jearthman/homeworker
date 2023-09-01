@@ -3,9 +3,9 @@ import prisma from "../../utils/prisma";
 
 export default async function handler(
   req: NextApiRequest,
-  res: NextApiResponse
+  res: NextApiResponse,
 ) {
-  const { chatId } = req.body;
+  const { chatId, hiddenFromUser } = req.body;
 
   if (!chatId) {
     return res.status(400).json({ error: "Missing required field" });
@@ -17,7 +17,7 @@ export default async function handler(
     return res.status(400).json({ error: "Invalid chatId" });
   }
 
-  const chat = await findUniqueChat(parsedChatId);
+  const chat = await findUniqueChat(parsedChatId, hiddenFromUser);
 
   if (!chat) {
     return res.status(404).json({ error: "Chat not found" });
@@ -26,11 +26,18 @@ export default async function handler(
   return res.status(200).json({ chat });
 }
 
-export async function findUniqueChat(chatId: number) {
+export async function findUniqueChat(
+  chatId: number,
+  hiddenFromUser: boolean = false,
+) {
   try {
     const chat = await prisma.chat.findUnique({
       where: { id: chatId },
-      include: { messages: true },
+      include: {
+        messages: {
+          where: { hiddenFromUser: hiddenFromUser },
+        },
+      },
     });
 
     return chat;

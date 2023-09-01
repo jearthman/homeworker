@@ -1,5 +1,5 @@
 -- CreateEnum
-CREATE TYPE "MessageRole" AS ENUM ('system', 'user', 'assistant');
+CREATE TYPE "MessageRole" AS ENUM ('system', 'user', 'assistant', 'function');
 
 -- CreateTable
 CREATE TABLE "User" (
@@ -91,7 +91,8 @@ CREATE TABLE "Message" (
     "id" SERIAL NOT NULL,
     "role" "MessageRole" NOT NULL,
     "content" TEXT NOT NULL,
-    "name" VARCHAR(255),
+    "functionName" VARCHAR(255),
+    "hiddenFromUser" BOOLEAN NOT NULL DEFAULT false,
     "timestamp" TIMESTAMP(6) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "chatId" INTEGER NOT NULL,
 

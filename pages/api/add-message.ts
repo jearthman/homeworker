@@ -26,7 +26,8 @@ export async function createMessage(
   chatId: number,
   role: MessageRole,
   content: string,
-  name?: string,
+  hiddenFromUser: boolean = false,
+  functionName?: string,
 ) {
   try {
     const message = await prisma.message.create({
@@ -34,7 +35,8 @@ export async function createMessage(
         chatId: chatId,
         role: role,
         content: content,
-        name: name,
+        hiddenFromUser: hiddenFromUser,
+        functionName: functionName,
       },
     });
 
