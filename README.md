@@ -1,38 +1,52 @@
-This is a [Next.js](https://nextjs.org/) project bootstrapped with [`create-next-app`](https://github.com/vercel/next.js/tree/canary/packages/create-next-app).
+# AI Tutor Web App
 
-## Getting Started
+An interactive web application that leverages OpenAI's GPT to assist students with their school assignments. The AI tutor provides feedback, explanations, and support for writing assignments, streamlining the learning experience.
 
-First, run the development server:
+## Features
+
+- **Interactive Chat Interface**: Streamed output from GPT, allowing users to interact with the AI in real-time.
+- **Selectable Responses**: Users can click on words or sentences in the AI's response to get detailed explanations or further information.
+- **Assignment Feedback**: Submit writing assignments and receive instant feedback based on the assignment's criteria.
+- **OAuth Authentication**: Secure sign-in using Google accounts.
+
+## Setup & Installation
+
+1. Clone the repository:
+
+```bash
+git clone [repository-url]
+```
+
+2. Navigate to the project directory and install the dependencies:
+
+```bash
+cd ai-tutor-web-app
+npm install
+```
+
+3. Start the development server:
 
 ```bash
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+4. Open a browser and navigate to `http://localhost:3000` to access the app.
 
-You can start editing the page by modifying `pages/index.tsx`. The page auto-updates as you edit the file.
+## Usage
 
-[API routes](https://nextjs.org/docs/api-routes/introduction) can be accessed on [http://localhost:3000/api/hello](http://localhost:3000/api/hello). This endpoint can be edited in `pages/api/hello.ts`.
+1. Sign in using your Google account.
+2. Start a new chat session with the AI tutor.
+3. Submit your writing assignments for feedback or ask questions related to your assignment.
 
-The `pages/api` directory is mapped to `/api/*`. Files in this directory are treated as [API routes](https://nextjs.org/docs/api-routes/introduction) instead of React pages.
+## Contribution
 
-This project uses [`next/font`](https://nextjs.org/docs/basic-features/font-optimization) to automatically optimize and load Inter, a custom Google Font.
+If you'd like to contribute to the development of this app, please fork the repository and submit a pull request.
 
-## Learn More
+## Acknowledgments
 
-To learn more about Next.js, take a look at the following resources:
+- OpenAI for providing the GPT API.
+- [Any other tools, libraries, or resources you've used]
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## License
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js/) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/deployment) for more details.
+[Your chosen license, e.g., MIT]
