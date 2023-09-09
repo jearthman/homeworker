@@ -13,9 +13,13 @@ async function fetchStudent(email: string, baseUrl: string) {
     body: JSON.stringify({ email }),
   });
 
-  const data = await response.json();
-
-  return response.status === 404 ? null : data.student;
+  try {
+    const data = await response.json();
+    return response.status === 404 ? null : data.student;
+  } catch (error) {
+    console.error("Error parsing JSON:", error);
+    console.error("Response:", response);
+  }
 }
 
 async function fetchAssignments(studentId: number, baseUrl: string) {
@@ -27,7 +31,12 @@ async function fetchAssignments(studentId: number, baseUrl: string) {
     body: JSON.stringify({ studentId }),
   });
 
-  return response.status === 404 ? null : await response.json();
+  try {
+    return response.status === 404 ? null : await response.json();
+  } catch (error) {
+    console.error("Error parsing JSON:", error);
+    console.error("Response:", response);
+  }
 }
 
 export async function getServerSideProps(context: GetServerSidePropsContext) {
