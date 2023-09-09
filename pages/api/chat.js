@@ -49,6 +49,8 @@ export default async function handler(
     content: content,
   });
 
+  await createMessage(chatId, "user", content, interactionType ? true : false);
+
   getCompletion(res, chatId, content, messages, interactionType ? true : false);
 }
 
@@ -75,7 +77,6 @@ async function getCompletion(res, chatId, userContent, messages, isInteraction){
           if(dataObjString === "[DONE]"){
             if(functionNameFromGPT === "" && functionArgumentsString === ""){
               res.end();
-              await createMessage(chatId, "user", userContent, isInteraction);
               await createMessage(chatId, "assistant", assistantResContent, isInteraction);
             }
             return;

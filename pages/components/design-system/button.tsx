@@ -7,9 +7,9 @@ const buttonStyles = cva(
     variants: {
       intent: {
         primary:
-          "bg-peach-600 text-gray-100 hover:bg-peach-500 dark:bg-peach-300 dark:text-gray-700 dark:hover:bg-peach-400",
+          "bg-matcha-600 text-gray-100 hover:bg-matcha-500 dark:bg-peach-300 dark:text-gray-700 dark:hover:bg-peach-400",
         secondary:
-          "bg-matcha-600 text-gray-100 hover:bg-matcha-500 dark:bg-matcha-300 dark:text-gray-700 dark:hover:bg-matcha-400",
+          "border-2 border-matcha-600 bg-transparent text-matcha-600 hover:border-matcha-500 hover:text-matcha-500 dark:bg-matcha-300 dark:text-gray-700 dark:hover:bg-matcha-400",
         danger: "bg-red-400 text-gray-900 hover:bg-red-500 focus:ring-red-500",
         neutral: "bg-gray-400 text-gray-900 hover:bg-gray-400",
         link: "bg-transparent text-matcha-600 shadow-none hover:bg-transparent",

@@ -1,15 +1,16 @@
 import { AppProps } from "next/app";
 import "styles/globals.css";
 import "material-icons/iconfont/material-icons.css";
+import "material-symbols";
 import { Provider } from "react-redux";
 import { store, RootState } from "../redux/store";
 import { useSelector } from "react-redux";
 import { SessionProvider } from "next-auth/react";
-import { Noto_Sans } from "next/font/google";
+import { Nunito } from "next/font/google";
 
-const notoSans = Noto_Sans({
+const nunito = Nunito({
   subsets: ["latin"],
-  weight: ["400"],
+  weight: ["500"],
 });
 interface ThemeProviderProps {
   children: React.ReactNode;
@@ -25,7 +26,7 @@ function MyApp({ Component, pageProps }: AppProps) {
     <SessionProvider session={pageProps.session}>
       <Provider store={store}>
         <ThemeProvider>
-          <div className={notoSans.className}>
+          <div className={nunito.className}>
             <Component {...pageProps} />
           </div>
         </ThemeProvider>

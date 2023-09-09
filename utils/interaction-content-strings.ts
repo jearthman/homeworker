@@ -1,13 +1,15 @@
 export function getInteractionContentString(
   type: string,
-  word: string,
+  content: string,
   isShorthand: boolean = false,
 ) {
   switch (type) {
     case "definition":
       return isShorthand
-        ? DEFINITION_INSTRUCTION_SHORTHAND.replace("<WORD>", word)
-        : DEFINITION_INSTRUCITON.replace("<WORD>", word);
+        ? DEFINITION_INSTRUCTION_SHORTHAND.replace("<CONTENT>", content)
+        : DEFINITION_INSTRUCITON.replace("<CONTENT>", content);
+    case "checkAnswer":
+      return CHECK_ANSWER_INSTRUCTION.replace("<CONTENT>", content);
     // case "example":
     //   return shorthand ? EXAMPLE_INSTRUCTION_SHORTHAND.replace("<WORD>", word) : EXAMPLE_INSTRUCTION.replace("<WORD>", word);
     // case "synonym":
@@ -28,5 +30,8 @@ export function getInteractionContentString(
 }
 
 export const DEFINITION_INSTRUCITON =
-  "Define '<WORD>'. Only give me one definition that you think makes the most sense based on our conversation and the assignment.Only give me the definition without any extra text.";
-export const DEFINITION_INSTRUCTION_SHORTHAND = "Define '<WORD>'.";
+  "Define '<CONTENT>'. Review each definition of the word and only provide one definition that you think makes the most sense based on your review our conversation and my current assignment. Only give me the word, functional label, and definition without any extra text. e.g. 'apple (noun) : the fleshy, usually rounded red, yellow, or green edible pome fruit of a usually cultivated tree (genus Malus) of the rose family'. If no definition was found, say 'No definitions found. Word is either a name or does not exist in the Merriam-Webster Dictionary.'";
+export const DEFINITION_INSTRUCTION_SHORTHAND = "Define '<CONTENT>'.";
+
+export const CHECK_ANSWER_INSTRUCTION =
+  "Please check my answer so far.\n\n<CONTENT>";
