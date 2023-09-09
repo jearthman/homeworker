@@ -1,12 +1,9 @@
 import { useState, useEffect, useRef, FormEvent } from "react";
 import { GetServerSidePropsContext } from "next";
 import { useRouter } from "next/router";
-import { Input } from "@/pages/components/design-system/input";
-import { Button } from "@/pages/components/design-system/button";
-import { type } from "os";
-import { FadeInText } from "./components/design-system/fade-in-text";
+import Button from "@/pages/components/design-system/button";
 import React from "react";
-import { ToggleSwitch } from "./components/design-system/toggle-switch";
+import ToggleSwitch from "./components/design-system/toggle-switch";
 import { useDispatch, useSelector } from "react-redux";
 import { toggleTheme } from "../redux/slices/themeSlice";
 import { RootState } from "../redux/store";

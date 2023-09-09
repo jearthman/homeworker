@@ -1,8 +1,8 @@
-import { Label } from "@ds/label";
-import { Input } from "@ds/input";
-import { Select } from "@ds/select";
+import Label from "@ds/label";
+import Input from "@ds/input";
+import Select from "@ds/select";
 import { useState } from "react";
-import { Button } from "@ds/button";
+import Button from "@ds/button";
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/router";
 
@@ -50,18 +50,18 @@ export default function Register() {
   return (
     <>
       {/* student account registreation form */}
-      <div className="flex flex-col justify-center items-center h-screen bg-gray-200">
-        <h1 className="text-2xl font-bold mb-8 ">
+      <div className="flex h-screen flex-col items-center justify-center bg-gray-200">
+        <h1 className="mb-8 text-2xl font-bold ">
           Please create a simple mock student.
         </h1>
         <form className="flex flex-col" onSubmit={registerStudent()}>
-          <Label className="text-black block">First Name</Label>
+          <Label className="block text-black">First Name</Label>
           <Input
             value={firstName}
             onChange={(event) => setFirstName(event.currentTarget.value)}
           ></Input>
 
-          <Label className="text-black block mt-4">Grade Level</Label>
+          <Label className="mt-4 block text-black">Grade Level</Label>
           <Select
             value={gradeLevel}
             onChange={(event) =>
@@ -73,7 +73,7 @@ export default function Register() {
             <option value="6">6th</option>
           </Select>
 
-          <Label className="text-black block mt-4">Native Language</Label>
+          <Label className="mt-4 block text-black">Native Language</Label>
           <Input
             value={nativeLanguage}
             onChange={(event) => setNativeLanguage(event.currentTarget.value)}

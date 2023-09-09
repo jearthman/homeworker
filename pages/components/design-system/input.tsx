@@ -23,7 +23,7 @@ export interface Props
   className?: string;
 }
 
-export function Input({ sizeVariant, className = "", ...rest }: Props) {
+export default function Input({ sizeVariant, className = "", ...rest }: Props) {
   const computedClassNames = `${inputStyles({})} ${className}`.trim();
 
   return <input className={computedClassNames} {...rest}></input>;

@@ -3,7 +3,7 @@ import { cva, VariantProps } from "cva";
 const cardStyles = cva("flex flex-col", {
   variants: {
     intent: {
-      primary: "bg-slate-700 text-white p-8",
+      primary: "bg-slate-700 p-8 text-white",
     },
     fullWidth: {
       true: "w-full",
@@ -30,7 +30,7 @@ export interface Props extends VariantProps<typeof cardStyles> {
   className?: string;
 }
 
-export function Card({
+export default function Card({
   intent,
   fullWidth,
   flat,

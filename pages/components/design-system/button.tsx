@@ -48,7 +48,7 @@ export interface Props
   children: React.ReactNode;
 }
 
-export function Button({
+export default function Button({
   intent,
   fullWidth,
   size,

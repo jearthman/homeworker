@@ -29,7 +29,7 @@ export interface SelectProps
   children: React.ReactNode;
 }
 
-export function Select({
+export default function Select({
   sizeVariant,
   children,
   className = "",

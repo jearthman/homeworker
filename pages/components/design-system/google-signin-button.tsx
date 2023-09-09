@@ -7,13 +7,13 @@ const roboto = Roboto_Flex({
   weight: ["500"],
 });
 
-export function GoogleSignInButton() {
+export default function GoogleSignInButton() {
   return (
     <button
       onClick={() =>
         signIn("google", { callbackUrl: `${window.location.origin}/portal` })
       }
-      className={`${roboto.className} flex items-center justify-center py-2 px-2 bg-white border border-gray-300 rounded shadow hover:bg-gray-100 focus:outline-none focus:ring focus:ring-blue-200 focus:ring-opacity-50`}
+      className={`${roboto.className} flex items-center justify-center rounded border border-gray-300 bg-white px-2 py-2 shadow hover:bg-gray-100 focus:outline-none focus:ring focus:ring-blue-200 focus:ring-opacity-50`}
     >
       <svg
         width="18px"

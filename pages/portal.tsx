@@ -44,7 +44,7 @@ export async function getServerSideProps(context: GetServerSidePropsContext) {
     try {
       student = await fetchStudent(email, baseUrl);
     } catch (error) {
-      throw new Error(error);
+      throw new Error(String(error));
     }
 
     if (!student) {
@@ -85,38 +85,38 @@ export default function Portal({ baseUrl, student }: PortalProps) {
 
   function selectAssignment(assignment: Assignment) {
     router.push(
-      `/worker?studentId=${student?.id}&assignmentId=${assignment.id}`
+      `/worker?studentId=${student?.id}&assignmentId=${assignment.id}`,
     );
   }
 
   return (
     <>
-      <div className="flex flex-col h-screen bg-gray-200 px-20">
+      <div className="flex h-screen flex-col bg-gray-200 px-20">
         {/* <div className=" flex flex-col w-1/5 bg-gray-400"></div> */}
-        <h1 className="self-center text-3xl font-bold m-12">
+        <h1 className="m-12 self-center text-3xl font-bold">
           Welcome {student?.firstName}!
         </h1>
 
-        <div className="mx-20] p-4 bg-matcha-300 border-4 border-matcha-400 rounded-xl">
-          <div className="text-2xl mb-4 font-semibold">Assignments</div>
+        <div className="mx-20] rounded-xl border-4 border-matcha-400 bg-matcha-300 p-4">
+          <div className="mb-4 text-2xl font-semibold">Assignments</div>
           {/* grid layout of assignments */}
           {assignments && (
             <div className="grid grid-cols-4 gap-4">
               {assignments.map((assignment: Assignment) => (
                 <div
                   key={assignment.id}
-                  className="bg-gray-100 rounded-lg shadow-lg cursor-pointer hover:bg-white hover:shadow-xl transition ease-in"
+                  className="cursor-pointer rounded-lg bg-gray-100 shadow-lg transition ease-in hover:bg-white hover:shadow-xl"
                   onClick={() => selectAssignment(assignment)}
                 >
                   <div className="flex flex-col p-4">
                     <div className="text-lg font-semibold">
                       {assignment.title}
                     </div>
-                    <div className="text-sm font-semibold mt-2">
+                    <div className="mt-2 text-sm font-semibold">
                       Subject: {assignment.subject}
                     </div>
 
-                    <div className="text-sm font-semibold mt-2">
+                    <div className="mt-2 text-sm font-semibold">
                       {" "}
                       {assignment.description}
                     </div>

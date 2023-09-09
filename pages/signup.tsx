@@ -1,11 +1,11 @@
 import axios from "axios";
 import Header from "./components/header";
-import { FadeInText } from "@/pages/components/design-system/fade-in-text";
+import FadeInText from "@/pages/components/design-system/fade-in-text";
 import { useState } from "react";
-import { Card } from "@/pages/components/design-system/card";
-import surveyOptions from "../public/data/sign-up-survey-options.json";
-import { ButtonGroup } from "@/pages/components/design-system/button-group";
-import { Button } from "@/pages/components/design-system/button";
+import Card from "@/pages/components/design-system/card";
+
+import ButtonGroup from "@/pages/components/design-system/button-group";
+import Button from "@/pages/components/design-system/button";
 
 export default function Signup() {
   const [welcomeTextIndex, setWelcomeTextIndex] = useState(0);
@@ -26,6 +26,7 @@ export default function Signup() {
   function handleWelcomeFadeInComplete() {
     setWelcomeTextIndex((prevIndex) => prevIndex + 1);
     if (welcomeTextIndex === textData.length) {
+      setWelcomeTextIndex(0);
     }
   }
 
@@ -61,11 +62,11 @@ export default function Signup() {
   }
 
   return (
-    <div className="flex flex-col h-screen bg-slate-500">
+    <div className="flex h-screen flex-col bg-slate-500">
       <Header></Header>
       <div className="flex flex-col items-center pt-16">
-        <div className="flex flex-col gap-4 items-center w-1/2">
-          {textData.map((data, index) => (
+        <div className="flex w-1/2 flex-col items-center gap-4">
+          {/* {textData.map((data, index) => (
             <FadeInText
               key={index}
               text={data.text}
@@ -73,7 +74,7 @@ export default function Signup() {
               onFadeInComplete={handleWelcomeFadeInComplete}
               isReady={index === welcomeTextIndex}
             />
-          ))}
+          ))} */}
         </div>
         <Card
           className={`relative mt-16 transition-opacity duration-[2000ms] ease-in-out ${
@@ -82,7 +83,7 @@ export default function Signup() {
           intent="primary"
           size="large"
         >
-          {surveyOptions.map((question, index) => (
+          {/* {surveyOptions.map((question, index) => (
             <div
               key={index}
               className={`${getQuestionClass(
@@ -128,7 +129,7 @@ export default function Signup() {
                 )}
               </div>
             </div>
-          ))}
+          ))} */}
         </Card>
       </div>
     </div>

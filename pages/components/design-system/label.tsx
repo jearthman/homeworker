@@ -11,7 +11,7 @@ export interface Props
   children: React.ReactNode;
 }
 
-export function Label({ children, className = "", ...rest }: Props) {
+export default function Label({ children, className = "", ...rest }: Props) {
   const computedClassNames = `${labelStyles({})} ${className}`.trim();
 
   return (

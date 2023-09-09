@@ -8,7 +8,7 @@ export interface Props {
   children?: React.ReactNode;
 }
 
-export function FadeInText({
+export default function FadeInText({
   text,
   className,
   onFadeInComplete,
@@ -31,7 +31,7 @@ export function FadeInText({
 
   return (
     <div className={className + " fade-in-text-container"}>
-      {text.split("").map((letter, index) => (
+      {(text || "").split("").map((letter, index) => (
         <span
           key={index}
           className={`transition-opacity duration-1000 ${

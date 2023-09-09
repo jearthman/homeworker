@@ -35,7 +35,7 @@ interface Props extends VariantProps<typeof buttonGroupStyles> {
   orientation?: "horizontal" | "vertical";
 }
 
-export function ButtonGroup({
+export default function ButtonGroup({
   // intent,
   fullWidth,
   size,

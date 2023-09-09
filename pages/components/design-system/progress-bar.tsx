@@ -3,11 +3,11 @@ export interface Props {
   percentage?: number;
 }
 
-export function ProgressBar({ className = "", percentage }: Props) {
+export default function ProgressBar({ className = "", percentage }: Props) {
   return (
-    <div className={className + " bg-matcha-600 h-1 w-full"}>
+    <div className={className + " h-1 w-full bg-matcha-600"}>
       <div
-        className="absolute bg-matcha-300 h-1"
+        className="absolute h-1 bg-matcha-300"
         style={{ width: `${percentage}%` }}
       ></div>
     </div>

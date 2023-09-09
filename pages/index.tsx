@@ -1,10 +1,6 @@
 import "material-icons/iconfont/material-icons.css";
-import Header from "./components/header";
-import Image from "next/image";
 import { Playfair_Display } from "next/font/google";
-import { Card } from "@/pages/components/design-system/card";
-import { Button } from "@ds/button";
-import { GoogleSignInButton } from "@ds/google-signin-button";
+import GoogleSignInButton from "@ds/google-signin-button";
 
 const playfairDisplay = Playfair_Display({
   subsets: ["latin"],
@@ -14,9 +10,9 @@ const playfairDisplay = Playfair_Display({
 export default function Landing() {
   return (
     <>
-      <div className="flex flex-col h-screen bg-gray-200">
-        <div className="flex flex-col h-4/5 content-center place-content-center gap-14">
-          <div className="font-bold text-center text-5xl text-black">
+      <div className="flex h-screen flex-col bg-gray-200">
+        <div className="flex h-4/5 flex-col place-content-center content-center gap-14">
+          <div className="text-center text-5xl font-bold text-black">
             homeworkers <span className="ml-8">🤖🤝🧑‍🎓</span>
           </div>
           <div className="flex justify-center gap-8">

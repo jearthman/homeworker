@@ -1,11 +1,11 @@
 import Header from "./components/header";
-import { Card } from "@/pages/components/design-system/card";
-import { Input } from "@/pages/components/design-system/input";
+import Card from "@/pages/components/design-system/card";
+import Input from "@/pages/components/design-system/input";
 import { useState } from "react";
 import { FormEvent } from "react";
-import { Label } from "@/pages/components/design-system/label";
-import { Button } from "@/pages/components/design-system/button";
-import { Checkbox } from "@/pages/components/design-system/checkbox";
+import Label from "@/pages/components/design-system/label";
+import Button from "@/pages/components/design-system/button";
+import Checkbox from "@/pages/components/design-system/checkbox";
 
 export default function Login() {
   const [username, setUsername] = useState<string>("");
@@ -40,11 +40,11 @@ export default function Login() {
   };
 
   return (
-    <div className="flex flex-col h-screen bg-slate-500">
+    <div className="flex h-screen flex-col bg-slate-500">
       <Header></Header>
       <div className="flex flex-col items-center">
-        <Card className="w-1/3 mt-16" intent="primary">
-          <div className="text-5xl text-center mb-3">Welcome back.</div>
+        <Card className="mt-16 w-1/3" intent="primary">
+          <div className="mb-3 text-center text-5xl">Welcome back.</div>
           <Label htmlFor="username">Username</Label>
           <Input
             id="username"
@@ -64,10 +64,10 @@ export default function Login() {
             placeholder="Enter your password"
           ></Input>
           {passwordError && (
-            <div className="text-red-500 mb-3">{passwordError}</div>
+            <div className="mb-3 text-red-500">{passwordError}</div>
           )}
           <Checkbox className="mt-3" label="Remember this device?"></Checkbox>
-          <Button onClick={handleLogin} className="text-xl px-5 mt-6">
+          <Button onClick={handleLogin} className="mt-6 px-5 text-xl">
             Log in
           </Button>
         </Card>
