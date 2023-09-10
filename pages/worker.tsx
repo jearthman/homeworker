@@ -28,130 +28,17 @@ type ChatWithMessages = Prisma.ChatGetPayload<typeof chatWithMessages>;
 export async function getServerSideProps(context: GetServerSidePropsContext) {
   const { studentId, assignmentId } = context.query;
 
-  const { req } = context;
-  const protocol = req.headers["x-forwarded-proto"] || "http";
-  const host = req.headers["host"];
-  const baseUrl = `${protocol}://${host}`;
-
-  // Utility function to log request details
-  const logRequest = (endpoint: string, body: any) => {
-    if (process.env.DEBUG_LOGGING === "true") {
-      console.log(`Sending request to ${endpoint} with body:`, body);
-    }
-  };
-
-  if (!studentId || !assignmentId) {
-    console.log("studentId or assignmentId is null", studentId, assignmentId);
-    return {
-      redirect: {
-        destination: "/404",
-        permanent: false,
-      },
-    };
-  }
-
-  const studentEndpoint = `${baseUrl}/api/student-by-id/`;
-  logRequest(studentEndpoint, { studentId });
-  const studentRes = await fetch(studentEndpoint, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify({ studentId }),
-  });
-
-  if (studentRes.status !== 200) {
-    return {
-      redirect: {
-        destination: "/404",
-        permanent: false,
-      },
-    };
-  }
-
-  const studentResJson = await studentRes.json();
-  const student = studentResJson.student;
-
-  const assignmentEndpoint = `${baseUrl}/api/assignment-by-id/`;
-  logRequest(assignmentEndpoint, { assignmentId });
-  const assignmentRes = await fetch(assignmentEndpoint, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify({ assignmentId }),
-  });
-
-  if (assignmentRes.status !== 200) {
-    return {
-      redirect: {
-        destination: "/404",
-        permanent: false,
-      },
-    };
-  }
-
-  const assignmentResJson = await assignmentRes.json();
-  const assignment = assignmentResJson.assignment;
-
-  const studentAssignmentEndpoint = `${baseUrl}/api/student-assignment-by-id/`;
-  logRequest(studentAssignmentEndpoint, { studentId, assignmentId });
-  const studentAssignmentRes = await fetch(studentAssignmentEndpoint, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify({ studentId, assignmentId }),
-  });
-
-  const studentAssignmentResJson = await studentAssignmentRes.json();
-  const studentAssignment: StudentAssignment =
-    studentAssignmentResJson.studentAssignment;
-
-  const chatId = studentAssignment.chatId;
-
-  let chat: ChatWithMessages;
-
-  if (!chatId) {
-    const initChatEndpoint = `${baseUrl}/api/init-chat/`;
-    logRequest(initChatEndpoint, { studentId, assignmentId });
-    const chatRes = await fetch(initChatEndpoint, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({ studentId, assignmentId }),
-    });
-
-    const chatResJson = await chatRes.json();
-    chat = chatResJson.chat;
-  } else {
-    const getChatEndpoint = `${baseUrl}/api/get-chat/`;
-    logRequest(getChatEndpoint, { chatId, hiddenfromUser: true });
-    const chatRes = await fetch(getChatEndpoint, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({ chatId, hiddenfromUser: true }),
-    });
-
-    const chatResJson = await chatRes.json();
-    chat = chatResJson.chat;
-  }
-
   return {
-    props: { student, assignment, chat },
+    props: { studentId, assignmentId },
   };
 }
 
 type WorkerProps = {
-  student: Student;
-  assignment: Assignment;
-  chat: ChatWithMessages;
+  studentId: string;
+  assignmentId: string;
 };
 
-export default function Worker({ student, assignment, chat }: WorkerProps) {
+export default function Worker({ studentId, assignmentId }: WorkerProps) {
   // types
   type ChatMessage =
     | {
@@ -175,6 +62,8 @@ export default function Worker({ student, assignment, chat }: WorkerProps) {
 
   // hooks
   const router = useRouter();
+  const [assignment, setAssignment] = useState<Assignment>();
+  const [chatId, setChatId] = useState<number>();
   const [userMessage, setUserMessage] = useState<string>("");
   const [answer, setAnswer] = useState<string>("");
   const [chatLog, setChatLog] = useState<ChatMessage[]>([]);
@@ -199,52 +88,141 @@ export default function Worker({ student, assignment, chat }: WorkerProps) {
 
   // eslint-disable-next-line react-hooks/exhaustive-deps
   useEffect(() => {
-    if (!chat.messages) {
-      console.log("chat is null");
+    // Utility function to log request details
+    const logRequest = (endpoint: string, body: any) => {
+      if (process.env.DEBUG_LOGGING) {
+        console.log(`Sending request to ${endpoint} with body:`, body);
+      }
+    };
+
+    if (!studentId || !assignmentId) {
+      console.log("studentId or assignmentId is null", studentId, assignmentId);
+      router.push("/404");
       return;
     }
-    // Add the chat messages to the chat log
-    const chatMessages: ChatMessage[] = chat.messages
-      .filter((message: Message) => {
-        return (
-          (message.role === "user" || message.role === "assistant") &&
-          !userMessageIsContextual(message.content)
-        );
-      })
-      .map((message: Message) => {
-        if (message.role === "user") {
-          return { type: "user", text: message.content };
-        } else if (message.role === "assistant") {
-          const paragraphs = message.content.split(/\n+/);
 
-          const sentencesInParagraphs = paragraphs.map((paragraph: string) => {
-            const sentences: string[] = paragraph.split(/(?<=\.|\?|\!)\s/);
-            return sentences.map((sentence) => {
-              const words = sentence
-                .split(/(?<!\n) +(?!\n)|(\n)/)
-                .filter(Boolean);
-              return {
-                words,
-                text: sentence,
-              };
-            });
-          });
+    let baseUrl = "";
+    if (typeof window !== "undefined") {
+      baseUrl = `${window.location.protocol}//${window.location.host}`;
+    }
 
-          const parsedResponse = sentencesInParagraphs.flat();
-
-          return { type: "assistant", text: parsedResponse };
-        } else {
-          console.log("Invalid message role", message.role);
-          throw new Error("Invalid message role");
-        }
+    async function fetchData() {
+      const assignmentEndpoint = `${baseUrl}/api/assignment-by-id/`;
+      logRequest(assignmentEndpoint, { assignmentId });
+      const assignmentRes = await fetch(assignmentEndpoint, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ assignmentId }),
       });
 
-    setChatLog(chatMessages);
+      if (assignmentRes.status !== 200) {
+        router.push("/404");
+        return;
+      }
 
-    // If the chat is empty, prompt LLM with a greeting
-    if (chatMessages.length === 0) {
-      sendMessage("<GREETING>Hello");
+      const assignmentResJson = await assignmentRes.json();
+      setAssignment(assignmentResJson.assignment);
+
+      const studentAssignmentEndpoint = `${baseUrl}/api/student-assignment-by-id/`;
+      logRequest(studentAssignmentEndpoint, { studentId, assignmentId });
+      const studentAssignmentRes = await fetch(studentAssignmentEndpoint, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ studentId, assignmentId }),
+      });
+
+      const studentAssignmentResJson = await studentAssignmentRes.json();
+      const studentAssignment: StudentAssignment =
+        studentAssignmentResJson.studentAssignment;
+
+      const chatId = studentAssignment.chatId;
+
+      let chat: ChatWithMessages;
+
+      if (!chatId) {
+        const initChatEndpoint = `${baseUrl}/api/init-chat/`;
+        logRequest(initChatEndpoint, { studentId, assignmentId });
+        const chatRes = await fetch(initChatEndpoint, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ studentId, assignmentId }),
+        });
+
+        const chatResJson = await chatRes.json();
+        chat = chatResJson.chat;
+      } else {
+        const getChatEndpoint = `${baseUrl}/api/get-chat/`;
+        logRequest(getChatEndpoint, { chatId, hiddenfromUser: true });
+        const chatRes = await fetch(getChatEndpoint, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ chatId, hiddenfromUser: true }),
+        });
+
+        const chatResJson = await chatRes.json();
+        chat = chatResJson.chat;
+        setChatId(chat.id);
+      }
+
+      if (!chat.messages) {
+        console.log("chat is null");
+        return;
+      }
+      // Add the chat messages to the chat log
+      const chatMessages: ChatMessage[] = chat.messages
+        .filter((message: Message) => {
+          return (
+            (message.role === "user" || message.role === "assistant") &&
+            !userMessageIsContextual(message.content)
+          );
+        })
+        .map((message: Message) => {
+          if (message.role === "user") {
+            return { type: "user", text: message.content };
+          } else if (message.role === "assistant") {
+            const paragraphs = message.content.split(/\n+/);
+
+            const sentencesInParagraphs = paragraphs.map(
+              (paragraph: string) => {
+                const sentences: string[] = paragraph.split(/(?<=\.|\?|\!)\s/);
+                return sentences.map((sentence) => {
+                  const words = sentence
+                    .split(/(?<!\n) +(?!\n)|(\n)/)
+                    .filter(Boolean);
+                  return {
+                    words,
+                    text: sentence,
+                  };
+                });
+              },
+            );
+
+            const parsedResponse = sentencesInParagraphs.flat();
+
+            return { type: "assistant", text: parsedResponse };
+          } else {
+            console.log("Invalid message role", message.role);
+            throw new Error("Invalid message role");
+          }
+        });
+
+      setChatLog(chatMessages);
+
+      // If the chat is empty, prompt LLM with a greeting
+      if (chatMessages.length === 0) {
+        sendMessage("<GREETING>Hello");
+      }
     }
+
+    fetchData();
   }, []);
 
   useEffect(() => {
@@ -373,7 +351,7 @@ export default function Worker({ student, assignment, chat }: WorkerProps) {
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        chatId: chat.id,
+        chatId: chatId,
         content: message,
         interactionType: interactionType,
       }),
@@ -556,8 +534,10 @@ export default function Worker({ student, assignment, chat }: WorkerProps) {
             />
             <div className="my-auto w-full">
               <div className="mb-4 rounded-lg bg-sky-100 p-3 shadow-lg">
-                <div className="text-lg font-extrabold">{assignment.title}</div>
-                <div className="mt-2">{assignment.description}</div>
+                <div className="text-lg font-extrabold">
+                  {assignment?.title}
+                </div>
+                <div className="mt-2">{assignment?.description}</div>
               </div>
               <textarea
                 className="mb-2 block w-full rounded-lg bg-white p-3 shadow-lg focus:outline-none"
