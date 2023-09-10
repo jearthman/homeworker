@@ -33,8 +33,26 @@ export async function getServerSideProps(context: GetServerSidePropsContext) {
   const host = req.headers["host"];
   const baseUrl = `${protocol}://${host}`;
 
-  // Fetch the student and assignment from the DB using studentId and assignmentId
-  const studentRes = await fetch(`${baseUrl}/api/student-by-id/`, {
+  // Utility function to log request details
+  const logRequest = (endpoint: string, body: any) => {
+    if (process.env.DEBUG_LOGGING === "true") {
+      console.log(`Sending request to ${endpoint} with body:`, body);
+    }
+  };
+
+  if (!studentId || !assignmentId) {
+    console.log("studentId or assignmentId is null", studentId, assignmentId);
+    return {
+      redirect: {
+        destination: "/404",
+        permanent: false,
+      },
+    };
+  }
+
+  const studentEndpoint = `${baseUrl}/api/student-by-id/`;
+  logRequest(studentEndpoint, { studentId });
+  const studentRes = await fetch(studentEndpoint, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
@@ -54,7 +72,9 @@ export async function getServerSideProps(context: GetServerSidePropsContext) {
   const studentResJson = await studentRes.json();
   const student = studentResJson.student;
 
-  const assignmentRes = await fetch(`${baseUrl}/api/assignment-by-id/`, {
+  const assignmentEndpoint = `${baseUrl}/api/assignment-by-id/`;
+  logRequest(assignmentEndpoint, { assignmentId });
+  const assignmentRes = await fetch(assignmentEndpoint, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
@@ -74,17 +94,15 @@ export async function getServerSideProps(context: GetServerSidePropsContext) {
   const assignmentResJson = await assignmentRes.json();
   const assignment = assignmentResJson.assignment;
 
-  // Get StudentAssignment from DB
-  const studentAssignmentRes = await fetch(
-    `${baseUrl}/api/student-assignment-by-id/`,
-    {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({ studentId, assignmentId }),
+  const studentAssignmentEndpoint = `${baseUrl}/api/student-assignment-by-id/`;
+  logRequest(studentAssignmentEndpoint, { studentId, assignmentId });
+  const studentAssignmentRes = await fetch(studentAssignmentEndpoint, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
     },
-  );
+    body: JSON.stringify({ studentId, assignmentId }),
+  });
 
   const studentAssignmentResJson = await studentAssignmentRes.json();
   const studentAssignment: StudentAssignment =
@@ -92,11 +110,12 @@ export async function getServerSideProps(context: GetServerSidePropsContext) {
 
   const chatId = studentAssignment.chatId;
 
-  // If the chat does not exist, create a new chat
   let chat: ChatWithMessages;
 
   if (!chatId) {
-    const chatRes = await fetch(`${baseUrl}/api/init-chat/`, {
+    const initChatEndpoint = `${baseUrl}/api/init-chat/`;
+    logRequest(initChatEndpoint, { studentId, assignmentId });
+    const chatRes = await fetch(initChatEndpoint, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -107,7 +126,9 @@ export async function getServerSideProps(context: GetServerSidePropsContext) {
     const chatResJson = await chatRes.json();
     chat = chatResJson.chat;
   } else {
-    const chatRes = await fetch(`${baseUrl}/api/get-chat/`, {
+    const getChatEndpoint = `${baseUrl}/api/get-chat/`;
+    logRequest(getChatEndpoint, { chatId, hiddenfromUser: true });
+    const chatRes = await fetch(getChatEndpoint, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
