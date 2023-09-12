@@ -66,6 +66,8 @@ export default function Worker({ studentId, assignmentId }: WorkerProps) {
   const [chatId, setChatId] = useState<number>();
   const [userMessage, setUserMessage] = useState<string>("");
   const [answer, setAnswer] = useState<string>("");
+  const [checkingAnswer, setCheckingAnswer] = useState<boolean>(false);
+  const [answerReview, setAnswerReview] = useState<string>("");
   const [chatLog, setChatLog] = useState<ChatMessage[]>([]);
   const [darkModeOn, setDarkModeOn] = useState<boolean>(false);
   const [showPopover, setShowPopover] = useState(false);
@@ -379,12 +381,17 @@ export default function Worker({ studentId, assignmentId }: WorkerProps) {
             currentSentence = words.pop() || ""; // Keep the last unfinished word or space
 
             words.forEach((word) => {
-              if (clickedWord) {
+              if (interactionType === "definition") {
                 setLoadingPopoverResponseType(null);
 
                 setPopoverResponseContent((prevContent) =>
                   prevContent ? prevContent + word : word,
                 );
+              } else if (interactionType === "checkAnswer") {
+                setAnswerReview((prevContent) =>
+                  prevContent ? prevContent + word : word,
+                );
+                setCheckingAnswer(false);
               } else {
                 updateLastResponse(word);
               }
@@ -396,8 +403,12 @@ export default function Worker({ studentId, assignmentId }: WorkerProps) {
         }
 
         if (currentSentence) {
-          if (clickedWord) {
+          if (interactionType === "definition") {
             setPopoverResponseContent((prevContent) =>
+              prevContent ? prevContent + currentSentence : currentSentence,
+            );
+          } else if (interactionType === "checkAnswer") {
+            setAnswerReview((prevContent) =>
               prevContent ? prevContent + currentSentence : currentSentence,
             );
           } else {
@@ -515,6 +526,8 @@ export default function Worker({ studentId, assignmentId }: WorkerProps) {
   }
 
   function checkAnswer() {
+    setAnswerReview("");
+    setCheckingAnswer(true);
     sendMessage(answer, "checkAnswer");
   }
 
@@ -533,26 +546,37 @@ export default function Worker({ studentId, assignmentId }: WorkerProps) {
               uncheckedIcon={<span className="material-icons">light_mode</span>}
             />
             <div className="my-auto w-full">
-              <div className="mb-4 rounded-lg bg-sky-100 p-3 shadow-lg">
-                <div className="text-lg font-extrabold">
+              <div className="mb-8 rounded-lg bg-sky-100 p-3 text-sky-900 shadow-lg">
+                <div className="text-lg font-extrabold underline">
                   {assignment?.title}
                 </div>
                 <div className="mt-2">{assignment?.description}</div>
               </div>
               <textarea
-                className="mb-2 block w-full rounded-lg bg-white p-3 shadow-lg focus:outline-none"
+                className="mb-2 block min-h-[16rem] w-full rounded-lg bg-white p-3 shadow-lg focus:outline-none"
                 placeholder="Write your answer here!"
                 value={answer}
                 onChange={(event) => setAnswer(event.currentTarget.value)}
               ></textarea>
-              <div className="mb-4 flex gap-2">
+              <div className="mb-8 flex gap-2">
                 <Button size="small" intent="secondary" onClick={checkAnswer}>
                   Check
                 </Button>
-                <Button size="small">Submit</Button>
+                <Button size="small" className="ml-auto">
+                  Submit
+                </Button>
               </div>
-              <div className="rounded-lg bg-matcha-100 p-3 shadow-lg">
-                Review goes here
+              <div className="rounded-lg bg-matcha-100 p-3 text-matcha-900 shadow-lg">
+                {checkingAnswer ? (
+                  <div className="flex justify-center text-center">
+                    <span className="material-symbols-outlined mr-2 animate-spin">
+                      progress_activity
+                    </span>
+                    Checking your answer...
+                  </div>
+                ) : (
+                  answerReview
+                )}
               </div>
             </div>
           </div>
@@ -612,81 +636,73 @@ export default function Worker({ studentId, assignmentId }: WorkerProps) {
               </div>
             )}
             {/* chat */}
-            <div className="mb-6 flex flex-col-reverse gap-6 overflow-y-auto px-5">
+            <div className="mb-6 flex flex-col-reverse gap-6 overflow-y-auto px-5 pb-2">
               {[...chatLog].reverse().map((chatMessage, messageIndex) => (
                 <div key={messageIndex} className="flex gap-4">
+                  <div
+                    role="img"
+                    aria-label={chatMessage.type}
+                    className="mt-1 text-2xl"
+                  >
+                    {chatMessage.type === "user" ? "👤" : "🤖"}
+                  </div>
                   {chatMessage.type === "user" && (
-                    <div role="img" aria-label="user" className="text-2xl">
-                      👤
-                    </div>
-                  )}
-                  {chatMessage.type === "assistant" && (
-                    <div role="img" aria-label="assistant" className="text-2xl">
-                      🤖
-                    </div>
-                  )}
-                  {chatMessage.type === "user" && (
-                    <div className="mt-1 inline-flex text-sky-900 dark:text-white">
+                    <div className="inline-flex rounded-lg bg-sky-100 px-3 py-2 text-sky-900 shadow-md dark:text-white">
                       {chatMessage.text}
                     </div>
                   )}
-                  {chatMessage.type === "assistant" &&
-                    (chatMessage.text.length === 0 ? (
-                      <div className="material-symbols-outlined h-6 animate-spin">
-                        progress_activity
-                      </div>
-                    ) : (
-                      <div className="mt-1 cursor-pointer text-black dark:text-sky-100">
-                        {chatMessage.text.map(
-                          (sentence: Sentence, sentenceIndex: number) => (
-                            <span
-                              key={`sentence-${sentenceIndex}`}
-                              className={`border border-transparent ${
-                                parseSentenceIndex(
-                                  messageIndex,
-                                  sentenceIndex,
-                                ) === clickedSentenceKey
-                                  ? "border-b-green-600 dark:border-b-green-400"
-                                  : "hover:border-b-green-600 dark:hover:border-b-green-400"
-                              }`}
-                            >
-                              {sentence.words.map(
-                                (word: string, wordIndex: number) => (
-                                  <span
-                                    key={`word-${sentenceIndex}-${wordIndex}`}
-                                    className={`mr-1 inline-block ${
-                                      parseWordIndex(
-                                        messageIndex,
-                                        sentenceIndex,
-                                        wordIndex,
-                                      ) === clickedWordKey
-                                        ? "text-green-600 dark:text-green-400"
-                                        : "hover:text-green-600 dark:hover:text-green-400"
-                                    }`}
-                                    onClick={(event) =>
-                                      handleWordClick(
-                                        event,
-                                        messageIndex,
-                                        sentenceIndex,
-                                        wordIndex,
-                                      )
-                                    }
-                                  >
-                                    {word}
-                                  </span>
-                                ),
-                              )}
-                            </span>
-                          ),
-                        )}
-                      </div>
-                    ))}
+                  {chatMessage.type === "assistant" && (
+                    <div className="cursor-pointer rounded-lg bg-matcha-100 px-3 py-2 text-matcha-900 shadow-md dark:text-sky-100">
+                      {chatMessage.text.map(
+                        (sentence: Sentence, sentenceIndex: number) => (
+                          <span
+                            key={`sentence-${sentenceIndex}`}
+                            className={`border border-transparent ${
+                              parseSentenceIndex(
+                                messageIndex,
+                                sentenceIndex,
+                              ) === clickedSentenceKey
+                                ? "border-b-green-600 dark:border-b-green-400"
+                                : "hover:border-b-green-600 dark:hover:border-b-green-400"
+                            }`}
+                          >
+                            {sentence.words.map(
+                              (word: string, wordIndex: number) => (
+                                <span
+                                  key={`word-${sentenceIndex}-${wordIndex}`}
+                                  className={`mr-1 inline-block ${
+                                    parseWordIndex(
+                                      messageIndex,
+                                      sentenceIndex,
+                                      wordIndex,
+                                    ) === clickedWordKey
+                                      ? "text-green-600 dark:text-green-400"
+                                      : "hover:text-green-600 dark:hover:text-green-400"
+                                  }`}
+                                  onClick={(event) =>
+                                    handleWordClick(
+                                      event,
+                                      messageIndex,
+                                      sentenceIndex,
+                                      wordIndex,
+                                    )
+                                  }
+                                >
+                                  {word}
+                                </span>
+                              ),
+                            )}
+                          </span>
+                        ),
+                      )}
+                    </div>
+                  )}
                 </div>
               ))}
             </div>
             <div className="flex flex-col justify-center">
               <form
-                className="m-6 flex items-center rounded-lg bg-white p-3 shadow-lg"
+                className="m-5 flex items-center rounded-lg bg-white p-3 shadow-lg"
                 onSubmit={handleChatSubmit}
               >
                 <textarea
@@ -698,9 +714,15 @@ export default function Worker({ studentId, assignmentId }: WorkerProps) {
                   className="h-6 max-h-24 w-full resize-none overflow-y-hidden bg-transparent focus:outline-none"
                   autoComplete="off"
                   onKeyDown={(event) => handleEnterKeyPress(event)}
+                  placeholder="Message your Homeworker..."
                 ></textarea>
-                <Button type="submit" intent="link" className="h-6 w-6">
-                  <span className="material-icons text-base">send</span>
+                <Button
+                  type="submit"
+                  intent="primary"
+                  disabled={userMessage === ""}
+                  className="px-1.5 disabled:cursor-not-allowed disabled:bg-transparent disabled:text-gray-400 disabled:shadow-none"
+                >
+                  <span className="material-symbols-rounded">send</span>
                 </Button>
               </form>
             </div>

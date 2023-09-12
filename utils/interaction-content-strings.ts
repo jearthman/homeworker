@@ -34,4 +34,4 @@ export const DEFINITION_INSTRUCITON =
 export const DEFINITION_INSTRUCTION_SHORTHAND = "Define '<CONTENT>'.";
 
 export const CHECK_ANSWER_INSTRUCTION =
-  "Please check my answer so far.\n\n<CONTENT>";
+  "Please check my answer so far. Do not ask any follow-up questions. Only provide feedback.\n\n<CONTENT>";

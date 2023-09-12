@@ -13,6 +13,13 @@ module.exports = {
     "./src/**/*.{js,ts,jsx,tsx}",
   ],
   darkMode: 'class', // or 'media' or false
+  variants: {
+    extend: {
+      backgroundColor: ["disabled"],
+      textColor: ["disabled"],
+      cursor: ["disabled"],
+    },
+  },
   theme: {
     extend: {
       fontFamily: {
