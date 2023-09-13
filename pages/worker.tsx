@@ -62,14 +62,20 @@ export default function Worker({ studentId, assignmentId }: WorkerProps) {
 
   // hooks
   const router = useRouter();
+
   const [assignment, setAssignment] = useState<Assignment>();
-  const [chatId, setChatId] = useState<number>();
+
   const [userMessage, setUserMessage] = useState<string>("");
+
   const [answer, setAnswer] = useState<string>("");
   const [checkingAnswer, setCheckingAnswer] = useState<boolean>(false);
   const [answerReview, setAnswerReview] = useState<string>("");
+
+  const [chatId, setChatId] = useState<number>();
   const [chatLog, setChatLog] = useState<ChatMessage[]>([]);
+
   const [darkModeOn, setDarkModeOn] = useState<boolean>(false);
+
   const [showPopover, setShowPopover] = useState(false);
   const [popoverPosition, setPopoverPosition] = useState({ x: 0, y: 0 });
   const [displayPopoverAbove, setDisplayPopoverAbove] = useState(false);
@@ -78,7 +84,6 @@ export default function Worker({ studentId, assignmentId }: WorkerProps) {
   );
   const [clickedWordKey, setclickedWordKey] = useState<string | null>(null);
   const [clickedWord, setClickedWord] = useState<string | null>(null);
-
   const [popoverResponseContent, setPopoverResponseContent] = useState<
     string | null
   >(null);

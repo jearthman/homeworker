@@ -49,16 +49,17 @@ model StudentLanguage {
 }
 
 model Student {
-  id                  Int                 @id @default(autoincrement())
-  userId              Int                 @unique
-  firstName           String              @db.VarChar(50)
-  gradeLevel          String              @db.VarChar(50)
-  nativeLanguageId    Int
-  studentDisabilities StudentDisability[]
-  studentLanguages    StudentLanguage[]
-  user                User                @relation(fields: [userId], references: [id])
-  nativeLanguage      Language            @relation(fields: [nativeLanguageId], references: [id])
-  studentAssignments  StudentAssignment[]
+  id                   Int                    @id @default(autoincrement())
+  userId               Int                    @unique
+  firstName            String                 @db.VarChar(50)
+  gradeLevel           String                 @db.VarChar(50)
+  nativeLanguageId     Int
+  studentDisabilities  StudentDisability[]
+  studentLanguages     StudentLanguage[]
+  user                 User                   @relation(fields: [userId], references: [id])
+  nativeLanguage       Language               @relation(fields: [nativeLanguageId], references: [id])
+  studentAssignments   StudentAssignment[]
+  StudentProblemAnswer StudentProblemAnswer[]
 }
 
 model Assignment {
@@ -68,21 +69,49 @@ model Assignment {
   subject            String              @db.VarChar(255)
   gradeLevel         String              @db.VarChar(50)
   gradingCriteria    String              @db.Text
+  problems           Problem[]
   studentAssignments StudentAssignment[]
 }
 
+model Problem {
+  id                   Int                    @id @default(autoincrement())
+  content              String                 @db.Text
+  answer               String                 @db.Text
+  assignmentId         Int
+  assignment           Assignment             @relation(fields: [assignmentId], references: [id])
+  StudentProblemAnswer StudentProblemAnswer[]
+}
+
 model StudentAssignment {
-  studentId    Int
-  assignmentId Int
-  chatId       Int?
-  status       String     @db.VarChar(50) // e.g., "completed", "in progress"
-  grade        Int?
-  student      Student    @relation(fields: [studentId], references: [id])
-  assignment   Assignment @relation(fields: [assignmentId], references: [id])
-  chat         Chat?      @relation(fields: [chatId], references: [id])
+  studentId             Int
+  assignmentId          Int
+  chatId                Int?
+  status                String                 @db.VarChar(50) // e.g., "completed", "in progress"
+  grade                 Int?
+  student               Student                @relation(fields: [studentId], references: [id])
+  assignment            Assignment             @relation(fields: [assignmentId], references: [id])
+  chat                  Chat?                  @relation(fields: [chatId], references: [id])
+  studentProblemAnswers StudentProblemAnswer[]
 
   @@id([studentId, assignmentId])
   @@unique([chatId])
+}
+
+model StudentProblemAnswer {
+  id           Int      @id @default(autoincrement())
+  studentId    Int
+  problemId    Int
+  assignmentId Int
+  answer       String   @db.Text // student's answer
+  feedback     String?  @db.Text // any feedback provided
+  isCorrect    Boolean? // whether the answer is correct or not
+  timestamp    DateTime @default(now()) // when the answer was submitted
+
+  student           Student           @relation(fields: [studentId], references: [id])
+  problem           Problem           @relation(fields: [problemId], references: [id])
+  studentAssignment StudentAssignment @relation(fields: [studentId, assignmentId], references: [studentId, assignmentId])
+
+  @@unique([studentId, problemId]) // each student can have one answer per problem
 }
 
 model Chat {

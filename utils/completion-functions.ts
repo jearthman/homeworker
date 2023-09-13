@@ -1,6 +1,9 @@
 const dictionaryUrl = process.env.LEARNER_DICTIONARY_URL;
 const dictionaryKey = process.env.LEARNER_DICTIONARY_KEY;
 
+const wolframAlphaLLMAPIUrl = process.env.WOLFRAM_ALPHA_LLM_API_URL;
+const wolmramAlphaAppId = process.env.WOLFRAM_ALPHA_APP_ID;
+
 type Definition = {
   headWord: string;
   functionalLabel: string;
@@ -33,7 +36,7 @@ export async function getDefinitions(word: string) {
           return JSON.stringify(definitions);
         } catch (error: any) {
           console.log(
-            "There was an error parsing the MW API response: ",
+            "There was an error parsing the Merriam-Webster Dictionary API response: ",
             error,
           );
           return error;
@@ -41,7 +44,46 @@ export async function getDefinitions(word: string) {
       },
     );
   } catch (error: any) {
-    console.log("There was an error using the MW API: ", error);
+    console.log(
+      "There was an error using the Merriam-Webster Dictionary API: ",
+      error,
+    );
+    return error;
+  }
+}
+
+export async function getMathSolution(equation: string) {
+  //If the equation is in LaTeX format, convert it to plain text
+  // if (equation.startsWith("\\(") && equation.endsWith("\\)")) {
+  //   equation = equation.substring(2, equation.length - 2);
+  // }
+
+  //If the equation is not a URI component, convert it to a URL encoded string
+  if (!decodeURIComponent(equation)) {
+    equation = encodeURIComponent(equation);
+  }
+
+  try {
+    return fetch(
+      `${wolframAlphaLLMAPIUrl}?input=${equation}&appid=${wolmramAlphaAppId}`,
+    ).then(async (res) => {
+      console.log("Wolfram Alpha LLM API response: ", res);
+      switch (res.status) {
+        case 200:
+          const wolframAlphaLLMRes = await res.json();
+          console.log(
+            "Wolfram Alpha LLM API response JSON: ",
+            wolframAlphaLLMRes,
+          );
+          return wolframAlphaLLMRes;
+        case 400 || 501 || 403:
+          return res.statusText;
+        default:
+          return "There was an error using the Wolfram Alpha LLM API.";
+      }
+    });
+  } catch (error: any) {
+    console.log("There was an error using the Wolfram Alpha LLM API: ", error);
     return error;
   }
 }
