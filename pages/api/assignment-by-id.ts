@@ -1,9 +1,9 @@
-import prisma from "../../utils/prisma";
+import prisma from "../../prisma/prisma";
 import { NextApiRequest, NextApiResponse } from "next";
 
 export default async function handler(
   req: NextApiRequest,
-  res: NextApiResponse
+  res: NextApiResponse,
 ) {
   const { assignmentId } = req.body;
 
@@ -16,6 +16,9 @@ export default async function handler(
     const assignment = await prisma.assignment.findUnique({
       where: {
         id: parseInt(assignmentId),
+      },
+      include: {
+        problems: true,
       },
     });
 

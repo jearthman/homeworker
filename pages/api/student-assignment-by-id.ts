@@ -1,9 +1,9 @@
 import { NextApiRequest, NextApiResponse } from "next";
-import prisma from "../../utils/prisma";
+import prisma from "../../prisma/prisma";
 
 export default async function handler(
   req: NextApiRequest,
-  res: NextApiResponse
+  res: NextApiResponse,
 ) {
   const { studentId, assignmentId } = req.body;
 
@@ -22,7 +22,11 @@ export default async function handler(
       include: {
         chat: {
           include: {
-            messages: true,
+            messages: {
+              where: {
+                hiddenFromUser: false,
+              },
+            },
           },
         },
       },

@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef, FormEvent } from "react";
 import { GetServerSidePropsContext } from "next";
 import { useRouter } from "next/router";
+import dynamic from "next/dynamic";
 import Button from "@/pages/components/design-system/button";
 import React from "react";
 import ToggleSwitch from "./components/design-system/toggle-switch";
@@ -8,16 +9,19 @@ import { useDispatch, useSelector } from "react-redux";
 import { toggleTheme } from "../redux/slices/themeSlice";
 import { RootState } from "../redux/store";
 import styles from "./worker.module.css";
+import { userMessageIsContextual } from "../utils/clientHelpers";
+import ProblemsProgress from "./components/problems-progress";
 import {
   Prisma,
   Student,
   Assignment,
   StudentAssignment,
   Message,
-} from "@prisma/client";
-
-import { userMessageIsContextual } from "../utils/clientHelpers";
-import getDefinition from "./api/get-definition";
+  Chat,
+  Problem,
+  StudentProblemAnswer,
+} from "@prisma/client"; // import { current } from "@reduxjs/toolkit";
+import next from "next/types";
 
 const chatWithMessages = Prisma.validator<Prisma.ChatDefaultArgs>()({
   include: { messages: true },
@@ -55,27 +59,28 @@ export default function Worker({ studentId, assignmentId }: WorkerProps) {
     text: string;
   };
 
-  // type ResponseWord = {
-  //   text: string;
-  //   sentenceIndex: number;
-  // };
+  type StudentAssignmentExtended = StudentAssignment & {
+    chat: ChatWithMessages;
+  };
+
+  type AssignmentExtended = Assignment & {
+    problems: Problem[];
+  };
 
   // hooks
   const router = useRouter();
 
-  const [assignment, setAssignment] = useState<Assignment>();
-
+  //useState block
+  const [baseUrl, setBaseUrl] = useState<string>("");
+  const [assignment, setAssignment] = useState<AssignmentExtended>();
   const [userMessage, setUserMessage] = useState<string>("");
-
   const [answer, setAnswer] = useState<string>("");
+  const [loadingAnswer, setLoadingAnswer] = useState<boolean>(false);
   const [checkingAnswer, setCheckingAnswer] = useState<boolean>(false);
   const [answerReview, setAnswerReview] = useState<string>("");
-
-  const [chatId, setChatId] = useState<number>();
+  const chatId = useRef<number>();
   const [chatLog, setChatLog] = useState<ChatMessage[]>([]);
-
   const [darkModeOn, setDarkModeOn] = useState<boolean>(false);
-
   const [showPopover, setShowPopover] = useState(false);
   const [popoverPosition, setPopoverPosition] = useState({ x: 0, y: 0 });
   const [displayPopoverAbove, setDisplayPopoverAbove] = useState(false);
@@ -90,18 +95,16 @@ export default function Worker({ studentId, assignmentId }: WorkerProps) {
   const [loadingPopoverResponseType, setLoadingPopoverResponseType] = useState<
     string | null
   >(null);
+  const [currentProblem, setCurrentProblem] = useState<Problem | null>(null);
+  const [currentProblemIndex, setCurrentProblemIndex] = useState<number>(0);
+  const [studentProblemAnswers, setStudentProblemAnswers] = useState<
+    StudentProblemAnswer[]
+  >([]);
 
   const popoverRef = useRef<HTMLDivElement | null>(null);
 
   // eslint-disable-next-line react-hooks/exhaustive-deps
   useEffect(() => {
-    // Utility function to log request details
-    const logRequest = (endpoint: string, body: any) => {
-      if (process.env.DEBUG_LOGGING) {
-        console.log(`Sending request to ${endpoint} with body:`, body);
-      }
-    };
-
     if (!studentId || !assignmentId) {
       console.log("studentId or assignmentId is null", studentId, assignmentId);
       router.push("/404");
@@ -112,6 +115,7 @@ export default function Worker({ studentId, assignmentId }: WorkerProps) {
     if (typeof window !== "undefined") {
       baseUrl = `${window.location.protocol}//${window.location.host}`;
     }
+    setBaseUrl(baseUrl);
 
     async function fetchData() {
       const assignmentEndpoint = `${baseUrl}/api/assignment-by-id/`;
@@ -131,7 +135,21 @@ export default function Worker({ studentId, assignmentId }: WorkerProps) {
 
       const assignmentResJson = await assignmentRes.json();
       setAssignment(assignmentResJson.assignment);
+      if (assignmentResJson.assignment.problems.length > 0) {
+        setCurrentProblem(assignmentResJson.assignment.problems[0]);
+        setCurrentProblemIndex(0);
+        const studentProblemAnswer = await getStudentProblemAnswer(
+          assignmentResJson.assignment,
+        );
+        if (studentProblemAnswer?.answer) {
+          setAnswer(studentProblemAnswer.answer);
+        } else {
+          setAnswer(assignmentResJson.assignment.problems[0].content);
+        }
+        setLoadingAnswer(false);
+      }
 
+      //REFACTOR FOR STUDENT ASSIGNMENT
       const studentAssignmentEndpoint = `${baseUrl}/api/student-assignment-by-id/`;
       logRequest(studentAssignmentEndpoint, { studentId, assignmentId });
       const studentAssignmentRes = await fetch(studentAssignmentEndpoint, {
@@ -143,14 +161,15 @@ export default function Worker({ studentId, assignmentId }: WorkerProps) {
       });
 
       const studentAssignmentResJson = await studentAssignmentRes.json();
-      const studentAssignment: StudentAssignment =
+      const studentAssignment: StudentAssignmentExtended =
         studentAssignmentResJson.studentAssignment;
-
-      const chatId = studentAssignment.chatId;
 
       let chat: ChatWithMessages;
 
-      if (!chatId) {
+      if (studentAssignment.chat) {
+        chatId.current = studentAssignment.chat.id;
+        chat = studentAssignment.chat;
+      } else {
         const initChatEndpoint = `${baseUrl}/api/init-chat/`;
         logRequest(initChatEndpoint, { studentId, assignmentId });
         const chatRes = await fetch(initChatEndpoint, {
@@ -163,20 +182,7 @@ export default function Worker({ studentId, assignmentId }: WorkerProps) {
 
         const chatResJson = await chatRes.json();
         chat = chatResJson.chat;
-      } else {
-        const getChatEndpoint = `${baseUrl}/api/get-chat/`;
-        logRequest(getChatEndpoint, { chatId, hiddenfromUser: true });
-        const chatRes = await fetch(getChatEndpoint, {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({ chatId, hiddenfromUser: true }),
-        });
-
-        const chatResJson = await chatRes.json();
-        chat = chatResJson.chat;
-        setChatId(chat.id);
+        chatId.current = chat.id;
       }
 
       if (!chat.messages) {
@@ -225,7 +231,7 @@ export default function Worker({ studentId, assignmentId }: WorkerProps) {
 
       // If the chat is empty, prompt LLM with a greeting
       if (chatMessages.length === 0) {
-        sendMessage("<GREETING>Hello");
+        sendMessage("", "greeting");
       }
     }
 
@@ -245,6 +251,126 @@ export default function Worker({ studentId, assignmentId }: WorkerProps) {
       document.removeEventListener("click", handleClickOutside);
     };
   }, [showPopover]);
+
+  useEffect(() => {
+    async function updateStudentProblemAnswer() {
+      try {
+        const updateStudentProblemAnswerEndpoint = `${baseUrl}/api/update-student-problem-answer/`;
+        const studentProblemAnswersByAssignmentEndpoint = `${baseUrl}/api/student-problem-answers-by-assignment/`;
+        logRequest(updateStudentProblemAnswerEndpoint, {
+          studentId,
+          problemId: currentProblem?.id,
+          answer,
+          isCorrect: false,
+        });
+        const updateStudentProblemAnswerRes = await fetch(
+          updateStudentProblemAnswerEndpoint,
+          {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+              studentId,
+              problemId: currentProblem?.id,
+              answer,
+              isCorrect: checkProblemAnswer(),
+            }),
+          },
+        );
+
+        if (updateStudentProblemAnswerRes.ok) {
+          if (studentProblemAnswers.length === 0) {
+            const StudentProblemAnswersRes = await fetch(
+              studentProblemAnswersByAssignmentEndpoint,
+              {
+                method: "POST",
+                headers: {
+                  "Content-Type": "application/json",
+                },
+                body: JSON.stringify({
+                  studentId,
+                  assignmentId,
+                }),
+              },
+            );
+
+            const studentProblemAnswersResJson =
+              await StudentProblemAnswersRes.json();
+            setStudentProblemAnswers(studentProblemAnswersResJson);
+          } else {
+            const updateStudentProblemAnswerJson =
+              await updateStudentProblemAnswerRes.json();
+            //update single student problem answer from updateStudentProblemAnswerJson
+            setStudentProblemAnswers((prevStudentProblemAnswers) => {
+              const updatedStudentProblemAnswers = [
+                ...prevStudentProblemAnswers,
+              ];
+              updatedStudentProblemAnswers[currentProblemIndex] =
+                updateStudentProblemAnswerJson;
+              return updatedStudentProblemAnswers;
+            });
+          }
+        }
+      } catch (error) {
+        console.error("Failed to update student problem answer:", error);
+      }
+    }
+
+    if (
+      currentProblem &&
+      answer &&
+      answer !== studentProblemAnswers[currentProblemIndex]?.answer &&
+      answer !== currentProblem.content
+    ) {
+      updateStudentProblemAnswer();
+    }
+  }, [answer]);
+
+  useEffect(() => {}, [currentProblemIndex]);
+
+  // Utility function to log request details
+  const logRequest = (endpoint: string, body: any) => {
+    if (process.env.DEBUG_LOGGING) {
+      console.log(`Sending request to ${endpoint} with body:`, body);
+    }
+  };
+
+  function checkProblemAnswer() {
+    if (currentProblem) {
+      return currentProblem.content === answer;
+    }
+
+    return false;
+  }
+
+  async function getStudentProblemAnswer(assignment: AssignmentExtended) {
+    const studentProblemEndpoint = `${baseUrl}/api/student-problem-answer-by-ids/`;
+
+    setLoadingAnswer(true);
+    logRequest(studentProblemEndpoint, {
+      studentId,
+      problemId: assignment.problems[0].id,
+    });
+    try {
+      const studentProblemRes = await fetch(studentProblemEndpoint, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          studentId,
+          problemId: assignment.problems[0].id,
+        }),
+      });
+
+      const studentProblemResJson = await studentProblemRes.json();
+      return studentProblemResJson.studentProblemAnswer;
+    } catch (error) {
+      console.error("Failed to get student problem answer:", error);
+      return null;
+    }
+  }
 
   // This function will be called when a word is clicked
   function handleWordClick(
@@ -343,8 +469,9 @@ export default function Worker({ studentId, assignmentId }: WorkerProps) {
     // If there are no previous messages or the last one is from the user, add a new response to trigger loading state
     setChatLog((prevChatLog) => {
       if (
-        prevChatLog.length === 0 ||
-        prevChatLog[prevChatLog.length - 1].type === "user"
+        (prevChatLog.length === 0 ||
+          prevChatLog[prevChatLog.length - 1].type === "user") &&
+        !interactionType
       ) {
         return [...prevChatLog, { type: "assistant", text: [] }];
       }
@@ -358,7 +485,7 @@ export default function Worker({ studentId, assignmentId }: WorkerProps) {
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        chatId: chatId,
+        chatId: chatId.current,
         content: message,
         interactionType: interactionType,
       }),
@@ -427,31 +554,6 @@ export default function Worker({ studentId, assignmentId }: WorkerProps) {
       }
     }
   }
-
-  function parseResponse(message: string) {
-    const paragraphs = message.split(/\n+/);
-
-    const sentencesInParagraphs = paragraphs.map((paragraph: string) => {
-      const sentences: string[] = paragraph.split(/(?<=\.|\?|\!)\s/);
-      return sentences.map((sentence) => {
-        const words = sentence.split(/(?<!\n) +(?!\n)|(\n)/).filter(Boolean);
-        return {
-          words,
-          text: sentence,
-        };
-      });
-    });
-
-    return sentencesInParagraphs.flat();
-  }
-
-  // function addResponse(message: string) {
-  //   const parsedResponse = parseResponse(message);
-  //   setChatLog((prevChatLog) => [
-  //     ...prevChatLog,
-  //     { type: "assistant", text: parsedResponse },
-  //   ]);
-  // }
 
   function updateLastResponse(word: string) {
     setChatLog((prevChatLog) => {
@@ -536,6 +638,30 @@ export default function Worker({ studentId, assignmentId }: WorkerProps) {
     sendMessage(answer, "checkAnswer");
   }
 
+  function changeProblem(direction: "prev" | "next") {
+    let newIndex = currentProblemIndex;
+
+    if (direction === "prev" && currentProblemIndex > 0) {
+      newIndex--;
+    } else if (
+      direction === "next" &&
+      assignment &&
+      currentProblemIndex < assignment?.problems.length - 1
+    ) {
+      newIndex++;
+    } else {
+      return; // Exit if there's no valid next or previous problem
+    }
+
+    setCurrentProblemIndex(newIndex);
+    setCurrentProblem(assignment?.problems[newIndex] || null);
+    if (studentProblemAnswers[newIndex]?.answer !== "") {
+      setAnswer(studentProblemAnswers[newIndex]?.answer);
+    } else {
+      setAnswer(assignment?.problems[newIndex]?.content || "");
+    }
+  }
+
   return (
     <>
       <div className="h-screen w-screen bg-gray-300 dark:bg-gray-800">
@@ -555,23 +681,65 @@ export default function Worker({ studentId, assignmentId }: WorkerProps) {
                 <div className="text-lg font-extrabold underline">
                   {assignment?.title}
                 </div>
-                <div className="mt-2">{assignment?.description}</div>
+                <div className="mt-2 opacity-75">{assignment?.description}</div>
+                <ProblemsProgress
+                  studentProblemAnswers={studentProblemAnswers}
+                  className="mt-4"
+                ></ProblemsProgress>
               </div>
-              <textarea
-                className="mb-2 block min-h-[16rem] w-full rounded-lg bg-white p-3 shadow-lg focus:outline-none"
-                placeholder="Write your answer here!"
-                value={answer}
-                onChange={(event) => setAnswer(event.currentTarget.value)}
-              ></textarea>
-              <div className="mb-8 flex gap-2">
+              {currentProblem && <div>Problem {currentProblemIndex + 1}</div>}
+              {loadingAnswer ? (
+                <div className="mb-2 block min-h-[1rem] w-full rounded-lg bg-white p-3 shadow-lg">
+                  <span className="material-symbols-outlined mr-2 animate-spin">
+                    progress_activity
+                  </span>
+                </div>
+              ) : (
+                <textarea
+                  className={`mb-2 block ${
+                    currentProblem ? "min-h-[1rem]" : "min-h-[16rem]"
+                  } w-full rounded-lg bg-white p-3 shadow-lg focus:outline-none`}
+                  value={answer}
+                  placeholder="Write your answer here!"
+                  onChange={(event) => setAnswer(event.currentTarget.value)}
+                />
+              )}
+              <div className="mb-8 flex justify-between">
                 <Button size="small" intent="secondary" onClick={checkAnswer}>
                   Check
                 </Button>
-                <Button size="small" className="ml-auto">
+                {currentProblem && (
+                  <div className="flex gap-2">
+                    <Button
+                      size="small"
+                      intent="secondary"
+                      onClick={() => changeProblem("prev")}
+                    >
+                      <span className="material-symbols-rounded">
+                        arrow_back
+                      </span>
+                    </Button>
+                    <Button
+                      size="small"
+                      intent="secondary"
+                      onClick={() => changeProblem("next")}
+                    >
+                      <span className="material-symbols-rounded">
+                        arrow_forward
+                      </span>
+                    </Button>
+                  </div>
+                )}
+                <Button size="small" className="">
                   Submit
                 </Button>
               </div>
               <div className="rounded-lg bg-matcha-100 p-3 text-matcha-900 shadow-lg">
+                {!answerReview && !checkingAnswer && (
+                  <span className="opacity-50">
+                    Use the &apos;Check&apos; button above to get feedback!
+                  </span>
+                )}
                 {checkingAnswer ? (
                   <div className="flex justify-center text-center">
                     <span className="material-symbols-outlined mr-2 animate-spin">
@@ -641,7 +809,7 @@ export default function Worker({ studentId, assignmentId }: WorkerProps) {
               </div>
             )}
             {/* chat */}
-            <div className="mb-6 flex flex-col-reverse gap-6 overflow-y-auto px-5 pb-2">
+            <div className="mb-6 flex flex-col-reverse gap-6 overflow-y-auto px-5 pb-5">
               {[...chatLog].reverse().map((chatMessage, messageIndex) => (
                 <div key={messageIndex} className="flex gap-4">
                   <div
@@ -657,7 +825,12 @@ export default function Worker({ studentId, assignmentId }: WorkerProps) {
                     </div>
                   )}
                   {chatMessage.type === "assistant" && (
-                    <div className="cursor-pointer rounded-lg bg-matcha-100 px-3 py-2 text-matcha-900 shadow-md dark:text-sky-100">
+                    <div className="cursor-pointer rounded-lg border border-matcha-300 bg-matcha-100 px-3 py-2 align-middle text-matcha-900 shadow-lg dark:text-sky-100">
+                      {chatMessage.text.length === 0 && (
+                        <div className="material-symbols-outlined animate-spin align-middle">
+                          progress_activity
+                        </div>
+                      )}
                       {chatMessage.text.map(
                         (sentence: Sentence, sentenceIndex: number) => (
                           <span
@@ -725,7 +898,7 @@ export default function Worker({ studentId, assignmentId }: WorkerProps) {
                   type="submit"
                   intent="primary"
                   disabled={userMessage === ""}
-                  className="px-1.5 disabled:cursor-not-allowed disabled:bg-transparent disabled:text-gray-400 disabled:shadow-none"
+                  className="px-1.5 disabled:cursor-not-allowed disabled:border-none disabled:bg-transparent disabled:text-gray-400 disabled:shadow-none"
                 >
                   <span className="material-symbols-rounded">send</span>
                 </Button>

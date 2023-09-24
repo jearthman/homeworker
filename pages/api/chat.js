@@ -26,7 +26,7 @@ export default async function handler(
     });
   }
 
-  if (!content) {
+  if (!content && !interactionType) {
     return res.status(400).json({
       error: "Missing chat message",
     });
@@ -49,8 +49,6 @@ export default async function handler(
     content: content,
   });
 
-  await createMessage(chatId, "user", content, interactionType ? true : false);
-
   getCompletion(res, chatId, content, messages, interactionType ? true : false);
 }
 
@@ -61,7 +59,7 @@ async function getCompletion(res, chatId, userContent, messages, isInteraction){
   let functionNameFromGPT = "";
 
   const completion = openai.createChatCompletion({
-    model: "gpt-3.5-turbo-16k-0613",
+    model: "gpt-4-0613",
     messages: messages,
     stream: true,
     functions: functions,
@@ -77,6 +75,7 @@ async function getCompletion(res, chatId, userContent, messages, isInteraction){
           if(dataObjString === "[DONE]"){
             if(functionNameFromGPT === "" && functionArgumentsString === ""){
               res.end();
+              await createMessage(chatId, "user", userContent, isInteraction);
               await createMessage(chatId, "assistant", assistantResContent, isInteraction);
             }
             return;

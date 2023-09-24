@@ -1,12 +1,9 @@
 import { NextApiRequest, NextApiResponse } from "next";
-import jwt from "jsonwebtoken";
-import prisma from "../../../utils/prisma";
-
-import bcrypt from "bcrypt";
+import prisma from "../../../prisma/prisma";
 
 export default async function handler(
   req: NextApiRequest,
-  res: NextApiResponse
+  res: NextApiResponse,
 ) {
   const { email, firstName, gradeLevel, nativeLanguage } = req.body;
 
@@ -71,6 +68,9 @@ export default async function handler(
       where: {
         gradeLevel,
       },
+      include: {
+        problems: true,
+      },
     });
 
     const studentAssignments = assignments.map((assignment) => {
@@ -81,8 +81,23 @@ export default async function handler(
       };
     });
 
+    const studentProblemAnswers = assignments.flatMap((assignment) => {
+      return assignment.problems.map((problem) => {
+        return {
+          studentId: createdStudent.id,
+          problemId: problem.id,
+          assignmentId: assignment.id,
+          answer: "",
+        };
+      });
+    });
+
     await prisma.studentAssignment.createMany({
       data: studentAssignments,
+    });
+
+    await prisma.studentProblemAnswer.createMany({
+      data: studentProblemAnswers,
     });
 
     res.status(200).json({ message: "User created successfully" });

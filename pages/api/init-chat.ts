@@ -1,10 +1,10 @@
 import { NextApiRequest, NextApiResponse } from "next";
-import prisma from "../../utils/prisma";
+import prisma from "../../prisma/prisma";
 import { convertTextFileToMessageString } from "../../utils/serverHelpers";
 
 export default async function handler(
   req: NextApiRequest,
-  res: NextApiResponse
+  res: NextApiResponse,
 ) {
   const { studentId, assignmentId } = req.body;
 
@@ -43,7 +43,7 @@ export default async function handler(
     // Create system message
     const systemMessageString = await constructSystemMessage(
       parsedStudentId,
-      parsedAssignmentId
+      parsedAssignmentId,
     );
 
     if (!systemMessageString) {
@@ -84,7 +84,7 @@ export default async function handler(
 
 async function constructSystemMessage(studentId: number, assignmentId: number) {
   let systemMessageString = await convertTextFileToMessageString(
-    "public/data/system_prompt.txt"
+    "public/data/system_prompt.txt",
   );
 
   // Get Student from DB
@@ -122,7 +122,7 @@ async function constructSystemMessage(studentId: number, assignmentId: number) {
     "Native Language: " + student.nativeLanguage?.name + "\n";
 
   const disabilityNames = student.studentDisabilities.map(
-    (sd) => sd.disability.name
+    (sd) => sd.disability.name,
   );
   systemMessageString += "Disabilities: " + disabilityNames.join(", ") + "\n";
 

@@ -1,5 +1,5 @@
 import { NextApiRequest, NextApiResponse } from "next";
-import prisma from "../../utils/prisma";
+import prisma from "../../prisma/prisma";
 import { convertTextFileToMessageString } from "../../utils/serverHelpers";
 import { MessageRole } from "@prisma/client";
 

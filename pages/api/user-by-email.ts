@@ -1,9 +1,9 @@
-import prisma from "../../utils/prisma";
+import prisma from "../../prisma/prisma";
 import { NextApiRequest, NextApiResponse } from "next";
 
 export default async function handler(
   req: NextApiRequest,
-  res: NextApiResponse
+  res: NextApiResponse,
 ) {
   const { email } = req.body;
 

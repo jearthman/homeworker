@@ -19,8 +19,8 @@
       "@/*": ["./*"],
       "@ds/*": ["./pages/components/design-system/*"]
     },
-    "types": ["next", "next/types/global", "@types/node", "@types/react"]
+    "typeRoots": ["node_modules/@types", "node_modules/mathlive/dist/types"]
   },
-  "include": ["next-env.d.ts", "**/*.ts", "**/*.tsx", "pages/api/chat.ts"],
+  "include": ["next-env.d.ts", "**/*.ts", "**/*.tsx", "pages/api/chat.ts", "prisma/seed.js", "prisma/prisma.js"],
   "exclude": ["node_modules"]
 }

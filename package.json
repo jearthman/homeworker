@@ -9,10 +9,14 @@
     "lint": "next lint",
     "postinstall": "npx prisma generate"
   },
+  "prisma": {
+    "seed": "node prisma/seed.js"
+  },
   "dependencies": {
+    "@edtr-io/mathquill": "^0.11.0",
     "@prisma/client": "^5.3.0",
     "@reduxjs/toolkit": "^1.9.5",
-    "@types/node": "18.15.10",
+    "@types/edtr-io__mathquill": "^0.11.2",
     "@types/react": "18.0.29",
     "@types/react-dom": "18.0.11",
     "axios": "^1.3.5",
@@ -21,9 +25,11 @@
     "drizzle-orm": "^0.23.2",
     "eslint": "8.36.0",
     "jsonwebtoken": "^9.0.1",
+    "katex": "^0.16.8",
     "material-icons": "^1.13.3",
     "material-symbols": "^0.11.0",
     "mathjax": "^3.2.2",
+    "mathlive": "^0.95.5",
     "next": "^13.4.1",
     "next-auth": "^4.22.3",
     "openai": "^3.2.1",
@@ -31,11 +37,15 @@
     "pg": "^8.10.0",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
+    "react-katex": "^3.0.1",
+    "react-mathquill": "^1.0.3",
     "react-redux": "^8.1.1"
   },
   "devDependencies": {
     "@types/bcrypt": "^5.0.0",
     "@types/jsonwebtoken": "^9.0.2",
+    "@types/node": "^20.6.1",
+    "@types/react-katex": "^3.0.0",
     "autoprefixer": "^10.4.14",
     "drizzle-kit": "^0.17.1",
     "eslint-config-next": "^13.4.1",
@@ -44,6 +54,7 @@
     "prettier-plugin-tailwindcss": "^0.5.3",
     "prisma": "^5.3.0",
     "tailwindcss": "^3.2.7",
-    "typescript": "^4.5.5"
+    "ts-node": "^10.9.1",
+    "typescript": "^4.9.5"
   }
 }

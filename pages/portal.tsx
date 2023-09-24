@@ -1,8 +1,13 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { useSession, getSession } from "next-auth/react";
 import { useRouter } from "next/router";
 import { GetServerSidePropsContext } from "next";
-import { Student, Assignment } from "@prisma/client";
+import {
+  Student,
+  Assignment,
+  StudentAssignment,
+  StudentProblemAnswer,
+} from "@prisma/client";
 
 async function fetchStudent(email: string, baseUrl: string) {
   const response = await fetch(`${baseUrl}/api/student-by-email`, {
@@ -40,144 +45,145 @@ async function fetchAssignments(studentId: number, baseUrl: string) {
 }
 
 export async function getServerSideProps(context: GetServerSidePropsContext) {
-  const { req } = context;
-  const protocol = req.headers["x-forwarded-proto"] || "http";
-  const host = req.headers["host"];
-  const baseUrl = `${protocol}://${host}`;
-
   const session = await getSession(context);
   const email = session?.user?.email;
-  let student = null;
-
-  if (email) {
-    try {
-      student = await fetchStudent(email, baseUrl);
-    } catch (error) {
-      throw new Error(String(error));
-    }
-
-    if (!student) {
-      return {
-        redirect: {
-          destination: "/register",
-          permanent: false,
-        },
-      };
-    }
-  }
 
   return {
-    props: { baseUrl, student },
+    props: { email },
   };
 }
 
 type PortalProps = {
-  baseUrl: string;
-  student: Student;
+  email: string;
 };
 
-export default function Portal({ baseUrl, student }: PortalProps) {
+export default function Portal({ email }: PortalProps) {
   // const [loading, setLoading] = useState(true);
+  type StudentAssignmentExtended = StudentAssignment & {
+    assignment: Assignment;
+    studentProblemAnswers: StudentProblemAnswer[];
+  };
+
   const router = useRouter();
-  const [assignments, setAssignments] = useState([]);
+  const student = useRef<Student | null>(null);
+  const [studentAssignments, setStudentAssignments] = useState<
+    StudentAssignmentExtended[]
+  >([]);
 
   const { data: session } = useSession();
   // const router = useRouter();
 
   useEffect(() => {
-    if (student) {
-      fetchAssignments(student.id, baseUrl).then((assignments) => {
-        setAssignments(assignments);
-      });
+    let baseUrl = "";
+    if (typeof window !== "undefined") {
+      baseUrl = `${window.location.protocol}//${window.location.host}`;
     }
-  }, [student, baseUrl]);
+
+    async function loadAssignments() {
+      if (email) {
+        try {
+          student.current = await fetchStudent(email, baseUrl);
+        } catch (error) {
+          throw new Error(String(error));
+        }
+
+        if (!student.current) {
+          return {
+            redirect: {
+              destination: "/register",
+              permanent: false,
+            },
+          };
+        }
+
+        fetchAssignments(student.current.id, baseUrl).then(
+          (studentAssignments) => {
+            setStudentAssignments(studentAssignments);
+          },
+        );
+      }
+    }
+
+    loadAssignments();
+  }, [email]);
 
   function selectAssignment(assignment: Assignment) {
     router.push(
-      `/worker?studentId=${student?.id}&assignmentId=${assignment.id}`,
+      `/worker?studentId=${student?.current?.id}&assignmentId=${assignment.id}`,
     );
+  }
+
+  function numberOfCorrectProblems(
+    studentAssignment: StudentAssignmentExtended,
+  ) {
+    return studentAssignment.studentProblemAnswers.filter(
+      (studentProblemAnswer) => studentProblemAnswer.isCorrect,
+    ).length;
   }
 
   return (
     <>
-      <div className="flex h-screen flex-col bg-gray-200 px-20">
+      <div className="h-screen w-screen bg-gray-300">
         {/* <div className=" flex flex-col w-1/5 bg-gray-400"></div> */}
-        <h1 className="m-12 self-center text-3xl font-bold">
-          Welcome {student?.firstName}!
-        </h1>
+        <div className="flex h-full flex-col bg-gray-200 md:max-w-6xl lg:mx-auto ">
+          {student?.current?.firstName ? (
+            <>
+              <div className="my-12 self-center text-5xl font-bold">
+                Welcome {student?.current?.firstName}!
+              </div>
 
-        <div className="mx-20] rounded-xl border-4 border-matcha-400 bg-matcha-300 p-4">
-          <div className="mb-4 text-2xl font-semibold">Assignments</div>
-          {/* grid layout of assignments */}
-          {assignments && (
-            <div className="grid grid-cols-4 gap-4">
-              {assignments.map((assignment: Assignment) => (
-                <div
-                  key={assignment.id}
-                  className="cursor-pointer rounded-lg bg-gray-100 shadow-lg transition ease-in hover:bg-white hover:shadow-xl"
-                  onClick={() => selectAssignment(assignment)}
-                >
-                  <div className="flex flex-col p-4">
-                    <div className="text-lg font-semibold">
-                      {assignment.title}
-                    </div>
-                    <div className="mt-2 text-sm font-semibold">
-                      Subject: {assignment.subject}
-                    </div>
-
-                    <div className="mt-2 text-sm font-semibold">
-                      {" "}
-                      {assignment.description}
-                    </div>
-                  </div>
+              <div className="mx-4 rounded-xl bg-matcha-300 p-4 shadow-lg">
+                <div className="mb-4 text-center text-2xl font-semibold text-matcha-900">
+                  Here are your current Assignments
                 </div>
-              ))}
+                {/* grid layout of assignments */}
+                {studentAssignments.length > 0 ? (
+                  <div className="grid grid-cols-3 gap-4">
+                    {studentAssignments.map((studentAssignment) => (
+                      <div
+                        key={studentAssignment.assignment.id}
+                        className="cursor-pointer rounded-lg border border-gray-400 bg-gray-50 shadow-lg transition ease-in hover:bg-white hover:shadow-xl"
+                        onClick={() =>
+                          selectAssignment(studentAssignment.assignment)
+                        }
+                      >
+                        <div className="flex h-full flex-col p-4">
+                          <div className="flex items-baseline">
+                            <div className="text-lg font-semibold underline">
+                              {studentAssignment.assignment.title}
+                            </div>
+                            <div className="ml-auto text-sm text-gray-500">
+                              {studentAssignment.assignment.subject}
+                            </div>
+                          </div>
+                          <div className="mt-2 text-sm">
+                            {studentAssignment.assignment.description}
+                          </div>
+                          {studentAssignment.studentProblemAnswers.length >
+                            0 && (
+                            <div className="mt-auto text-xs text-gray-500">
+                              {numberOfCorrectProblems(studentAssignment)} of{" "}
+                              {studentAssignment.studentProblemAnswers.length}{" "}
+                              problems are complete
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <span className="material-symbols-outlined w-full animate-spin text-center text-6xl">
+                    progress_activity
+                  </span>
+                )}
+              </div>
+            </>
+          ) : (
+            <div className="my-12 animate-bounce self-center text-5xl font-bold">
+              Loading your info...
             </div>
           )}
         </div>
-        {/* <div className="flex justify-around mx-20 mt-20">
-            <div className="bg-sky-200 rounded-xl p-4 border-4 border-sky-400">
-              <div className="text-2xl font-semibold mb-4">Schedule</div>
-              <div className="text-sm font-semibold">Monday</div>
-              <div className="text-sm font-semibold">Tuesday</div>
-              <div className="text-sm font-semibold">Wednesday</div>
-              <div className="text-sm font-semibold">Thursday</div>
-              <div className="text-sm font-semibold">Friday</div>
-            </div>
-            <div className="bg-yellow-200 rounded-xl p-4 border-4 border-yellow-400">
-              <div className="text-2xl font-semibold mb-4">Courses</div>
-              <div className="flex flex-col">
-                <div className="flex flex-row">
-                  <div className="bg-white rounded-lg shadow-lg cursor-pointer hover:bg-gray-200 transition-colors ease-in">
-                    <div className="flex flex-col p-4">
-                      <div className="text-lg font-semibold">
-                        Introduction to Psychology
-                      </div>
-                      <div className="text-sm font-semibold">
-                        Instructor: Dr. John Doe
-                      </div>
-                      <div className="text-sm font-semibold">
-                        Time: 10:00 - 11:00 AM
-                      </div>
-                      <div className="text-sm font-semibold">
-                        Location: Zoom
-                      </div>
-                      <div className="text-sm font-semibold">
-                        Days: Monday, Wednesday, Friday
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-            <div className="bg-pink-200 rounded-xl p-4 border-4 border-pink-400">
-              <div className="text-2xl font-semibold mb-4">Resources</div>
-              <div className="text-sm font-semibold">Syllabus</div>
-              <div className="text-sm font-semibold">Zoom Link</div>
-              <div className="text-sm font-semibold">Office Hours</div>
-              <div className="text-sm font-semibold">Tutoring</div>
-            </div>
-          </div> */}
       </div>
     </>
   );
