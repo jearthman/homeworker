@@ -471,7 +471,7 @@ export default function Worker({ studentId, assignmentId }: WorkerProps) {
       if (
         (prevChatLog.length === 0 ||
           prevChatLog[prevChatLog.length - 1].type === "user") &&
-        !interactionType
+        (interactionType === "greeting" || !interactionType)
       ) {
         return [...prevChatLog, { type: "assistant", text: [] }];
       }
@@ -561,7 +561,7 @@ export default function Worker({ studentId, assignmentId }: WorkerProps) {
       let lastMessage = newChatLog[newChatLog.length - 1];
 
       // Type guard to ensure lastMessage is of type assistant
-      if (lastMessage.type === "assistant") {
+      if (!lastMessage || lastMessage.type === "assistant") {
         let lastSentence = lastMessage.text[lastMessage.text.length - 1];
 
         if (!lastSentence) {
