@@ -3,9 +3,9 @@ import { Configuration, OpenAIApi } from "openai";
 // import { NextApiRequest, NextApiResponse } from "next";
 import { createMessage } from "./add-message";
 import { findUniqueChat } from "./get-chat";
-import { userMessageIsContextual } from "../../utils/serverHelpers";
 import {callCompletionFunction} from "../../utils/completion-function-factory"
 import { getInteractionContentString } from "../../utils/interaction-content-strings";
+import { setChat, getChat} from "../../redis/redis-server-helpers";
 
 const configuration = new Configuration({
   apiKey: process.env.OPENAI_API_KEY,
@@ -32,7 +32,7 @@ export default async function handler(
     });
   }
 
-  let messages = await parseMessagesFromChat(chatId);
+  let messages = await getChatMessages(chatId);
 
   if (!messages) {
     return res.status(400).json({
@@ -75,6 +75,18 @@ async function getCompletion(res, chatId, userContent, messages, isInteraction){
           if(dataObjString === "[DONE]"){
             if(functionNameFromGPT === "" && functionArgumentsString === ""){
               res.end();
+              //write to redis
+              messages.push({
+              role: "user",
+              content: userContent,
+              });
+              messages.push({
+                role: "assistant",
+                name: assistantResContent,
+                content: functionResponse,
+              });
+              setChat(chatId, messages);
+              //write to postgres
               await createMessage(chatId, "user", userContent, isInteraction);
               await createMessage(chatId, "assistant", assistantResContent, isInteraction);
             }
@@ -125,7 +137,14 @@ async function getCompletion(res, chatId, userContent, messages, isInteraction){
   }
 }
 
-export async function parseMessagesFromChat(chatId) {
+export async function getChatMessages(chatId) {
+
+  const cachedChat = getChat(chatId);
+
+  if(cachedChat){
+    return cachedChat;
+  }
+
   const chat = await findUniqueChat(chatId);
 
   if (!chat) {
