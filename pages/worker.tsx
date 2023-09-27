@@ -72,6 +72,7 @@ export default function Worker({ studentId, assignmentId }: WorkerProps) {
 
   //useState block
   const [baseUrl, setBaseUrl] = useState<string>("");
+  const [student, setStudent] = useState<Student | null>(null);
   const [assignment, setAssignment] = useState<AssignmentExtended>();
   const [userMessage, setUserMessage] = useState<string>("");
   const [answer, setAnswer] = useState<string>("");
@@ -118,6 +119,23 @@ export default function Worker({ studentId, assignmentId }: WorkerProps) {
     setBaseUrl(baseUrl);
 
     async function fetchData() {
+      const studentEndpoint = `${baseUrl}/api/student-by-id/`;
+      logRequest(studentEndpoint, { studentId });
+      const studentRes = await fetch(studentEndpoint, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ studentId }),
+      });
+
+      if (studentRes.status !== 200) {
+        router.push("/404");
+        return;
+      }
+      const tempStudent = await studentRes.json();
+      setStudent(tempStudent);
+
       const assignmentEndpoint = `${baseUrl}/api/assignment-by-id/`;
       logRequest(assignmentEndpoint, { assignmentId });
       const assignmentRes = await fetch(assignmentEndpoint, {
@@ -231,7 +249,7 @@ export default function Worker({ studentId, assignmentId }: WorkerProps) {
 
       // If the chat is empty, prompt LLM with a greeting
       if (chatMessages.length === 0) {
-        sendMessage("", "greeting");
+        sendMessage(tempStudent?.firstName || "", "greeting");
       }
     }
 
@@ -471,7 +489,7 @@ export default function Worker({ studentId, assignmentId }: WorkerProps) {
       if (
         (prevChatLog.length === 0 ||
           prevChatLog[prevChatLog.length - 1].type === "user") &&
-        !interactionType
+        (interactionType === "greeting" || !interactionType)
       ) {
         return [...prevChatLog, { type: "assistant", text: [] }];
       }
@@ -561,7 +579,7 @@ export default function Worker({ studentId, assignmentId }: WorkerProps) {
       let lastMessage = newChatLog[newChatLog.length - 1];
 
       // Type guard to ensure lastMessage is of type assistant
-      if (lastMessage.type === "assistant") {
+      if (!lastMessage || lastMessage.type === "assistant") {
         let lastSentence = lastMessage.text[lastMessage.text.length - 1];
 
         if (!lastSentence) {
@@ -682,10 +700,12 @@ export default function Worker({ studentId, assignmentId }: WorkerProps) {
                   {assignment?.title}
                 </div>
                 <div className="mt-2 opacity-75">{assignment?.description}</div>
-                <ProblemsProgress
-                  studentProblemAnswers={studentProblemAnswers}
-                  className="mt-4"
-                ></ProblemsProgress>
+                {studentProblemAnswers.length > 0 && (
+                  <ProblemsProgress
+                    studentProblemAnswers={studentProblemAnswers}
+                    className="mt-4"
+                  ></ProblemsProgress>
+                )}
               </div>
               {currentProblem && <div>Problem {currentProblemIndex + 1}</div>}
               {loadingAnswer ? (

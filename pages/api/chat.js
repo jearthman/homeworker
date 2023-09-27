@@ -4,8 +4,8 @@ import { Configuration, OpenAIApi } from "openai";
 import { createMessage } from "./add-message";
 import { findUniqueChat } from "./get-chat";
 import {callCompletionFunction} from "../../utils/completion-function-factory"
-import { getInteractionContentString } from "../../utils/interaction-content-strings";
-import { setChat, getChat} from "../../redis/redis-server-helpers";
+import { getPromptTemplate } from "../../utils/prompt-templates";
+import { PromptTemplate } from "langchain/prompts"
 
 const configuration = new Configuration({
   apiKey: process.env.OPENAI_API_KEY,
@@ -41,7 +41,7 @@ export default async function handler(
   }
 
   if(interactionType){
-    content = getInteractionContentString(interactionType, content);
+    content = await getPromptTemplate(interactionType, content);
   };
 
   messages.push({
