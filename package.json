@@ -19,6 +19,7 @@
     "@types/edtr-io__mathquill": "^0.11.2",
     "@types/react": "18.0.29",
     "@types/react-dom": "18.0.11",
+    "@vercel/kv": "^0.2.3",
     "axios": "^1.3.5",
     "bcrypt": "^5.1.0",
     "cva": "npm:class-variance-authority@^0.4.0",
@@ -39,6 +40,7 @@
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
     "react-katex": "^3.0.1",
+    "react-markdown": "^9.0.0",
     "react-mathquill": "^1.0.3",
     "react-redux": "^8.1.1"
   },

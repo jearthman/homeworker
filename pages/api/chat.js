@@ -3,10 +3,10 @@ import { Configuration, OpenAIApi } from "openai";
 // import { NextApiRequest, NextApiResponse } from "next";
 import { createMessage } from "./add-message";
 import { findUniqueChat } from "./get-chat";
-import { userMessageIsContextual } from "../../utils/serverHelpers";
 import {callCompletionFunction} from "../../utils/completion-function-factory"
 import { getPromptTemplate } from "../../utils/prompt-templates";
-import { PromptTemplate } from "langchain/prompts"
+import { getChat, setChat } from "../../redis/redis-server-helpers";
+
 
 const configuration = new Configuration({
   apiKey: process.env.OPENAI_API_KEY,
@@ -33,7 +33,7 @@ export default async function handler(
     });
   }
 
-  let messages = await parseMessagesFromChat(chatId);
+  let messages = await getChatMessages(chatId);
 
   if (!messages) {
     return res.status(400).json({
@@ -43,17 +43,19 @@ export default async function handler(
 
   if(interactionType){
     content = await getPromptTemplate(interactionType, content);
-  };
+  } else {
+    content = content[0]
+  }
 
   messages.push({
     role: "user",
     content: content,
   });
 
-  getCompletion(res, chatId, content, messages, interactionType ? true : false);
+  getCompletion(res, chatId, content, messages, interactionType);
 }
 
-async function getCompletion(res, chatId, userContent, messages, isInteraction){
+async function getCompletion(res, chatId, userContent, messages, interactionType){
 
   let assistantResContent = "";
   let functionArgumentsString = "";
@@ -76,8 +78,15 @@ async function getCompletion(res, chatId, userContent, messages, isInteraction){
           if(dataObjString === "[DONE]"){
             if(functionNameFromGPT === "" && functionArgumentsString === ""){
               res.end();
-              await createMessage(chatId, "user", userContent, isInteraction);
-              await createMessage(chatId, "assistant", assistantResContent, isInteraction);
+              //write to redis
+              messages.push({
+                role: "assistant",
+                content: assistantResContent,
+              });
+              setChat(chatId, messages);
+              //write to postgres
+              await createMessage(chatId, "user", userContent, interactionType ? true : false);
+              await createMessage(chatId, "assistant", assistantResContent, interactionType && interactionType !== "greeting" ? true : false);
             }
             return;
           }
@@ -90,8 +99,8 @@ async function getCompletion(res, chatId, userContent, messages, isInteraction){
               name: functionNameFromGPT,
               content: functionResponse,
             });
-            await createMessage(chatId, "function", functionResponse, isInteraction, functionNameFromGPT);
-            getCompletion(res, chatId, userContent, messages, isInteraction);
+            await createMessage(chatId, "function", functionResponse, interactionType ? true : false, functionNameFromGPT);
+            getCompletion(res, chatId, userContent, messages, interactionType ? true : false);
           }
           if(dataObj.choices[0].delta.function_call){
             if(dataObj.choices[0].delta.function_call.name && functionNameFromGPT === ""){
@@ -126,7 +135,14 @@ async function getCompletion(res, chatId, userContent, messages, isInteraction){
   }
 }
 
-export async function parseMessagesFromChat(chatId) {
+export async function getChatMessages(chatId) {
+
+  const cachedChat = await getChat(chatId);
+
+  if(cachedChat){
+    return cachedChat;
+  }
+
   const chat = await findUniqueChat(chatId);
 
   if (!chat) {
