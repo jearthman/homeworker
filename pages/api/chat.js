@@ -5,7 +5,8 @@ import { createMessage } from "./add-message";
 import { findUniqueChat } from "./get-chat";
 import {callCompletionFunction} from "../../utils/completion-function-factory"
 import { getPromptTemplate } from "../../utils/prompt-templates";
-import { PromptTemplate } from "langchain/prompts"
+import { getChat, setChat } from "../../redis/redis-server-helpers";
+
 
 const configuration = new Configuration({
   apiKey: process.env.OPENAI_API_KEY,
@@ -42,17 +43,19 @@ export default async function handler(
 
   if(interactionType){
     content = await getPromptTemplate(interactionType, content);
-  };
+  } else {
+    content = content[0]
+  }
 
   messages.push({
     role: "user",
     content: content,
   });
 
-  getCompletion(res, chatId, content, messages, interactionType ? true : false);
+  getCompletion(res, chatId, content, messages, interactionType);
 }
 
-async function getCompletion(res, chatId, userContent, messages, isInteraction){
+async function getCompletion(res, chatId, userContent, messages, interactionType){
 
   let assistantResContent = "";
   let functionArgumentsString = "";
@@ -77,18 +80,13 @@ async function getCompletion(res, chatId, userContent, messages, isInteraction){
               res.end();
               //write to redis
               messages.push({
-              role: "user",
-              content: userContent,
-              });
-              messages.push({
                 role: "assistant",
-                name: assistantResContent,
-                content: functionResponse,
+                content: assistantResContent,
               });
               setChat(chatId, messages);
               //write to postgres
-              await createMessage(chatId, "user", userContent, isInteraction);
-              await createMessage(chatId, "assistant", assistantResContent, isInteraction);
+              await createMessage(chatId, "user", userContent, interactionType ? true : false);
+              await createMessage(chatId, "assistant", assistantResContent, interactionType && interactionType !== "greeting" ? true : false);
             }
             return;
           }
@@ -101,8 +99,8 @@ async function getCompletion(res, chatId, userContent, messages, isInteraction){
               name: functionNameFromGPT,
               content: functionResponse,
             });
-            await createMessage(chatId, "function", functionResponse, isInteraction, functionNameFromGPT);
-            getCompletion(res, chatId, userContent, messages, isInteraction);
+            await createMessage(chatId, "function", functionResponse, interactionType ? true : false, functionNameFromGPT);
+            getCompletion(res, chatId, userContent, messages, interactionType ? true : false);
           }
           if(dataObj.choices[0].delta.function_call){
             if(dataObj.choices[0].delta.function_call.name && functionNameFromGPT === ""){
@@ -139,7 +137,7 @@ async function getCompletion(res, chatId, userContent, messages, isInteraction){
 
 export async function getChatMessages(chatId) {
 
-  const cachedChat = getChat(chatId);
+  const cachedChat = await getChat(chatId);
 
   if(cachedChat){
     return cachedChat;

@@ -21,7 +21,7 @@ import {
   Problem,
   StudentProblemAnswer,
 } from "@prisma/client"; // import { current } from "@reduxjs/toolkit";
-import next from "next/types";
+import Markdown from "react-markdown";
 
 const chatWithMessages = Prisma.validator<Prisma.ChatDefaultArgs>()({
   include: { messages: true },
@@ -89,6 +89,7 @@ export default function Worker({ studentId, assignmentId }: WorkerProps) {
     null,
   );
   const [clickedWordKey, setclickedWordKey] = useState<string | null>(null);
+  const [clickedSentence, setClickedSentence] = useState<string | null>(null);
   const [clickedWord, setClickedWord] = useState<string | null>(null);
   const [popoverResponseContent, setPopoverResponseContent] = useState<
     string | null
@@ -219,26 +220,17 @@ export default function Worker({ studentId, assignmentId }: WorkerProps) {
           if (message.role === "user") {
             return { type: "user", text: message.content };
           } else if (message.role === "assistant") {
-            const paragraphs = message.content.split(/\n+/);
+            // Split content by spaces and newline characters while preserving them
+            const words = message.content
+              .split(/(?<!\n) +(?!\n)|(\n)/)
+              .filter(Boolean);
 
-            const sentencesInParagraphs = paragraphs.map(
-              (paragraph: string) => {
-                const sentences: string[] = paragraph.split(/(?<=\.|\?|\!)\s/);
-                return sentences.map((sentence) => {
-                  const words = sentence
-                    .split(/(?<!\n) +(?!\n)|(\n)/)
-                    .filter(Boolean);
-                  return {
-                    words,
-                    text: sentence,
-                  };
-                });
-              },
-            );
+            const sentences = words.map((word) => ({
+              words: [word],
+              text: word,
+            }));
 
-            const parsedResponse = sentencesInParagraphs.flat();
-
-            return { type: "assistant", text: parsedResponse };
+            return { type: "assistant", text: sentences };
           } else {
             console.log("Invalid message role", message.role);
             throw new Error("Invalid message role");
@@ -249,7 +241,7 @@ export default function Worker({ studentId, assignmentId }: WorkerProps) {
 
       // If the chat is empty, prompt LLM with a greeting
       if (chatMessages.length === 0) {
-        sendMessage(tempStudent?.firstName || "", "greeting");
+        sendMessage([tempStudent?.firstName] || "", "greeting");
       }
     }
 
@@ -393,6 +385,8 @@ export default function Worker({ studentId, assignmentId }: WorkerProps) {
   // This function will be called when a word is clicked
   function handleWordClick(
     event: React.MouseEvent<HTMLSpanElement, MouseEvent>,
+    word: string,
+    sentence: string,
     messageIndex: number,
     sentenceIndex: number,
     wordIndex: number,
@@ -400,7 +394,8 @@ export default function Worker({ studentId, assignmentId }: WorkerProps) {
     event.stopPropagation(); // stop the event from bubbling up to the document
     // get the position of the clicked word
     setPopoverResponseContent(null);
-    setClickedWord(event.currentTarget.textContent);
+    setClickedWord(word);
+    setClickedSentence(sentence);
     const wordPosition = event.currentTarget.getBoundingClientRect();
     const wordPositionX = wordPosition.x;
     const wordPositionY = wordPosition.y;
@@ -470,7 +465,7 @@ export default function Worker({ studentId, assignmentId }: WorkerProps) {
       ]);
       setUserMessage("");
 
-      sendMessage(userMessage);
+      sendMessage([userMessage]);
     }
   }
 
@@ -483,7 +478,7 @@ export default function Worker({ studentId, assignmentId }: WorkerProps) {
     }
   }
 
-  async function sendMessage(message: string, interactionType?: String) {
+  async function sendMessage(message: string[], interactionType?: String) {
     // If there are no previous messages or the last one is from the user, add a new response to trigger loading state
     setChatLog((prevChatLog) => {
       if (
@@ -527,7 +522,7 @@ export default function Worker({ studentId, assignmentId }: WorkerProps) {
             currentSentence += readString;
 
             // Splitting by words while keeping punctuation
-            const words = currentSentence.match(/\S+|\s/g) || [];
+            const words = currentSentence.match(/\S+|\s|\n+/g) || [];
             currentSentence = words.pop() || ""; // Keep the last unfinished word or space
 
             words.forEach((word) => {
@@ -588,7 +583,7 @@ export default function Worker({ studentId, assignmentId }: WorkerProps) {
         }
 
         // If the word is a space, add it to the last word; otherwise, create a new word
-        if (/\s/.test(word)) {
+        if (/ /.test(word)) {
           lastSentence.words[lastSentence.words.length - 1] += word;
           lastSentence.text += word;
         } else {
@@ -603,7 +598,7 @@ export default function Worker({ studentId, assignmentId }: WorkerProps) {
 
         newChatLog[newChatLog.length - 1] = lastMessage;
       }
-
+      console.log(newChatLog);
       return newChatLog;
     });
   }
@@ -631,29 +626,20 @@ export default function Worker({ studentId, assignmentId }: WorkerProps) {
     );
   }
 
-  function isLastChatFromAssistant() {
-    if (chatLog.length === 0) {
-      return false; // Return false if chatLog is empty
-    }
-
-    const lastMessage = chatLog[chatLog.length - 1];
-    return lastMessage.type === "assistant";
-  }
-
   function getWordsDefinition() {
     setLoadingPopoverResponseType("definition");
 
-    if (!clickedWord) {
+    if (!clickedWord || !clickedSentence) {
       return;
     }
 
-    sendMessage(clickedWord, "definition");
+    sendMessage([clickedWord, clickedSentence], "definition");
   }
 
   function checkAnswer() {
     setAnswerReview("");
     setCheckingAnswer(true);
-    sendMessage(answer, "checkAnswer");
+    sendMessage([answer], "checkAnswer");
   }
 
   function changeProblem(direction: "prev" | "next") {
@@ -768,7 +754,7 @@ export default function Worker({ studentId, assignmentId }: WorkerProps) {
                     Checking your answer...
                   </div>
                 ) : (
-                  answerReview
+                  <Markdown>{answerReview}</Markdown>
                 )}
               </div>
             </div>
@@ -781,7 +767,7 @@ export default function Worker({ studentId, assignmentId }: WorkerProps) {
                 ref={popoverRef}
                 className={`${
                   displayPopoverAbove ? styles.caretDown : styles.caretUp
-                } absolute left-1/2 z-10 -translate-x-1/2 transform cursor-pointer rounded-lg bg-white py-1 shadow-lg dark:border-white dark:bg-black`}
+                } absolute left-1/2 z-10 -translate-x-1/2 transform cursor-pointer rounded-lg border border-gray-300 bg-white py-1 shadow-lg dark:border-white dark:bg-black`}
                 style={{
                   ...(displayPopoverAbove
                     ? { bottom: window.innerHeight - popoverPosition.y }
@@ -799,7 +785,9 @@ export default function Worker({ studentId, assignmentId }: WorkerProps) {
                       Getting {loadingPopoverResponseType}...
                     </div>
                   ) : (
-                    <div className="m-2 max-w-md">{popoverResponseContent}</div>
+                    <div className="max-w-md px-2">
+                      <Markdown>{popoverResponseContent}</Markdown>
+                    </div>
                   )
                 ) : (
                   <div className="flex flex-col">
@@ -844,6 +832,7 @@ export default function Worker({ studentId, assignmentId }: WorkerProps) {
                       {chatMessage.text}
                     </div>
                   )}
+
                   {chatMessage.type === "assistant" && (
                     <div className="cursor-pointer rounded-lg border border-matcha-300 bg-matcha-100 px-3 py-2 align-middle text-matcha-900 shadow-lg dark:text-sky-100">
                       {chatMessage.text.length === 0 && (
@@ -865,30 +854,42 @@ export default function Worker({ studentId, assignmentId }: WorkerProps) {
                             }`}
                           >
                             {sentence.words.map(
-                              (word: string, wordIndex: number) => (
-                                <span
-                                  key={`word-${sentenceIndex}-${wordIndex}`}
-                                  className={`mr-1 inline-block ${
-                                    parseWordIndex(
-                                      messageIndex,
-                                      sentenceIndex,
-                                      wordIndex,
-                                    ) === clickedWordKey
-                                      ? "text-green-600 dark:text-green-400"
-                                      : "hover:text-green-600 dark:hover:text-green-400"
-                                  }`}
-                                  onClick={(event) =>
-                                    handleWordClick(
-                                      event,
-                                      messageIndex,
-                                      sentenceIndex,
-                                      wordIndex,
-                                    )
-                                  }
-                                >
-                                  {word}
-                                </span>
-                              ),
+                              (word: string, wordIndex: number) =>
+                                word === "\n" ? (
+                                  // Render a line break for each newline character in the word
+                                  Array.from({ length: word.length }).map(
+                                    (_, index) => (
+                                      <br
+                                        key={`br-${sentenceIndex}-${wordIndex}-${index}`}
+                                      />
+                                    ),
+                                  )
+                                ) : (
+                                  <span
+                                    key={`word-${sentenceIndex}-${wordIndex}`}
+                                    className={`mr-1 inline-block ${
+                                      parseWordIndex(
+                                        messageIndex,
+                                        sentenceIndex,
+                                        wordIndex,
+                                      ) === clickedWordKey
+                                        ? "text-green-600 dark:text-green-400"
+                                        : "hover:text-green-600 dark:hover:text-green-400"
+                                    }`}
+                                    onClick={(event) =>
+                                      handleWordClick(
+                                        event,
+                                        word,
+                                        sentence.text,
+                                        messageIndex,
+                                        sentenceIndex,
+                                        wordIndex,
+                                      )
+                                    }
+                                  >
+                                    <Markdown>{word}</Markdown>
+                                  </span>
+                                ),
                             )}
                           </span>
                         ),
