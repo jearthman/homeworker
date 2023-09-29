@@ -27,7 +27,7 @@ export default async function handler(
       return;
     }
 
-    res.status(200).json({ assignment });
+    res.status(200).json(assignment);
   } catch (error: any) {
     res.status(400).json({ message: error.message });
   }

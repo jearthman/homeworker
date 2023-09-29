@@ -22,6 +22,7 @@ import {
   StudentProblemAnswer,
 } from "@prisma/client"; // import { current } from "@reduxjs/toolkit";
 import Markdown from "react-markdown";
+import ChatSkeleton from "./components/design-system/chat-skeleton";
 
 const chatWithMessages = Prisma.validator<Prisma.ChatDefaultArgs>()({
   include: { messages: true },
@@ -122,66 +123,74 @@ export default function Worker({ studentId, assignmentId }: WorkerProps) {
     async function fetchData() {
       const studentEndpoint = `${baseUrl}/api/student-by-id/`;
       logRequest(studentEndpoint, { studentId });
-      const studentRes = await fetch(studentEndpoint, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ studentId }),
-      });
-
-      if (studentRes.status !== 200) {
-        router.push("/404");
-        return;
-      }
-      const tempStudent = await studentRes.json();
-      setStudent(tempStudent);
-
       const assignmentEndpoint = `${baseUrl}/api/assignment-by-id/`;
       logRequest(assignmentEndpoint, { assignmentId });
-      const assignmentRes = await fetch(assignmentEndpoint, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ assignmentId }),
-      });
+      const studentAssignmentEndpoint = `${baseUrl}/api/student-assignment-by-id/`;
+      logRequest(studentAssignmentEndpoint, { studentId, assignmentId });
 
-      if (assignmentRes.status !== 200) {
+      let studentRes = null;
+      let assignmentRes = null;
+      let studentAssignmentRes = null;
+
+      try {
+        [studentRes, assignmentRes, studentAssignmentRes] = await Promise.all([
+          fetch(studentEndpoint, {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({ studentId }),
+          }),
+          fetch(assignmentEndpoint, {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({ assignmentId }),
+          }),
+          fetch(studentAssignmentEndpoint, {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({ studentId, assignmentId }),
+          }),
+        ]);
+
+        if (!studentRes.ok || !assignmentRes.ok || !studentAssignmentRes.ok) {
+          console.error(
+            "One or more fetch requests returned an HTTP error status.",
+          );
+          router.push("/404");
+          return;
+        }
+      } catch (error) {
+        console.error("Failed to fetch data due to network error:", error);
         router.push("/404");
         return;
       }
 
-      const assignmentResJson = await assignmentRes.json();
-      setAssignment(assignmentResJson.assignment);
-      if (assignmentResJson.assignment.problems.length > 0) {
-        setCurrentProblem(assignmentResJson.assignment.problems[0]);
+      const [student, assignment, studentAssignment] = await Promise.all([
+        studentRes.json(),
+        assignmentRes.json(),
+        studentAssignmentRes.json(),
+      ]);
+
+      setStudent(student);
+      setAssignment(assignment);
+
+      if (assignment.problems.length > 0) {
+        setCurrentProblem(assignment.problems[0]);
         setCurrentProblemIndex(0);
-        const studentProblemAnswer = await getStudentProblemAnswer(
-          assignmentResJson.assignment,
-        );
+        const studentProblemAnswer =
+          await getFirstStudentProblemAnswer(assignment);
         if (studentProblemAnswer?.answer) {
           setAnswer(studentProblemAnswer.answer);
         } else {
-          setAnswer(assignmentResJson.assignment.problems[0].content);
+          setAnswer(assignment.problems[0].content);
         }
         setLoadingAnswer(false);
       }
-
-      //REFACTOR FOR STUDENT ASSIGNMENT
-      const studentAssignmentEndpoint = `${baseUrl}/api/student-assignment-by-id/`;
-      logRequest(studentAssignmentEndpoint, { studentId, assignmentId });
-      const studentAssignmentRes = await fetch(studentAssignmentEndpoint, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ studentId, assignmentId }),
-      });
-
-      const studentAssignmentResJson = await studentAssignmentRes.json();
-      const studentAssignment: StudentAssignmentExtended =
-        studentAssignmentResJson.studentAssignment;
 
       let chat: ChatWithMessages;
 
@@ -202,11 +211,6 @@ export default function Worker({ studentId, assignmentId }: WorkerProps) {
         const chatResJson = await chatRes.json();
         chat = chatResJson.chat;
         chatId.current = chat.id;
-      }
-
-      if (!chat.messages) {
-        console.log("chat is null");
-        return;
       }
       // Add the chat messages to the chat log
       const chatMessages: ChatMessage[] = chat.messages
@@ -241,7 +245,7 @@ export default function Worker({ studentId, assignmentId }: WorkerProps) {
 
       // If the chat is empty, prompt LLM with a greeting
       if (chatMessages.length === 0) {
-        sendMessage([tempStudent?.firstName] || "", "greeting");
+        sendMessage([student?.firstName] || "", "greeting");
       }
     }
 
@@ -354,7 +358,7 @@ export default function Worker({ studentId, assignmentId }: WorkerProps) {
     return false;
   }
 
-  async function getStudentProblemAnswer(assignment: AssignmentExtended) {
+  async function getFirstStudentProblemAnswer(assignment: AssignmentExtended) {
     const studentProblemEndpoint = `${baseUrl}/api/student-problem-answer-by-ids/`;
 
     setLoadingAnswer(true);
@@ -682,10 +686,23 @@ export default function Worker({ studentId, assignmentId }: WorkerProps) {
             />
             <div className="my-auto w-full">
               <div className="mb-8 rounded-lg bg-sky-100 p-3 text-sky-900 shadow-lg">
-                <div className="text-lg font-extrabold underline">
-                  {assignment?.title}
-                </div>
-                <div className="mt-2 opacity-75">{assignment?.description}</div>
+                {assignment ? (
+                  <>
+                    <div className="text-lg font-extrabold underline">
+                      {assignment?.title}
+                    </div>
+                    <div className="mt-2 opacity-75">
+                      {assignment?.description}
+                    </div>
+                  </>
+                ) : (
+                  <>
+                    <div className="h-4 w-1/3 animate-pulse rounded-full bg-gray-300"></div>
+                    <div className="mt-4 h-2 animate-pulse rounded bg-gray-300"></div>
+                    <div className="mt-3 h-2 animate-pulse rounded bg-gray-300"></div>
+                    <div className="mt-3 h-2 animate-pulse rounded bg-gray-300"></div>
+                  </>
+                )}
                 {studentProblemAnswers.length > 0 && (
                   <ProblemsProgress
                     studentProblemAnswers={studentProblemAnswers}
@@ -818,6 +835,9 @@ export default function Worker({ studentId, assignmentId }: WorkerProps) {
             )}
             {/* chat */}
             <div className="mb-6 flex flex-col-reverse gap-6 overflow-y-auto px-5 pb-5">
+              {chatLog.length === 0 && (
+                <ChatSkeleton className="animate-pulse"></ChatSkeleton>
+              )}
               {[...chatLog].reverse().map((chatMessage, messageIndex) => (
                 <div key={messageIndex} className="flex gap-4">
                   <div
