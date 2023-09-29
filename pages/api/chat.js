@@ -6,6 +6,7 @@ import { findUniqueChat } from "./get-chat";
 import {callCompletionFunction} from "../../utils/completion-function-factory"
 import { getPromptTemplate } from "../../utils/prompt-templates";
 import { getChat, setChat } from "../../redis/redis-server-helpers";
+import { debugLog } from "../../utils/server-helpers";
 
 
 const configuration = new Configuration({
@@ -14,12 +15,6 @@ const configuration = new Configuration({
 const openai = new OpenAIApi(configuration);
 
 const functions = require("../../public/data/functions.json");
-
-function debugLog(message) {
-  if (process.env.DEBUG === 'true') {
-    console.log("[DEBUG]:", message);
-  }
-}
 
 export default async function handler(
   req,
@@ -154,6 +149,8 @@ async function getCompletion(res, chatId, userContent, messages, interactionType
 }
 
 export async function getChatMessages(chatId) {
+
+  debugLog(`Checking KV Redis for chat`);
 
   const cachedChat = await getChat(chatId);
 

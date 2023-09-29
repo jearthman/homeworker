@@ -20,3 +20,9 @@ export async function convertTextFileToMessageString(
     throw err;
   }
 }
+
+export function debugLog(message: string) {
+  if (process.env.DEBUG === "true") {
+    console.log("[DEBUG]:", message);
+  }
+}

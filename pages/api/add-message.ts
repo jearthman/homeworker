@@ -1,6 +1,6 @@
 import { NextApiRequest, NextApiResponse } from "next";
 import prisma from "../../prisma/prisma";
-import { convertTextFileToMessageString } from "../../utils/serverHelpers";
+import { convertTextFileToMessageString } from "../../utils/server-helpers";
 import { MessageRole } from "@prisma/client";
 
 export default async function handler(
