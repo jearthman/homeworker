@@ -15,6 +15,12 @@ const openai = new OpenAIApi(configuration);
 
 const functions = require("../../public/data/functions.json");
 
+function debugLog(message) {
+  if (process.env.DEBUG === 'true') {
+    console.log("[DEBUG]:", message);
+  }
+}
+
 export default async function handler(
   req,
   res
@@ -33,6 +39,8 @@ export default async function handler(
     });
   }
 
+  debugLog(`Request is good! chatId: ${chatId}, content: ${content}, interactionType: ${interactionType}`);
+
   let messages = await getChatMessages(chatId);
 
   if (!messages) {
@@ -41,11 +49,15 @@ export default async function handler(
     });
   }
 
+  debugLog(`messages: ${messages}`);
+
   if(interactionType){
     content = await getPromptTemplate(interactionType, content);
   } else {
     content = content[0]
   }
+
+  debugLog(`content: ${content}`);
 
   messages.push({
     role: "user",
@@ -61,6 +73,8 @@ async function getCompletion(res, chatId, userContent, messages, interactionType
   let functionArgumentsString = "";
   let functionNameFromGPT = "";
 
+  debugLog("Starting completion and stream");
+
   const completion = openai.createChatCompletion({
     model: "gpt-4-0613",
     messages: messages,
@@ -70,8 +84,11 @@ async function getCompletion(res, chatId, userContent, messages, interactionType
     function_call: "auto",
   }, {responseType: "stream"});
 
+  debugLog(`completion: ${completion}`);
+
   completion.then((comp) => {
     comp.data.on("data", async data => {
+      debugLog(`data: ${data}`);
       data.toString().split("\n").forEach(async (dataObjString) => {
         if (dataObjString) {
           dataObjString = dataObjString.replace("data: ", "");
@@ -88,6 +105,7 @@ async function getCompletion(res, chatId, userContent, messages, interactionType
               await createMessage(chatId, "user", userContent, interactionType ? true : false);
               await createMessage(chatId, "assistant", assistantResContent, interactionType && interactionType !== "greeting" ? true : false);
             }
+            debugLog(`Done with stream: ${assistantResContent}`);
             return;
           }
           const dataObj = JSON.parse(dataObjString);
@@ -139,6 +157,8 @@ export async function getChatMessages(chatId) {
 
   const cachedChat = await getChat(chatId);
 
+  debugLog(`cachedChat: ${cachedChat}`);
+
   if(cachedChat){
     return cachedChat;
   }
@@ -148,6 +168,8 @@ export async function getChatMessages(chatId) {
   if (!chat) {
     return null;
   }
+
+  debugLog(`chat: ${chat}`);
 
   const messages = chat.messages.map((message) => {
     return {
