@@ -2,13 +2,11 @@ import { join } from "path";
 import fs from "fs/promises";
 
 export async function convertTextFileToMessageString(
-  relativePath: string
+  relativePath: string,
 ): Promise<string> {
-  // Get the absolute path to the file
-  const filePath = join(process.cwd(), relativePath);
-
   try {
-    // Read the file's contents
+    const filePath = join(__dirname, "..", relativePath);
+
     const content = await fs.readFile(filePath, "utf-8");
 
     // Replace consecutive newline characters with '\n\n' and other necessary replacements
