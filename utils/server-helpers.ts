@@ -1,11 +1,11 @@
-import { join } from "path";
+import path from "path";
 import fs from "fs/promises";
 
 export async function convertTextFileToMessageString(
-  relativePath: string,
+  rootPath: string,
 ): Promise<string> {
   try {
-    const filePath = join(__dirname, "..", relativePath);
+    const filePath = path.join(process.cwd(), rootPath);
 
     const content = await fs.readFile(filePath, "utf-8");
 
