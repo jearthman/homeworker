@@ -19,6 +19,11 @@ export default async function handler(
       },
     });
 
+    if (!user) {
+      res.status(404).json({ message: "User not found" });
+      return;
+    }
+
     const student = await prisma.student.findUnique({
       where: {
         userId: user?.id,

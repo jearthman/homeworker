@@ -182,13 +182,16 @@ export default function Worker({ studentId, assignmentId }: WorkerProps) {
       if (assignment.problems.length > 0) {
         setCurrentProblem(assignment.problems[0]);
         setCurrentProblemIndex(0);
-        const studentProblemAnswer =
-          await getFirstStudentProblemAnswer(assignment);
-        if (studentProblemAnswer?.answer) {
-          setAnswer(studentProblemAnswer.answer);
+        const studentProblemAnswers = await getStudentProblemAnswers(
+          studentId,
+          assignmentId,
+        );
+        if (studentProblemAnswers[0].answer) {
+          setAnswer(studentProblemAnswers[0].answer);
         } else {
           setAnswer(assignment.problems[0].content);
         }
+        setStudentProblemAnswers(studentProblemAnswers);
         setLoadingAnswer(false);
       }
 
@@ -267,70 +270,6 @@ export default function Worker({ studentId, assignmentId }: WorkerProps) {
   }, [showPopover]);
 
   useEffect(() => {
-    async function updateStudentProblemAnswer() {
-      try {
-        const updateStudentProblemAnswerEndpoint = `${baseUrl}/api/update-student-problem-answer/`;
-        const studentProblemAnswersByAssignmentEndpoint = `${baseUrl}/api/student-problem-answers-by-assignment/`;
-        logRequest(updateStudentProblemAnswerEndpoint, {
-          studentId,
-          problemId: currentProblem?.id,
-          answer,
-          isCorrect: false,
-        });
-        const updateStudentProblemAnswerRes = await fetch(
-          updateStudentProblemAnswerEndpoint,
-          {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-            },
-            body: JSON.stringify({
-              studentId,
-              problemId: currentProblem?.id,
-              answer,
-              isCorrect: checkProblemAnswer(),
-            }),
-          },
-        );
-
-        if (updateStudentProblemAnswerRes.ok) {
-          if (studentProblemAnswers.length === 0) {
-            const StudentProblemAnswersRes = await fetch(
-              studentProblemAnswersByAssignmentEndpoint,
-              {
-                method: "POST",
-                headers: {
-                  "Content-Type": "application/json",
-                },
-                body: JSON.stringify({
-                  studentId,
-                  assignmentId,
-                }),
-              },
-            );
-
-            const studentProblemAnswersResJson =
-              await StudentProblemAnswersRes.json();
-            setStudentProblemAnswers(studentProblemAnswersResJson);
-          } else {
-            const updateStudentProblemAnswerJson =
-              await updateStudentProblemAnswerRes.json();
-            //update single student problem answer from updateStudentProblemAnswerJson
-            setStudentProblemAnswers((prevStudentProblemAnswers) => {
-              const updatedStudentProblemAnswers = [
-                ...prevStudentProblemAnswers,
-              ];
-              updatedStudentProblemAnswers[currentProblemIndex] =
-                updateStudentProblemAnswerJson;
-              return updatedStudentProblemAnswers;
-            });
-          }
-        }
-      } catch (error) {
-        console.error("Failed to update student problem answer:", error);
-      }
-    }
-
     if (
       currentProblem &&
       answer &&
@@ -350,6 +289,68 @@ export default function Worker({ studentId, assignmentId }: WorkerProps) {
     }
   };
 
+  async function updateStudentProblemAnswer() {
+    try {
+      const updateStudentProblemAnswerEndpoint = `${baseUrl}/api/update-student-problem-answer/`;
+      const studentProblemAnswersByAssignmentEndpoint = `${baseUrl}/api/student-problem-answers-by-assignment/`;
+      logRequest(updateStudentProblemAnswerEndpoint, {
+        studentId,
+        problemId: currentProblem?.id,
+        answer,
+        isCorrect: false,
+      });
+      const updateStudentProblemAnswerRes = await fetch(
+        updateStudentProblemAnswerEndpoint,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            studentId,
+            problemId: currentProblem?.id,
+            answer,
+            isCorrect: checkProblemAnswer(),
+          }),
+        },
+      );
+
+      if (updateStudentProblemAnswerRes.ok) {
+        if (studentProblemAnswers.length === 0) {
+          const StudentProblemAnswersRes = await fetch(
+            studentProblemAnswersByAssignmentEndpoint,
+            {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+              },
+              body: JSON.stringify({
+                studentId,
+                assignmentId,
+              }),
+            },
+          );
+
+          const studentProblemAnswersResJson =
+            await StudentProblemAnswersRes.json();
+          setStudentProblemAnswers(studentProblemAnswersResJson);
+        } else {
+          const updateStudentProblemAnswerJson =
+            await updateStudentProblemAnswerRes.json();
+          //update single student problem answer from updateStudentProblemAnswerJson
+          setStudentProblemAnswers((prevStudentProblemAnswers) => {
+            const updatedStudentProblemAnswers = [...prevStudentProblemAnswers];
+            updatedStudentProblemAnswers[currentProblemIndex] =
+              updateStudentProblemAnswerJson;
+            return updatedStudentProblemAnswers;
+          });
+        }
+      }
+    } catch (error) {
+      console.error("Failed to update student problem answer:", error);
+    }
+  }
+
   function checkProblemAnswer() {
     if (currentProblem) {
       return currentProblem.content === answer;
@@ -358,30 +359,37 @@ export default function Worker({ studentId, assignmentId }: WorkerProps) {
     return false;
   }
 
-  async function getFirstStudentProblemAnswer(assignment: AssignmentExtended) {
-    const studentProblemEndpoint = `${baseUrl}/api/student-problem-answer-by-ids/`;
+  async function getStudentProblemAnswers(
+    studentId: string,
+    assignmentId: string,
+  ) {
+    const studentProblemAnswersByAssignmentEndpoint = `${baseUrl}/api/student-problem-answers-by-assignment/`;
 
     setLoadingAnswer(true);
-    logRequest(studentProblemEndpoint, {
+    logRequest(studentProblemAnswersByAssignmentEndpoint, {
       studentId,
-      problemId: assignment.problems[0].id,
+      assignmentId,
     });
     try {
-      const studentProblemRes = await fetch(studentProblemEndpoint, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
+      const StudentProblemAnswersRes = await fetch(
+        studentProblemAnswersByAssignmentEndpoint,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            studentId,
+            assignmentId,
+          }),
         },
-        body: JSON.stringify({
-          studentId,
-          problemId: assignment.problems[0].id,
-        }),
-      });
+      );
 
-      const studentProblemResJson = await studentProblemRes.json();
-      return studentProblemResJson.studentProblemAnswer;
+      const StudentProblemAnswersResJson =
+        await StudentProblemAnswersRes.json();
+      return StudentProblemAnswersResJson;
     } catch (error) {
-      console.error("Failed to get student problem answer:", error);
+      console.error("Failed to get student problem answers:", error);
       return null;
     }
   }
@@ -674,7 +682,7 @@ export default function Worker({ studentId, assignmentId }: WorkerProps) {
     <>
       <div className="h-screen w-screen bg-gray-300 dark:bg-gray-800">
         <div
-          className={`${styles.shadowSides} flex h-full bg-gray-200 md:max-w-6xl lg:mx-auto`}
+          className={`${styles.shadowSides} flex h-full bg-gray-200 md:max-w-7xl lg:mx-auto`}
         >
           <div className="flex flex-col justify-center border-r-2 border-gray-300 p-5 md:w-5/12">
             <ToggleSwitch
@@ -737,6 +745,7 @@ export default function Worker({ studentId, assignmentId }: WorkerProps) {
                       size="small"
                       intent="secondary"
                       onClick={() => changeProblem("prev")}
+                      disabled={currentProblemIndex === 0}
                     >
                       <span className="material-symbols-rounded">
                         arrow_back
@@ -746,6 +755,10 @@ export default function Worker({ studentId, assignmentId }: WorkerProps) {
                       size="small"
                       intent="secondary"
                       onClick={() => changeProblem("next")}
+                      disabled={
+                        currentProblemIndex ===
+                        (assignment?.problems?.length || 0) - 1
+                      }
                     >
                       <span className="material-symbols-rounded">
                         arrow_forward
@@ -757,7 +770,7 @@ export default function Worker({ studentId, assignmentId }: WorkerProps) {
                   Submit
                 </Button>
               </div>
-              <div className="rounded-lg bg-matcha-100 p-3 text-matcha-900 shadow-lg">
+              <div className="rounded-lg border border-matcha-300 bg-matcha-100 p-3 text-matcha-900 shadow-lg">
                 {!answerReview && !checkingAnswer && (
                   <span className="opacity-50">
                     Use the &apos;Check&apos; button above to get feedback!
@@ -782,9 +795,7 @@ export default function Worker({ studentId, assignmentId }: WorkerProps) {
             {showPopover && (
               <div
                 ref={popoverRef}
-                className={`${
-                  displayPopoverAbove ? styles.caretDown : styles.caretUp
-                } absolute left-1/2 z-10 -translate-x-1/2 transform cursor-pointer rounded-lg border border-gray-300 bg-white py-1 shadow-lg dark:border-white dark:bg-black`}
+                className="absolute left-1/2 z-10 -translate-x-1/2 transform cursor-pointer rounded-lg border border-gray-300 bg-white py-1 shadow-lg dark:border-white dark:bg-black"
                 style={{
                   ...(displayPopoverAbove
                     ? { bottom: window.innerHeight - popoverPosition.y }
@@ -907,7 +918,7 @@ export default function Worker({ studentId, assignmentId }: WorkerProps) {
                                       )
                                     }
                                   >
-                                    <Markdown>{word}</Markdown>
+                                    {word}
                                   </span>
                                 ),
                             )}

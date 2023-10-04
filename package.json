@@ -3,7 +3,7 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "next dev",
+    "dev": "VERCEL='' next dev",
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
@@ -32,7 +32,7 @@
     "material-icons": "^1.13.3",
     "material-symbols": "^0.11.0",
     "mathlive": "^0.95.5",
-    "next": "^13.4.1",
+    "next": "^13.4.2",
     "next-auth": "^4.22.3",
     "openai": "^3.2.1",
     "openai-streams": "^6.2.0",

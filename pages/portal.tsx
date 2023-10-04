@@ -8,22 +8,22 @@ import {
   StudentAssignment,
   StudentProblemAnswer,
 } from "@prisma/client";
+import AssignmentSkeleton from "./components/design-system/assignment-skeleton";
 
 async function fetchStudent(email: string, baseUrl: string) {
-  const response = await fetch(`${baseUrl}/api/student-by-email`, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify({ email }),
-  });
-
   try {
+    const response = await fetch(`${baseUrl}/api/student-by-email`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ email }),
+    });
+
     const data = await response.json();
-    return response.status === 404 ? null : data.student;
+    return response.status !== 200 ? null : data.student;
   } catch (error) {
-    console.error("Error parsing JSON:", error);
-    console.error("Response:", response);
+    console.error("Error getting student by email:", error);
   }
 }
 
@@ -46,6 +46,14 @@ async function fetchAssignments(studentId: number, baseUrl: string) {
 
 export async function getServerSideProps(context: GetServerSidePropsContext) {
   const session = await getSession(context);
+  if (!session) {
+    return {
+      redirect: {
+        destination: "/",
+        permanent: false,
+      },
+    };
+  }
   const email = session?.user?.email;
 
   return {
@@ -88,12 +96,8 @@ export default function Portal({ email }: PortalProps) {
         }
 
         if (!student.current) {
-          return {
-            redirect: {
-              destination: "/register",
-              permanent: false,
-            },
-          };
+          router.push("/register");
+          return;
         }
 
         fetchAssignments(student.current.id, baseUrl).then(
@@ -126,63 +130,56 @@ export default function Portal({ email }: PortalProps) {
       <div className="h-screen w-screen bg-gray-300">
         {/* <div className=" flex flex-col w-1/5 bg-gray-400"></div> */}
         <div className="flex h-full flex-col bg-gray-200 md:max-w-6xl lg:mx-auto ">
-          {student?.current?.firstName ? (
-            <>
-              <div className="my-12 self-center text-5xl font-bold">
-                Welcome {student?.current?.firstName}!
-              </div>
+          <>
+            <div className="my-12 self-center text-5xl font-bold">Welcome!</div>
 
-              <div className="mx-4 rounded-xl bg-matcha-300 p-4 shadow-lg">
-                <div className="mb-4 text-center text-2xl font-semibold text-matcha-900">
-                  Here are your current Assignments
-                </div>
-                {/* grid layout of assignments */}
-                {studentAssignments.length > 0 ? (
-                  <div className="grid grid-cols-3 gap-4">
-                    {studentAssignments.map((studentAssignment) => (
-                      <div
-                        key={studentAssignment.assignment.id}
-                        className="cursor-pointer rounded-lg border border-gray-400 bg-gray-50 shadow-lg transition ease-in hover:bg-white hover:shadow-xl"
-                        onClick={() =>
-                          selectAssignment(studentAssignment.assignment)
-                        }
-                      >
-                        <div className="flex h-full flex-col p-4">
-                          <div className="flex items-baseline">
-                            <div className="text-lg font-semibold underline">
-                              {studentAssignment.assignment.title}
-                            </div>
-                            <div className="ml-auto text-sm text-gray-500">
-                              {studentAssignment.assignment.subject}
-                            </div>
-                          </div>
-                          <div className="mt-2 text-sm">
-                            {studentAssignment.assignment.description}
-                          </div>
-                          {studentAssignment.studentProblemAnswers.length >
-                            0 && (
-                            <div className="mt-auto text-xs text-gray-500">
-                              {numberOfCorrectProblems(studentAssignment)} of{" "}
-                              {studentAssignment.studentProblemAnswers.length}{" "}
-                              problems are complete
-                            </div>
-                          )}
-                        </div>
-                      </div>
-                    ))}
-                  </div>
+            <div className="mx-4 rounded-xl bg-matcha-300 p-4 shadow-lg">
+              <div className="mb-4 text-center text-2xl font-semibold text-matcha-900">
+                Here are your current Assignments
+              </div>
+              {/* grid layout of assignments */}
+              <div className="grid grid-cols-3 gap-4">
+                {studentAssignments.length === 0 ? (
+                  <>
+                    <AssignmentSkeleton />
+                    <AssignmentSkeleton />
+                    <AssignmentSkeleton />
+                  </>
                 ) : (
-                  <span className="material-symbols-outlined w-full animate-spin text-center text-6xl">
-                    progress_activity
-                  </span>
+                  studentAssignments.map((studentAssignment) => (
+                    <div
+                      key={studentAssignment.assignment.id}
+                      className="cursor-pointer rounded-lg border border-gray-400 bg-gray-50 shadow-lg transition ease-in hover:bg-white hover:shadow-xl"
+                      onClick={() =>
+                        selectAssignment(studentAssignment.assignment)
+                      }
+                    >
+                      <div className="flex h-full flex-col p-4">
+                        <div className="flex items-baseline">
+                          <div className="text-lg font-semibold underline">
+                            {studentAssignment.assignment.title}
+                          </div>
+                          <div className="ml-auto text-sm text-gray-500">
+                            {studentAssignment.assignment.subject}
+                          </div>
+                        </div>
+                        <div className="mt-2 text-sm">
+                          {studentAssignment.assignment.description}
+                        </div>
+                        {studentAssignment.studentProblemAnswers.length > 0 && (
+                          <div className="mt-auto text-xs text-gray-500">
+                            {numberOfCorrectProblems(studentAssignment)} of{" "}
+                            {studentAssignment.studentProblemAnswers.length}{" "}
+                            problems are complete
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  ))
                 )}
               </div>
-            </>
-          ) : (
-            <div className="my-12 animate-bounce self-center text-5xl font-bold">
-              Loading your info...
             </div>
-          )}
+          </>
         </div>
       </div>
     </>
