@@ -684,109 +684,119 @@ export default function Worker({ studentId, assignmentId }: WorkerProps) {
         <div
           className={`${styles.shadowSides} flex h-full bg-gray-200 md:max-w-7xl lg:mx-auto`}
         >
-          <div className="flex flex-col justify-center border-r-2 border-gray-300 p-5 md:w-5/12">
-            <ToggleSwitch
-              className="mb-5"
-              isChecked={darkModeOn}
-              onChange={toggleDarkMode}
-              checkedIcon={<span className="material-icons">dark_mode</span>}
-              uncheckedIcon={<span className="material-icons">light_mode</span>}
-            />
-            <div className="my-auto w-full">
-              <div className="mb-8 rounded-lg bg-sky-100 p-3 text-sky-900 shadow-lg">
-                {assignment ? (
-                  <>
-                    <div className="text-lg font-extrabold underline">
-                      {assignment?.title}
-                    </div>
-                    <div className="mt-2 opacity-75">
-                      {assignment?.description}
-                    </div>
-                  </>
-                ) : (
-                  <>
-                    <div className="h-4 w-1/3 animate-pulse rounded-full bg-gray-300"></div>
-                    <div className="mt-4 h-2 animate-pulse rounded bg-gray-300"></div>
-                    <div className="mt-3 h-2 animate-pulse rounded bg-gray-300"></div>
-                    <div className="mt-3 h-2 animate-pulse rounded bg-gray-300"></div>
-                  </>
-                )}
-                {studentProblemAnswers.length > 0 && (
-                  <ProblemsProgress
-                    studentProblemAnswers={studentProblemAnswers}
-                    className="mt-4"
-                  ></ProblemsProgress>
-                )}
+          <div className="flex flex-col border-r-2 border-gray-300 p-5 md:w-5/12">
+            <div className="mb-8 flex w-full">
+              <Button
+                size="small"
+                intent="secondary"
+                className="inline"
+                onClick={() => router.push("/portal")}
+              >
+                <span className="material-symbols-rounded">arrow_back</span>
+                Back to Assignments
+              </Button>
+              <ToggleSwitch
+                className="ml-auto"
+                isChecked={darkModeOn}
+                onChange={toggleDarkMode}
+                checkedIcon={<span className="material-icons">dark_mode</span>}
+                uncheckedIcon={
+                  <span className="material-icons">light_mode</span>
+                }
+              />
+            </div>
+
+            <div className="mb-8 rounded-lg bg-sky-100 p-3 text-sky-900 shadow-lg">
+              {assignment ? (
+                <>
+                  <div className="text-lg font-extrabold underline">
+                    {assignment?.title}
+                  </div>
+                  <div className="mt-2 opacity-75">
+                    {assignment?.description}
+                  </div>
+                </>
+              ) : (
+                <>
+                  <div className="h-4 w-1/3 animate-pulse rounded-full bg-gray-300"></div>
+                  <div className="mt-4 h-2 animate-pulse rounded bg-gray-300"></div>
+                  <div className="mt-3 h-2 animate-pulse rounded bg-gray-300"></div>
+                  <div className="mt-3 h-2 animate-pulse rounded bg-gray-300"></div>
+                </>
+              )}
+              {studentProblemAnswers.length > 0 && (
+                <ProblemsProgress
+                  studentProblemAnswers={studentProblemAnswers}
+                  className="mt-4"
+                ></ProblemsProgress>
+              )}
+            </div>
+            {currentProblem && <div>Problem {currentProblemIndex + 1}</div>}
+            {loadingAnswer ? (
+              <div className="mb-2 block min-h-[1rem] w-full rounded-lg bg-white p-3 shadow-lg">
+                <span className="material-symbols-outlined mr-2 animate-spin">
+                  progress_activity
+                </span>
               </div>
-              {currentProblem && <div>Problem {currentProblemIndex + 1}</div>}
-              {loadingAnswer ? (
-                <div className="mb-2 block min-h-[1rem] w-full rounded-lg bg-white p-3 shadow-lg">
+            ) : (
+              <textarea
+                className={`mb-2 block ${
+                  currentProblem ? "min-h-[1rem]" : "min-h-[16rem]"
+                } w-full rounded-lg bg-white p-3 shadow-lg focus:outline-none`}
+                value={answer}
+                placeholder="Write your answer here!"
+                onChange={(event) => setAnswer(event.currentTarget.value)}
+              />
+            )}
+            <div className="mb-8 flex justify-between">
+              <Button size="small" intent="secondary" onClick={checkAnswer}>
+                Check
+              </Button>
+              {currentProblem && (
+                <div className="flex gap-2">
+                  <Button
+                    size="small"
+                    intent="secondary"
+                    onClick={() => changeProblem("prev")}
+                    disabled={currentProblemIndex === 0}
+                  >
+                    <span className="material-symbols-rounded">arrow_back</span>
+                  </Button>
+                  <Button
+                    size="small"
+                    intent="secondary"
+                    onClick={() => changeProblem("next")}
+                    disabled={
+                      currentProblemIndex ===
+                      (assignment?.problems?.length || 0) - 1
+                    }
+                  >
+                    <span className="material-symbols-rounded">
+                      arrow_forward
+                    </span>
+                  </Button>
+                </div>
+              )}
+              <Button size="small" className="">
+                Submit
+              </Button>
+            </div>
+            <div className="rounded-lg border border-matcha-300 bg-matcha-100 p-3 text-matcha-900 shadow-lg">
+              {!answerReview && !checkingAnswer && (
+                <span className="opacity-50">
+                  Use the &apos;Check&apos; button above to get feedback!
+                </span>
+              )}
+              {checkingAnswer ? (
+                <div className="flex justify-center text-center">
                   <span className="material-symbols-outlined mr-2 animate-spin">
                     progress_activity
                   </span>
+                  Checking your answer...
                 </div>
               ) : (
-                <textarea
-                  className={`mb-2 block ${
-                    currentProblem ? "min-h-[1rem]" : "min-h-[16rem]"
-                  } w-full rounded-lg bg-white p-3 shadow-lg focus:outline-none`}
-                  value={answer}
-                  placeholder="Write your answer here!"
-                  onChange={(event) => setAnswer(event.currentTarget.value)}
-                />
+                <Markdown>{answerReview}</Markdown>
               )}
-              <div className="mb-8 flex justify-between">
-                <Button size="small" intent="secondary" onClick={checkAnswer}>
-                  Check
-                </Button>
-                {currentProblem && (
-                  <div className="flex gap-2">
-                    <Button
-                      size="small"
-                      intent="secondary"
-                      onClick={() => changeProblem("prev")}
-                      disabled={currentProblemIndex === 0}
-                    >
-                      <span className="material-symbols-rounded">
-                        arrow_back
-                      </span>
-                    </Button>
-                    <Button
-                      size="small"
-                      intent="secondary"
-                      onClick={() => changeProblem("next")}
-                      disabled={
-                        currentProblemIndex ===
-                        (assignment?.problems?.length || 0) - 1
-                      }
-                    >
-                      <span className="material-symbols-rounded">
-                        arrow_forward
-                      </span>
-                    </Button>
-                  </div>
-                )}
-                <Button size="small" className="">
-                  Submit
-                </Button>
-              </div>
-              <div className="rounded-lg border border-matcha-300 bg-matcha-100 p-3 text-matcha-900 shadow-lg">
-                {!answerReview && !checkingAnswer && (
-                  <span className="opacity-50">
-                    Use the &apos;Check&apos; button above to get feedback!
-                  </span>
-                )}
-                {checkingAnswer ? (
-                  <div className="flex justify-center text-center">
-                    <span className="material-symbols-outlined mr-2 animate-spin">
-                      progress_activity
-                    </span>
-                    Checking your answer...
-                  </div>
-                ) : (
-                  <Markdown>{answerReview}</Markdown>
-                )}
-              </div>
             </div>
           </div>
           {/* desktop worker col */}

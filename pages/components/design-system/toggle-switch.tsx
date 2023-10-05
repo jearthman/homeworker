@@ -45,9 +45,11 @@ export default function ToggleSwitch({
   });
 
   return (
-    <label className="flex cursor-pointer items-center">
+    <label
+      className={`${computedSwitchClassNames} flex cursor-pointer items-center`}
+    >
       <input type="checkbox" className="hidden" {...rest} />
-      <div className={computedSwitchClassNames}>
+      <div>
         <div className={computedDotClassNames}>
           {isChecked ? checkedIcon : uncheckedIcon}
         </div>

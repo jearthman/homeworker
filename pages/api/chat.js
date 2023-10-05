@@ -104,7 +104,7 @@ async function getCompletion(res, chatId, userContent, messages, interactionType
             return;
           }
           const dataObj = JSON.parse(dataObjString);
-          if(dataObj.choices[0].finish_reason === "function_call"){
+          if(dataObj.choices[0] && dataObj.choices[0].finish_reason === "function_call"){
             //call completion again with function response
             const functionResponse = await callCompletionFunction(functionNameFromGPT, functionArgumentsString);
             messages.push({
