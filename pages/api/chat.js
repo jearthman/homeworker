@@ -14,7 +14,7 @@ const configuration = new Configuration({
 });
 const openai = new OpenAIApi(configuration);
 
-const functions = require("../../public/data/functions.json");
+const functions = require("../../private/data/functions.json");
 
 export default async function handler(
   req,

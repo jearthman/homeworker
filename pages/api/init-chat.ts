@@ -84,7 +84,7 @@ export default async function handler(
 
 async function constructSystemMessage(studentId: number, assignmentId: number) {
   let systemMessageString = await convertTextFileToMessageString(
-    "public/data/system_prompt.txt",
+    "private/data/system_prompt.txt",
   );
 
   // Get Student from DB
