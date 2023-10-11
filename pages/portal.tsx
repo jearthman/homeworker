@@ -12,13 +12,15 @@ import AssignmentSkeleton from "./components/design-system/assignment-skeleton";
 
 async function fetchStudent(email: string, baseUrl: string) {
   try {
-    const response = await fetch(`${baseUrl}/api/student-by-email`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
+    const response = await fetch(
+      `${baseUrl}/api/student-by-email?email=${encodeURIComponent(email)}`,
+      {
+        method: "GET",
+        headers: {
+          "Content-Type": "application/json",
+        },
       },
-      body: JSON.stringify({ email }),
-    });
+    );
 
     const data = await response.json();
     return response.status !== 200 ? null : data.student;
@@ -28,13 +30,15 @@ async function fetchStudent(email: string, baseUrl: string) {
 }
 
 async function fetchAssignments(studentId: number, baseUrl: string) {
-  const response = await fetch(`${baseUrl}/api/assignments-by-student-id`, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
+  const response = await fetch(
+    `${baseUrl}/api/assignments-by-student-id?studentId=${studentId}`,
+    {
+      method: "GET",
+      headers: {
+        "Content-Type": "application/json",
+      },
     },
-    body: JSON.stringify({ studentId }),
-  });
+  );
 
   try {
     return response.status === 404 ? null : await response.json();
@@ -55,17 +59,36 @@ export async function getServerSideProps(context: GetServerSidePropsContext) {
     };
   }
   const email = session?.user?.email;
+  if (!email) {
+    return {
+      redirect: {
+        destination: "/",
+        permanent: false,
+      },
+    };
+  }
+  const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || "http://localhost:3000";
+  const student = await fetchStudent(email, baseUrl);
+
+  if (!student) {
+    return {
+      redirect: {
+        destination: "/register",
+        permanent: false,
+      },
+    };
+  }
 
   return {
-    props: { email },
+    props: { student },
   };
 }
 
 type PortalProps = {
-  email: string;
+  student: Student;
 };
 
-export default function Portal({ email }: PortalProps) {
+export default function Portal({ student }: PortalProps) {
   // const [loading, setLoading] = useState(true);
   type StudentAssignmentExtended = StudentAssignment & {
     assignment: Assignment;
@@ -73,13 +96,9 @@ export default function Portal({ email }: PortalProps) {
   };
 
   const router = useRouter();
-  const student = useRef<Student | null>(null);
   const [studentAssignments, setStudentAssignments] = useState<
     StudentAssignmentExtended[]
   >([]);
-
-  const { data: session } = useSession();
-  // const router = useRouter();
 
   useEffect(() => {
     let baseUrl = "";
@@ -88,32 +107,30 @@ export default function Portal({ email }: PortalProps) {
     }
 
     async function loadAssignments() {
-      if (email) {
-        try {
-          student.current = await fetchStudent(email, baseUrl);
-        } catch (error) {
-          throw new Error(String(error));
-        }
+      if (student) {
+        // try {
+        //   student = await fetchStudent(email, baseUrl);
+        // } catch (error) {
+        //   throw new Error(String(error));
+        // }
 
-        if (!student.current) {
-          router.push("/register");
-          return;
-        }
+        // if (!student.current) {
+        //   router.push("/register");
+        //   return;
+        // }
 
-        fetchAssignments(student.current.id, baseUrl).then(
-          (studentAssignments) => {
-            setStudentAssignments(studentAssignments);
-          },
-        );
+        fetchAssignments(student.id, baseUrl).then((studentAssignments) => {
+          setStudentAssignments(studentAssignments);
+        });
       }
     }
 
     loadAssignments();
-  }, [email]);
+  }, [student]);
 
   function selectAssignment(assignment: Assignment) {
     router.push(
-      `/worker?studentId=${student?.current?.id}&assignmentId=${assignment.id}`,
+      `/worker?studentId=${student?.id}&assignmentId=${assignment.id}`,
     );
   }
 

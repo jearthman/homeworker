@@ -5,7 +5,12 @@ export default async function handler(
   req: NextApiRequest,
   res: NextApiResponse,
 ) {
-  const { studentId, assignmentId } = req.body;
+  const studentId = Array.isArray(req.query.studentId)
+    ? req.query.studentId[0]
+    : req.query.studentId;
+  const assignmentId = Array.isArray(req.query.assignmentId)
+    ? req.query.assignmentId[0]
+    : req.query.assignmentId;
 
   if (!studentId || !assignmentId) {
     return res.status(400).json({ error: "Missing required field" });

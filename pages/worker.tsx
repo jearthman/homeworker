@@ -121,11 +121,11 @@ export default function Worker({ studentId, assignmentId }: WorkerProps) {
     setBaseUrl(baseUrl);
 
     async function fetchData() {
-      const studentEndpoint = `${baseUrl}/api/student-by-id/`;
+      const studentEndpoint = `${baseUrl}/api/student-by-id/?studentId=${studentId}`;
       logRequest(studentEndpoint, { studentId });
-      const assignmentEndpoint = `${baseUrl}/api/assignment-by-id/`;
+      const assignmentEndpoint = `${baseUrl}/api/assignment-by-id/?assignmentId=${assignmentId}`;
       logRequest(assignmentEndpoint, { assignmentId });
-      const studentAssignmentEndpoint = `${baseUrl}/api/student-assignment-by-id/`;
+      const studentAssignmentEndpoint = `${baseUrl}/api/student-assignment-by-id/?studentId=${studentId}&assignmentId=${assignmentId}`;
       logRequest(studentAssignmentEndpoint, { studentId, assignmentId });
 
       let studentRes = null;
@@ -135,25 +135,22 @@ export default function Worker({ studentId, assignmentId }: WorkerProps) {
       try {
         [studentRes, assignmentRes, studentAssignmentRes] = await Promise.all([
           fetch(studentEndpoint, {
-            method: "POST",
+            method: "GET",
             headers: {
               "Content-Type": "application/json",
             },
-            body: JSON.stringify({ studentId }),
           }),
           fetch(assignmentEndpoint, {
-            method: "POST",
+            method: "GET",
             headers: {
               "Content-Type": "application/json",
             },
-            body: JSON.stringify({ assignmentId }),
           }),
           fetch(studentAssignmentEndpoint, {
-            method: "POST",
+            method: "GET",
             headers: {
               "Content-Type": "application/json",
             },
-            body: JSON.stringify({ studentId, assignmentId }),
           }),
         ]);
 
@@ -320,7 +317,7 @@ export default function Worker({ studentId, assignmentId }: WorkerProps) {
           const StudentProblemAnswersRes = await fetch(
             studentProblemAnswersByAssignmentEndpoint,
             {
-              method: "POST",
+              method: "GET",
               headers: {
                 "Content-Type": "application/json",
               },

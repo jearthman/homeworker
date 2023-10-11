@@ -5,7 +5,9 @@ export default async function handler(
   req: NextApiRequest,
   res: NextApiResponse,
 ) {
-  const { email } = req.body;
+  const email = Array.isArray(req.query.email)
+    ? req.query.email[0]
+    : req.query.email;
 
   if (!email) {
     res.status(400).json({ message: "Invalid request data" });

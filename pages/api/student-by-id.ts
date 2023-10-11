@@ -5,7 +5,9 @@ export default async function handler(
   req: NextApiRequest,
   res: NextApiResponse,
 ) {
-  const { studentId } = req.body;
+  const studentId = Array.isArray(req.query.studentId)
+    ? req.query.studentId[0]
+    : req.query.studentId;
 
   if (!studentId) {
     res.status(400).json({ message: "Invalid request data" });
