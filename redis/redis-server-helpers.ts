@@ -14,7 +14,9 @@ export async function setChat(chatId: string, chat: Chat) {
 
 export async function getChat(chatId: string) {
   try {
-    debugLog(`Getting chat ${chatId} from Redis: ${kvChatClient}`);
+    debugLog(
+      `Getting chat ${chatId} from Redis: ${JSON.stringify(kvChatClient)}`,
+    );
     return await kvChatClient.get(chatId);
   } catch (error: any) {
     console.error("Error getting chat:", error.message);
