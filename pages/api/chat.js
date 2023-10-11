@@ -136,6 +136,7 @@ async function getCompletion(res, chatId, userContent, messages, interactionType
           if(dataObj.choices[0].delta.content?.length > 0){
             assistantResContent += dataObj.choices[0].delta.content;
             res.write(dataObj.choices[0].delta.content);
+            debugLog('Wrote to response');
           }
         }
       });
