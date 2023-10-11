@@ -87,6 +87,7 @@ async function getCompletion(res, chatId, userContent, messages, interactionType
       data.toString().split("\n").forEach(async (dataObjString) => {
         if (dataObjString) {
           dataObjString = dataObjString.replace("data: ", "");
+          debugLog(`dataObjString: ${dataObjString}`);
           if(dataObjString === "[DONE]"){
             if(functionNameFromGPT === "" && functionArgumentsString === ""){
               res.end();
@@ -103,7 +104,13 @@ async function getCompletion(res, chatId, userContent, messages, interactionType
             debugLog(`Done with stream: ${assistantResContent}`);
             return;
           }
-          const dataObj = JSON.parse(dataObjString);
+          let dataObj;
+          try{
+            dataObj = JSON.parse(dataObjString);
+          } catch (error){
+            console.error(error);
+            return;
+          }
           if(dataObj.choices[0] && dataObj.choices[0].finish_reason === "function_call"){
             //call completion again with function response
             const functionResponse = await callCompletionFunction(functionNameFromGPT, functionArgumentsString);
