@@ -1,6 +1,6 @@
 import "material-icons/iconfont/material-icons.css";
 import { Playfair_Display } from "next/font/google";
-import GoogleSignInButton from "@ds/google-signin-button";
+import GoogleSignInButton from "@/components/design-system/google-signin-button";
 
 const playfairDisplay = Playfair_Display({
   subsets: ["latin"],
@@ -18,6 +18,7 @@ export default function Landing() {
           <div className="flex justify-center gap-8">
             <GoogleSignInButton />
           </div>
+          <div></div>
         </div>
 
         {/* <div className="flex flex-col">

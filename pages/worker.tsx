@@ -2,15 +2,15 @@ import { useState, useEffect, useRef, FormEvent } from "react";
 import { GetServerSidePropsContext } from "next";
 import { useRouter } from "next/router";
 import dynamic from "next/dynamic";
-import Button from "@/pages/components/design-system/button";
+import Button from "@/components/design-system/button";
 import React from "react";
-import ToggleSwitch from "./components/design-system/toggle-switch";
+import ToggleSwitch from "../components/design-system/toggle-switch";
 import { useDispatch, useSelector } from "react-redux";
 import { toggleTheme } from "../redux/slices/themeSlice";
 import { RootState } from "../redux/store";
 import styles from "./worker.module.css";
 import { userMessageIsContextual } from "../utils/clientHelpers";
-import ProblemsProgress from "./components/problems-progress";
+import ProblemsProgress from "../components/problems-progress";
 import {
   Prisma,
   Student,
@@ -22,7 +22,7 @@ import {
   StudentProblemAnswer,
 } from "@prisma/client"; // import { current } from "@reduxjs/toolkit";
 import Markdown from "react-markdown";
-import ChatSkeleton from "./components/design-system/chat-skeleton";
+import ChatSkeleton from "../components/design-system/chat-skeleton";
 
 const chatWithMessages = Prisma.validator<Prisma.ChatDefaultArgs>()({
   include: { messages: true },

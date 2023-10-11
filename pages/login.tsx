@@ -1,11 +1,11 @@
-import Header from "./components/header";
-import Card from "@/pages/components/design-system/card";
-import Input from "@/pages/components/design-system/input";
+import Header from "../components/header";
+import Card from "@/components/design-system/card";
+import Input from "@/components/design-system/input";
 import { useState } from "react";
 import { FormEvent } from "react";
-import Label from "@/pages/components/design-system/label";
-import Button from "@/pages/components/design-system/button";
-import Checkbox from "@/pages/components/design-system/checkbox";
+import Label from "@/components/design-system/label";
+import Button from "@/components/design-system/button";
+import Checkbox from "@/components/design-system/checkbox";
 
 export default function Login() {
   const [username, setUsername] = useState<string>("");

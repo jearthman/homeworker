@@ -8,7 +8,7 @@ import {
   StudentAssignment,
   StudentProblemAnswer,
 } from "@prisma/client";
-import AssignmentSkeleton from "./components/design-system/assignment-skeleton";
+import AssignmentSkeleton from "../components/design-system/assignment-skeleton";
 
 async function fetchStudent(email: string, baseUrl: string) {
   try {

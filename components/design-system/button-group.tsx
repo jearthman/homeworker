@@ -1,6 +1,6 @@
 import React from "react";
 import { cva, VariantProps } from "cva";
-import { Props as ButtonProps } from "@/pages/components/design-system/button";
+import { Props as ButtonProps } from "@/components/design-system/button";
 
 const buttonGroupStyles = cva("flex items-center justify-center", {
   variants: {

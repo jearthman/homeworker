@@ -1,8 +1,8 @@
-import Label from "@ds/label";
-import Input from "@ds/input";
-import Select from "@ds/select";
+import Label from "@/components/design-system/label";
+import Input from "@/components/design-system/input";
+import Select from "@/components/design-system/select";
 import { useState } from "react";
-import Button from "@ds/button";
+import Button from "@/components/design-system/button";
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/router";
 
