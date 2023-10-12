@@ -14,7 +14,7 @@
   },
   "dependencies": {
     "@edtr-io/mathquill": "^0.11.0",
-    "@prisma/client": "^5.3.0",
+    "@prisma/client": "^5.4.2",
     "@reduxjs/toolkit": "^1.9.5",
     "@types/edtr-io__mathquill": "^0.11.2",
     "@types/react": "18.0.29",
@@ -57,7 +57,7 @@
     "postcss": "^8.4.21",
     "prettier": "^3.0.3",
     "prettier-plugin-tailwindcss": "^0.5.3",
-    "prisma": "^5.3.0",
+    "prisma": "^5.4.2",
     "tailwindcss": "^3.2.7",
     "ts-node": "^10.9.1",
     "typescript": "^4.9.5"
