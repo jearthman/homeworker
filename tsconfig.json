@@ -28,6 +28,6 @@
     "pages/api/chat.ts",
     "prisma/seed.js",
     "prisma/prisma.js"
-  ],
+, "scripts/put-system-message.js"  ],
   "exclude": ["node_modules"]
 }
