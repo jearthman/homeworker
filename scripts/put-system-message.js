@@ -8,7 +8,7 @@ async function main() {
       "private/data/system_prompt.txt",
       "utf-8",
     );
-    put("system_prompt.txt", content, { access: "public", token: process.env.BLOB_READ_WRITE_TOKEN }).then(
+    put("system_prompt.txt", content, { access: "public", token: process.env.BLOB_READ_WRITE_TOKEN, addRandomSuffix: false }).then(
       (url) => {
         console.log(url);
       },
