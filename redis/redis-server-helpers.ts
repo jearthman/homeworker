@@ -4,7 +4,9 @@ import { debugLog } from "../utils/server-helpers";
 
 export async function setChat(chatId: string, chat: Chat) {
   try {
-    debugLog(`Setting chat ${chatId} in Redis: ${kvChatClient}`);
+    debugLog(
+      `Setting chat ${chatId} in Redis: ${JSON.stringify(kvChatClient)}`,
+    );
     return await kvChatClient.set(chatId, chat);
   } catch (error: any) {
     console.error("Error setting chat:", error.message);

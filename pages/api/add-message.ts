@@ -42,6 +42,6 @@ export async function createMessage(
 
     return message;
   } catch (error: any) {
-    return null;
+    console.error("Error creating message:", error.message);
   }
 }

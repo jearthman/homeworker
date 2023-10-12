@@ -20,7 +20,9 @@ export default async function handler(
   req,
   res
 ) {
-  let { chatId, content, interactionType } = req.body || "";
+  let chatId = req.query.chatId;
+  let content = req.query.content;
+  let interactionType = req.query.interactionType === 'undefined' ? null : req.query.interactionType;
 
   if (!chatId) {
     return res.status(400).json({
@@ -33,6 +35,12 @@ export default async function handler(
       error: "Missing chat message",
     });
   }
+
+  res.setHeader('Content-Type', 'text/event-stream');
+  res.setHeader('Cache-Control', 'no-cache');
+  res.setHeader('Connection', 'keep-alive');
+  res.flushHeaders();
+
 
   debugLog(`Request is good! chatId: ${chatId}, content: ${content}, interactionType: ${interactionType}`);
 
@@ -48,8 +56,6 @@ export default async function handler(
 
   if(interactionType){
     content = await getPromptTemplate(interactionType, content);
-  } else {
-    content = content[0]
   }
 
   debugLog(`content: ${content}`);
@@ -98,8 +104,8 @@ async function getCompletion(res, chatId, userContent, messages, interactionType
               });
               setChat(chatId, messages);
               //write to postgres
-              await createMessage(chatId, "user", userContent, interactionType ? true : false);
-              await createMessage(chatId, "assistant", assistantResContent, interactionType && interactionType !== "greeting" ? true : false);
+              await createMessage(parseInt(chatId), "user", userContent, interactionType ? true : false);
+              await createMessage(parseInt(chatId), "assistant", assistantResContent, interactionType && interactionType !== "greeting" ? true : false);
             }
             debugLog(`Done with stream: ${assistantResContent}`);
             return;
@@ -135,7 +141,7 @@ async function getCompletion(res, chatId, userContent, messages, interactionType
           }
           if(dataObj.choices[0].delta.content?.length > 0){
             assistantResContent += dataObj.choices[0].delta.content;
-            res.write(dataObj.choices[0].delta.content);
+            sendSSE(res, { content: dataObj.choices[0].delta.content });
             debugLog('Wrote to response');
           }
         }
@@ -168,7 +174,7 @@ export async function getChatMessages(chatId) {
     return cachedChat;
   }
 
-  const chat = await findUniqueChat(chatId);
+  const chat = await findUniqueChat(parseInt(chatId));
 
   if (!chat) {
     return null;
@@ -185,3 +191,9 @@ export async function getChatMessages(chatId) {
 
   return messages;
 }
+
+function sendSSE(res, data) {
+  res.write(`data: ${JSON.stringify(data)}\n\n`);
+  res.flush();
+}
+
