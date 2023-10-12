@@ -1,5 +1,5 @@
-import { put } from "@vercel/blob";
-import fs from "fs/promises";
+const { put } = require("@vercel/blob");
+const fs = require("fs/promises");
 
 async function main() {
   try {
@@ -7,9 +7,11 @@ async function main() {
       "private/data/system_prompt.txt",
       "utf-8",
     );
-    put("system_prompt.txt", content, { access: "public" }).then((url) => {
-      console.log(url);
-    });
+    put("system_prompt.txt", content, { access: "public" }).then(
+      (url: string) => {
+        console.log(url);
+      },
+    );
   } catch (error) {
     console.log(error);
   }
