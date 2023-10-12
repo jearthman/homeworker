@@ -1,13 +1,14 @@
-import path from "path";
-import fs from "fs/promises";
-
 export async function convertTextFileToMessageString(
-  rootPath: string,
+  path: string,
 ): Promise<string> {
   try {
-    const filePath = path.join(process.cwd(), rootPath);
+    const fileResponse = await fetch(process.env.BLOB_URL + path);
 
-    const content = await fs.readFile(filePath, "utf-8");
+    if (!fileResponse.ok) {
+      throw new Error("Error fetching file from Blob storage");
+    }
+
+    const content = await fileResponse.text();
 
     // Replace consecutive newline characters with '\n\n' and other necessary replacements
     const formattedContent = content

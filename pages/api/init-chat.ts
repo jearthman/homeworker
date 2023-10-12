@@ -83,9 +83,8 @@ export default async function handler(
 }
 
 async function constructSystemMessage(studentId: number, assignmentId: number) {
-  let systemMessageString = await convertTextFileToMessageString(
-    "private/data/system_prompt.txt",
-  );
+  let systemMessageString =
+    await convertTextFileToMessageString("system_prompt.txt");
 
   // Get Student from DB
   const student = await prisma.student.findUnique({
