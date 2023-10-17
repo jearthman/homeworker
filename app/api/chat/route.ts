@@ -7,6 +7,7 @@ import { ChatCompletionMessageParam } from "openai/resources";
 import { functions, runFunction } from "./functions";
 import { createMessage } from "../../../pages/api/add-message";
 import { getPromptTemplate } from "../../../utils/prompt-templates";
+import { getChatMessages } from "./helpers";
 
 const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY!,
@@ -98,33 +99,4 @@ export async function POST(req: Request) {
 
   // Respond with the stream
   return new StreamingTextResponse(stream);
-}
-
-export async function getChatMessages(chatId: string) {
-  debugLog(`Checking KV Redis for chat`);
-
-  const cachedChat: ChatCompletionMessageParam[] | null = await getChat(chatId);
-
-  debugLog(`cachedChat: ${cachedChat}`);
-
-  if (cachedChat) {
-    return cachedChat;
-  }
-
-  const chat = await findUniqueChat(parseInt(chatId));
-
-  if (!chat) {
-    return [];
-  }
-
-  debugLog(`chat: ${chat}`);
-
-  const messages = chat.messages.map((message) => {
-    return {
-      role: message.role,
-      content: message.content,
-    };
-  });
-
-  return messages;
 }
