@@ -1,8 +1,11 @@
 import kvChatClient from "./redis-clients";
-import { Chat } from "@prisma/client";
 import { debugLog } from "../utils/server-helpers";
+import { ChatCompletionMessageParam } from "openai/resources";
 
-export async function setChat(chatId: string, chat: Chat) {
+export async function setChat(
+  chatId: string,
+  chat: ChatCompletionMessageParam[],
+) {
   try {
     debugLog(
       `Setting chat ${chatId} in Redis: ${JSON.stringify(kvChatClient)}`,
@@ -14,7 +17,9 @@ export async function setChat(chatId: string, chat: Chat) {
   }
 }
 
-export async function getChat(chatId: string) {
+export async function getChat(
+  chatId: string,
+): Promise<ChatCompletionMessageParam[] | null> {
   try {
     debugLog(
       `Getting chat ${chatId} from Redis: ${JSON.stringify(kvChatClient)}`,

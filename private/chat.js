@@ -1,12 +1,14 @@
 /* eslint-disable import/no-anonymous-default-export */
 import { Configuration, OpenAIApi } from "openai";
 // import { NextApiRequest, NextApiResponse } from "next";
-import { createMessage } from "./add-message";
-import { findUniqueChat } from "./get-chat";
-import {callCompletionFunction} from "../../utils/completion-function-factory"
-import { getPromptTemplate } from "../../utils/prompt-templates";
-import { getChat, setChat } from "../../redis/redis-server-helpers";
-import { debugLog } from "../../utils/server-helpers";
+import { createMessage } from "../pages/api/add-message";
+import { findUniqueChat } from "../pages/api/get-chat";
+import {callCompletionFunction} from "./chat/function-factory"
+import { getPromptTemplate } from "../utils/prompt-templates";
+import { getChat, setChat } from "../redis/redis-server-helpers";
+import { debugLog } from "../utils/server-helpers";
+
+
 
 
 const configuration = new Configuration({
@@ -35,12 +37,6 @@ export default async function handler(
       error: "Missing chat message",
     });
   }
-
-  res.setHeader('Content-Type', 'text/event-stream');
-  res.setHeader('Cache-Control', 'no-cache');
-  res.setHeader('Connection', 'keep-alive');
-  res.flushHeaders();
-
 
   debugLog(`Request is good! chatId: ${chatId}, content: ${content}, interactionType: ${interactionType}`);
 
@@ -141,7 +137,7 @@ async function getCompletion(res, chatId, userContent, messages, interactionType
           }
           if(dataObj.choices[0].delta.content?.length > 0){
             assistantResContent += dataObj.choices[0].delta.content;
-            sendSSE(res, { content: dataObj.choices[0].delta.content });
+            res.write(dataObj.choices[0].delta.content);
             debugLog('Wrote to response');
           }
         }
@@ -190,10 +186,5 @@ export async function getChatMessages(chatId) {
   });
 
   return messages;
-}
-
-function sendSSE(res, data) {
-  res.write(`data: ${JSON.stringify(data)}\n\n`);
-  res.flush();
 }
 

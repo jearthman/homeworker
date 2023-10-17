@@ -1,7 +1,11 @@
 {
   "compilerOptions": {
     "target": "es5",
-    "lib": ["dom", "dom.iterable", "esnext"],
+    "lib": [
+      "dom",
+      "dom.iterable",
+      "esnext"
+    ],
     "allowJs": true,
     "skipLibCheck": true,
     "strict": true,
@@ -16,10 +20,22 @@
     "incremental": true,
     "sourceMap": true,
     "paths": {
-      "@/*": ["./*"],
-      "@ds/*": ["./components/design-system/*"]
+      "@/*": [
+        "./*"
+      ],
+      "@ds/*": [
+        "./components/design-system/*"
+      ]
     },
-    "typeRoots": ["node_modules/@types", "node_modules/mathlive/dist/types"]
+    "typeRoots": [
+      "node_modules/@types",
+      "node_modules/mathlive/dist/types"
+    ],
+    "plugins": [
+      {
+        "name": "next"
+      }
+    ]
   },
   "include": [
     "next-env.d.ts",
@@ -27,7 +43,11 @@
     "**/*.tsx",
     "pages/api/chat.ts",
     "prisma/seed.js",
-    "prisma/prisma.js"
-, "scripts/put-system-message.js"  ],
-  "exclude": ["node_modules"]
+    "prisma/prisma.js",
+    "scripts/put-system-message.js",
+    ".next/types/**/*.ts"
+  ],
+  "exclude": [
+    "node_modules"
+  ]
 }

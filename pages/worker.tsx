@@ -501,63 +501,77 @@ export default function Worker({ studentId, assignmentId }: WorkerProps) {
       return prevChatLog;
     });
     // Send the input to the server
-    // Setting up the EventSource to listen to SSE
-    const eventSource = new EventSource(
-      `/api/chat?chatId=${chatId.current}&content=${message}&interactionType=${interactionType}`,
-    );
+    const response = await fetch("/api/chat", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        chatId: chatId.current,
+        content: message,
+        interactionType: interactionType,
+      }),
+    });
+    if (response.ok) {
+      const reader = response.body?.getReader();
 
-    eventSource.onopen = (event) => {};
+      const processStream = async (reader: ReadableStreamDefaultReader) => {
+        let currentSentence = "";
 
-    eventSource.onerror = (event) => {
-      // An error occurred.
-      console.error("EventSource failed:", event);
-      eventSource.close();
-    };
+        while (true) {
+          try {
+            const { done, value } = await reader.read();
+            const readString = new TextDecoder("utf-8").decode(value);
 
-    eventSource.onmessage = (event) => {
-      const data = JSON.parse(event.data);
-      let readString = data.content;
+            if (done) {
+              break;
+            }
 
-      // The following is your existing logic to process the stream
-      let currentSentence = "";
-      currentSentence += readString;
-      console.log(readString);
+            currentSentence += readString;
 
-      // Splitting by words while keeping punctuation
-      const words = currentSentence.match(/\S+|\s|\n+/g) || [];
-      currentSentence = words.pop() || ""; // Keep the last unfinished word or space
+            // Splitting by words while keeping punctuation
+            const words = currentSentence.match(/\S+|\s|\n+/g) || [];
+            currentSentence = words.pop() || ""; // Keep the last unfinished word or space
 
-      words.forEach((word) => {
-        if (interactionType === "definition") {
-          setLoadingPopoverResponseType(null);
+            words.forEach((word) => {
+              if (interactionType === "definition") {
+                setLoadingPopoverResponseType(null);
 
-          setPopoverResponseContent((prevContent) =>
-            prevContent ? prevContent + word : word,
-          );
-        } else if (interactionType === "checkAnswer") {
-          setAnswerReview((prevContent) =>
-            prevContent ? prevContent + word : word,
-          );
-          setCheckingAnswer(false);
-        } else {
-          updateLastResponse(word);
+                setPopoverResponseContent((prevContent) =>
+                  prevContent ? prevContent + word : word,
+                );
+              } else if (interactionType === "checkAnswer") {
+                setAnswerReview((prevContent) =>
+                  prevContent ? prevContent + word : word,
+                );
+                setCheckingAnswer(false);
+              } else {
+                updateLastResponse(word);
+              }
+            });
+          } catch (err) {
+            console.log("Error reading from stream: ", err);
+            break;
+          }
         }
-      });
-
-      if (currentSentence) {
-        if (interactionType === "definition") {
-          setPopoverResponseContent((prevContent) =>
-            prevContent ? prevContent + currentSentence : currentSentence,
-          );
-        } else if (interactionType === "checkAnswer") {
-          setAnswerReview((prevContent) =>
-            prevContent ? prevContent + currentSentence : currentSentence,
-          );
-        } else {
-          updateLastResponse(currentSentence); // Send any remaining content
+        if (currentSentence) {
+          if (interactionType === "definition") {
+            setPopoverResponseContent((prevContent) =>
+              prevContent ? prevContent + currentSentence : currentSentence,
+            );
+          } else if (interactionType === "checkAnswer") {
+            setAnswerReview((prevContent) =>
+              prevContent ? prevContent + currentSentence : currentSentence,
+            );
+          } else {
+            updateLastResponse(currentSentence); // Send any remaining content
+          }
         }
+      };
+      if (reader) {
+        processStream(reader);
       }
-    };
+    }
   }
 
   function updateLastResponse(word: string) {
