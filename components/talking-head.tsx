@@ -3,14 +3,21 @@ import Image from "next/image";
 
 interface TalkingHeadProps {
   isTalking: boolean;
+  left?: number;
+  top?: number;
 }
 
-function TalkingHead({ isTalking }: TalkingHeadProps) {
+export default function TalkingHead({
+  isTalking,
+  left = 0,
+  top = 0,
+}: TalkingHeadProps) {
   const [frame, setFrame] = useState(0);
   const frames = [
-    "../private/img/sprite/homeworker_closed.png",
-    "../private/img/sprite/homeworker_open_1.png",
-    "../private/img/sprite/homeworker_open_2.png",
+    "/img/sprite/homeworker_closed.svg",
+    "/img/sprite/homeworker_open_1.svg",
+    "/img/sprite/homeworker_open_2.svg",
+    "/img/sprite/homeworker_open_1.svg",
   ];
 
   useEffect(() => {
@@ -19,15 +26,25 @@ function TalkingHead({ isTalking }: TalkingHeadProps) {
     if (isTalking) {
       interval = setInterval(() => {
         setFrame((prevFrame) => (prevFrame + 1) % frames.length);
-      }, 200); // Adjust this time for animation speed
+      }, 100); // Adjust this time for animation speed
     } else {
-      setFrame(0); // Reset to default frame (mouth closed)
+      setFrame(0); // Reset to first frame
     }
 
     return () => clearInterval(interval);
   }, [isTalking]);
 
-  return <Image src={frames[frame]} alt="Talking Head" />;
+  return (
+    <div
+      style={{
+        position: "absolute",
+        left: `${left}px`,
+        top: `${top}px`,
+        zIndex: 1000,
+        transition: "top 0.6s ease-in-out, left 0.6s ease-in-out",
+      }}
+    >
+      <Image src={frames[frame]} alt="Talking Head" width={64} height={64} />
+    </div>
+  );
 }
-
-export default TalkingHead;

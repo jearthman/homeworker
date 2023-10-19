@@ -93,6 +93,8 @@ export async function POST(req: Request) {
         model: "gpt-3.5-turbo-0613",
         stream: true,
         messages: messages,
+        functions,
+        function_call: "auto",
       });
     },
   });

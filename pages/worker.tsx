@@ -11,6 +11,7 @@ import { RootState } from "../redux/store";
 import styles from "./worker.module.css";
 import { userMessageIsContextual } from "../utils/clientHelpers";
 import ProblemsProgress from "../components/problems-progress";
+import TalkingHead from "@/components/talking-head";
 import {
   Prisma,
   Student,
@@ -68,6 +69,11 @@ export default function Worker({ studentId, assignmentId }: WorkerProps) {
     problems: Problem[];
   };
 
+  type ActiveDiv = {
+    name: string;
+    ref: HTMLDivElement | null;
+  };
+
   // hooks
   const router = useRouter();
 
@@ -103,8 +109,18 @@ export default function Worker({ studentId, assignmentId }: WorkerProps) {
   const [studentProblemAnswers, setStudentProblemAnswers] = useState<
     StudentProblemAnswer[]
   >([]);
+  const [latestAssistantMsgIndex, setLatestAssistantMsgIndex] = useState(-1);
 
   const popoverRef = useRef<HTMLDivElement | null>(null);
+  const latestChatMessageIconRef = useRef<HTMLDivElement | null>(null);
+  const latestChatMessageRef = useRef<HTMLDivElement | null>(null);
+  const [latestChatMessageTop, setLatestChatMessageTop] = useState<number>(0);
+  const chatRef = useRef<HTMLDivElement | null>(null);
+  const reviewRef = useRef<HTMLDivElement | null>(null);
+  const [activeDiv, setActiveDiv] = useState<ActiveDiv | null>(null);
+  const [isStreamingMessage, setIsStreamingMessage] = useState<boolean>(false);
+  const [talkingHeadTop, setTalkingHeadTop] = useState<number>(0);
+  const [talkingHeadLeft, setTalkingHeadLeft] = useState<number>(0);
 
   // eslint-disable-next-line react-hooks/exhaustive-deps
   useEffect(() => {
@@ -224,24 +240,59 @@ export default function Worker({ studentId, assignmentId }: WorkerProps) {
           if (message.role === "user") {
             return { type: "user", text: message.content };
           } else if (message.role === "assistant") {
-            // Split content by spaces and newline characters while preserving them
-            const words = message.content
-              .split(/(?<!\n) +(?!\n)|(\n)/)
-              .filter(Boolean);
+            // Split content into segments by newline characters
+            const segments = message.content
+              .split("\n")
+              .map((segment) => segment.trim());
 
-            const sentences = words.map((word) => ({
-              words: [word],
-              text: word,
-            }));
+            const allSentences: Sentence[] = [];
 
-            return { type: "assistant", text: sentences };
+            // Process each segment
+            segments.forEach((segment) => {
+              // Split segment by sentence delimiters while preserving them
+              const sentences = segment
+                .split(/(?<=[.!?])\s/)
+                .filter(Boolean)
+                .map((sentence) => {
+                  // Split sentence into words or newlines, preserving spaces after words
+                  const words = [];
+                  let word = "";
+                  for (let i = 0; i < sentence.length; i++) {
+                    const char = sentence[i];
+                    if (
+                      char === " " ||
+                      char === "." ||
+                      char === "?" ||
+                      char === "!"
+                    ) {
+                      word += char;
+                      words.push(word);
+                      word = "";
+                    } else {
+                      word += char;
+                    }
+                  }
+                  if (word) words.push(word);
+                  return {
+                    words: words.filter(Boolean),
+                    text: sentence,
+                  };
+                });
+              allSentences.push(...sentences);
+              allSentences.push({ words: ["\n"], text: "\n" });
+            });
+
+            return { type: "assistant", text: allSentences };
           } else {
             console.log("Invalid message role", message.role);
             throw new Error("Invalid message role");
           }
         });
 
+      setLatestAssistantMsgIndex(chatMessages.length - 1);
+
       setChatLog(chatMessages);
+      console.log(chatMessages[0]);
 
       // If the chat is empty, prompt LLM with a greeting
       if (chatMessages.length === 0) {
@@ -276,6 +327,41 @@ export default function Worker({ studentId, assignmentId }: WorkerProps) {
       updateStudentProblemAnswer();
     }
   }, [answer]);
+
+  useEffect(() => {
+    if (activeDiv && activeDiv.ref) {
+      const rect = activeDiv.ref.getBoundingClientRect();
+
+      let left = 0;
+      let top = 0;
+      if (activeDiv.name === "chat" && chatRef.current) {
+        const chatRect = chatRef.current.getBoundingClientRect();
+
+        left = rect.left - 20; // position to the right of activeDiv
+        top = rect.top + chatRef.current.scrollHeight - 80; // position above activeDiv
+      } else if (activeDiv.name === "review") {
+        left = rect.left - 48; // position to the right of activeDiv
+        top = rect.top - 32; // position above activeDiv
+      } else if (activeDiv.name === "popover") {
+        left = rect.left - 48; // position to the right of activeDiv
+        top = rect.top - 32;
+      }
+
+      setTalkingHeadLeft(left);
+      setTalkingHeadTop(top);
+    }
+  }, [activeDiv]);
+
+  useEffect(() => {
+    if (latestChatMessageIconRef.current) {
+      const rect = latestChatMessageIconRef.current.getBoundingClientRect();
+      setLatestChatMessageTop(rect.top);
+    }
+  }, [latestChatMessageIconRef.current]);
+
+  useEffect(() => {
+    setActiveDiv({ name: "chat", ref: latestChatMessageIconRef.current });
+  }, [latestChatMessageTop]);
 
   useEffect(() => {}, [currentProblemIndex]);
 
@@ -441,6 +527,8 @@ export default function Worker({ studentId, assignmentId }: WorkerProps) {
       setclickedWordKey(null);
       setClickedWord(null);
     }
+
+    setActiveDiv({ name: "chat", ref: latestChatMessageIconRef.current });
   }
 
   // Redux
@@ -495,11 +583,22 @@ export default function Worker({ studentId, assignmentId }: WorkerProps) {
           prevChatLog[prevChatLog.length - 1].type === "user") &&
         (interactionType === "greeting" || !interactionType)
       ) {
+        const newAssistantMsgIndex = prevChatLog.length;
+        setLatestAssistantMsgIndex(newAssistantMsgIndex);
+
         return [...prevChatLog, { type: "assistant", text: [] }];
       }
-
       return prevChatLog;
     });
+
+    if (interactionType === "definition") {
+      setActiveDiv({ name: "popover", ref: popoverRef.current });
+    } else if (interactionType === "checkAnswer") {
+      setActiveDiv({ name: "review", ref: reviewRef.current });
+    } else {
+      setActiveDiv({ name: "chat", ref: latestChatMessageIconRef.current });
+    }
+
     // Send the input to the server
     const response = await fetch("/api/chat", {
       method: "POST",
@@ -513,6 +612,7 @@ export default function Worker({ studentId, assignmentId }: WorkerProps) {
       }),
     });
     if (response.ok) {
+      setIsStreamingMessage(true);
       const reader = response.body?.getReader();
 
       const processStream = async (reader: ReadableStreamDefaultReader) => {
@@ -524,6 +624,7 @@ export default function Worker({ studentId, assignmentId }: WorkerProps) {
             const readString = new TextDecoder("utf-8").decode(value);
 
             if (done) {
+              setIsStreamingMessage(false);
               break;
             }
 
@@ -614,15 +715,15 @@ export default function Worker({ studentId, assignmentId }: WorkerProps) {
 
         newChatLog[newChatLog.length - 1] = lastMessage;
       }
-      // console.log(newChatLog);
+      console.log(newChatLog);
       return newChatLog;
     });
   }
 
-  function toggleDarkMode() {
-    setDarkModeOn((prevDarkModeOn) => !prevDarkModeOn);
-    handleThemeChange();
-  }
+  // function toggleDarkMode() {
+  //   setDarkModeOn((prevDarkModeOn) => !prevDarkModeOn);
+  //   handleThemeChange();
+  // }
 
   function parseSentenceIndex(messageIndex: number, sentenceIndex: number) {
     return messageIndex.toString() + "-" + sentenceIndex.toString();
@@ -699,7 +800,7 @@ export default function Worker({ studentId, assignmentId }: WorkerProps) {
                 <span className="material-symbols-rounded">arrow_back</span>
                 Back to Assignments
               </Button>
-              <ToggleSwitch
+              {/* <ToggleSwitch
                 className="ml-auto"
                 isChecked={darkModeOn}
                 onChange={toggleDarkMode}
@@ -707,7 +808,7 @@ export default function Worker({ studentId, assignmentId }: WorkerProps) {
                 uncheckedIcon={
                   <span className="material-icons">light_mode</span>
                 }
-              />
+              /> */}
             </div>
 
             <div className="mb-8 rounded-lg bg-sky-100 p-3 text-sky-900 shadow-lg">
@@ -785,7 +886,10 @@ export default function Worker({ studentId, assignmentId }: WorkerProps) {
                 Submit
               </Button>
             </div>
-            <div className="rounded-lg border border-matcha-300 bg-matcha-100 p-3 text-matcha-900 shadow-lg">
+            <div
+              ref={reviewRef}
+              className="rounded-lg border border-matcha-300 bg-matcha-100 p-3 text-matcha-900 shadow-lg"
+            >
               {!answerReview && !checkingAnswer && (
                 <span className="opacity-50">
                   Use the &apos;Check&apos; button above to get feedback!
@@ -805,61 +909,11 @@ export default function Worker({ studentId, assignmentId }: WorkerProps) {
           </div>
           {/* desktop worker col */}
           <div className="flex h-full flex-grow flex-col justify-end md:w-7/12">
-            {/* popover */}
-            {showPopover && (
-              <div
-                ref={popoverRef}
-                className="absolute left-1/2 z-10 -translate-x-1/2 transform cursor-pointer rounded-lg border border-gray-300 bg-white py-1 shadow-lg dark:border-white dark:bg-black"
-                style={{
-                  ...(displayPopoverAbove
-                    ? { bottom: window.innerHeight - popoverPosition.y }
-                    : { top: popoverPosition.y }),
-                  left: popoverPosition.x,
-                }}
-                onClick={(e) => e.stopPropagation()}
-              >
-                {loadingPopoverResponseType || popoverResponseContent ? (
-                  loadingPopoverResponseType ? (
-                    <div className="m-2 flex justify-center text-center">
-                      <span className="material-symbols-outlined mr-2 animate-spin">
-                        progress_activity
-                      </span>
-                      Getting {loadingPopoverResponseType}...
-                    </div>
-                  ) : (
-                    <div className="max-w-md px-2">
-                      <Markdown>{popoverResponseContent}</Markdown>
-                    </div>
-                  )
-                ) : (
-                  <div className="flex flex-col">
-                    {/* <div
-                  className="cursor-pointer text-black dark:text-white margin-auto"
-                  onClick={() => setShowPopover(false)}
-                >
-                  <span className="material-icons">close</span>
-                </div> */}
-                    <span
-                      className=" p-2 hover:bg-gray-100 dark:border-white dark:text-white dark:hover:bg-gray-900"
-                      onClick={getWordsDefinition}
-                    >
-                      Define
-                    </span>
-                    <span className=" p-2 hover:bg-gray-100 dark:border-white dark:text-white dark:hover:bg-gray-900">
-                      Pronunciation
-                    </span>
-                    <span className=" p-2 hover:bg-gray-100 dark:border-white dark:text-white dark:hover:bg-gray-900">
-                      Synonym
-                    </span>
-                    <span className="p-2 hover:bg-gray-100 dark:text-white dark:hover:bg-gray-900">
-                      Etymology
-                    </span>
-                  </div>
-                )}
-              </div>
-            )}
             {/* chat */}
-            <div className="mb-6 flex flex-col-reverse gap-6 overflow-y-auto px-5 pb-5">
+            <div
+              ref={chatRef}
+              className="mb-6 flex flex-col-reverse gap-6 overflow-y-auto px-5 pb-5"
+            >
               {chatLog.length === 0 && (
                 <ChatSkeleton className="animate-pulse"></ChatSkeleton>
               )}
@@ -869,6 +923,12 @@ export default function Worker({ studentId, assignmentId }: WorkerProps) {
                     role="img"
                     aria-label={chatMessage.type}
                     className="mt-1 text-2xl"
+                    ref={
+                      chatMessage.type === "assistant" &&
+                      messageIndex === latestAssistantMsgIndex
+                        ? latestChatMessageIconRef
+                        : null
+                    }
                   >
                     {chatMessage.type === "user" ? "👤" : "🤖"}
                   </div>
@@ -879,7 +939,10 @@ export default function Worker({ studentId, assignmentId }: WorkerProps) {
                   )}
 
                   {chatMessage.type === "assistant" && (
-                    <div className="cursor-pointer rounded-lg border border-matcha-300 bg-matcha-100 px-3 py-2 align-middle text-matcha-900 shadow-lg dark:text-sky-100">
+                    <div
+                      ref={latestChatMessageRef}
+                      className="cursor-pointer rounded-lg border border-matcha-300 bg-matcha-100 px-3 py-2 align-middle text-matcha-900 shadow-lg dark:text-sky-100"
+                    >
                       {chatMessage.text.length === 0 && (
                         <div className="material-symbols-outlined animate-spin align-middle">
                           progress_activity
@@ -964,7 +1027,7 @@ export default function Worker({ studentId, assignmentId }: WorkerProps) {
                   type="submit"
                   intent="primary"
                   disabled={userMessage === ""}
-                  className="px-1.5 disabled:cursor-not-allowed disabled:border-none disabled:bg-transparent disabled:text-gray-400 disabled:shadow-none"
+                  className="px-1.5"
                 >
                   <span className="material-symbols-rounded">send</span>
                 </Button>
@@ -973,6 +1036,65 @@ export default function Worker({ studentId, assignmentId }: WorkerProps) {
           </div>
         </div>
       </div>
+
+      <TalkingHead
+        isTalking={isStreamingMessage}
+        left={talkingHeadLeft}
+        top={talkingHeadTop}
+      />
+      {/* popover */}
+      {showPopover && (
+        <div
+          ref={popoverRef}
+          className="absolute left-1/2 z-10 -translate-x-1/2 transform cursor-pointer rounded-lg border border-gray-300 bg-white py-1 shadow-lg dark:border-white dark:bg-black"
+          style={{
+            ...(displayPopoverAbove
+              ? { bottom: window.innerHeight - popoverPosition.y }
+              : { top: popoverPosition.y }),
+            left: popoverPosition.x,
+          }}
+          onClick={(e) => e.stopPropagation()}
+        >
+          {loadingPopoverResponseType || popoverResponseContent ? (
+            loadingPopoverResponseType ? (
+              <div className="m-2 flex justify-center text-center">
+                <span className="material-symbols-outlined mr-2 animate-spin">
+                  progress_activity
+                </span>
+                Getting {loadingPopoverResponseType}...
+              </div>
+            ) : (
+              <div className="max-w-md px-2">
+                <Markdown>{popoverResponseContent}</Markdown>
+              </div>
+            )
+          ) : (
+            <div className="flex flex-col">
+              {/* <div
+                  className="cursor-pointer text-black dark:text-white margin-auto"
+                  onClick={() => setShowPopover(false)}
+                >
+                  <span className="material-icons">close</span>
+                </div> */}
+              <span
+                className=" p-2 hover:bg-gray-100 dark:border-white dark:text-white dark:hover:bg-gray-900"
+                onClick={getWordsDefinition}
+              >
+                Define
+              </span>
+              <span className=" p-2 hover:bg-gray-100 dark:border-white dark:text-white dark:hover:bg-gray-900">
+                Pronunciation
+              </span>
+              <span className=" p-2 hover:bg-gray-100 dark:border-white dark:text-white dark:hover:bg-gray-900">
+                Synonym
+              </span>
+              <span className="p-2 hover:bg-gray-100 dark:text-white dark:hover:bg-gray-900">
+                Etymology
+              </span>
+            </div>
+          )}
+        </div>
+      )}
     </>
   );
 }
