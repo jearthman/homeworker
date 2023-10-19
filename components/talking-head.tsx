@@ -1,50 +1,66 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import Image from "next/image";
 
 interface TalkingHeadProps {
-  isTalking: boolean;
+  talkingIncrement: number;
   left?: number;
   top?: number;
+  useAbsolutePositioning?: boolean;
 }
 
-export default function TalkingHead({
-  isTalking,
+const TalkingHead: React.FC<TalkingHeadProps> = ({
+  talkingIncrement = 0,
   left = 0,
   top = 0,
-}: TalkingHeadProps) {
+  useAbsolutePositioning = true,
+}) => {
+  const positioningStyle = useAbsolutePositioning
+    ? {
+        position: "absolute" as "absolute",
+        left: `${left}px`,
+        top: `${top}px`,
+      }
+    : {};
+
   const [frame, setFrame] = useState(0);
   const frames = [
     "/img/sprite/homeworker_closed.svg",
     "/img/sprite/homeworker_open_1.svg",
     "/img/sprite/homeworker_open_2.svg",
     "/img/sprite/homeworker_open_1.svg",
+    "/img/sprite/homeworker_closed.svg",
   ];
 
+  const localFrameRef = useRef(0);
+  const currentIncrementRef = useRef(talkingIncrement);
+
   useEffect(() => {
-    let interval: NodeJS.Timeout;
-
-    if (isTalking) {
+    if (talkingIncrement !== currentIncrementRef.current) {
+      let interval: NodeJS.Timeout;
       interval = setInterval(() => {
-        setFrame((prevFrame) => (prevFrame + 1) % frames.length);
-      }, 100); // Adjust this time for animation speed
-    } else {
-      setFrame(0); // Reset to first frame
-    }
+        localFrameRef.current = (localFrameRef.current + 1) % frames.length;
+        setFrame(localFrameRef.current);
+        if (localFrameRef.current === frames.length - 1) {
+          clearInterval(interval);
+          currentIncrementRef.current = talkingIncrement;
+        }
+      }, 30); // Adjust this time for animation speed
 
-    return () => clearInterval(interval);
-  }, [isTalking]);
+      return () => clearInterval(interval);
+    }
+  }, [talkingIncrement]);
 
   return (
     <div
       style={{
-        position: "absolute",
-        left: `${left}px`,
-        top: `${top}px`,
+        ...positioningStyle,
         zIndex: 1000,
-        transition: "top 0.6s ease-in-out, left 0.6s ease-in-out",
+        transition: "top 0.3s ease-in-out, left 0.3s ease-in-out",
       }}
     >
       <Image src={frames[frame]} alt="Talking Head" width={64} height={64} />
     </div>
   );
-}
+};
+
+export default React.memo(TalkingHead);

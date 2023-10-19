@@ -26,6 +26,7 @@ export async function getChatMessages(chatId: string) {
     return {
       role: message.role,
       content: message.content,
+      name: message.functionName ? message.functionName : undefined,
     };
   });
 

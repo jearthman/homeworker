@@ -118,7 +118,7 @@ export default function Worker({ studentId, assignmentId }: WorkerProps) {
   const chatRef = useRef<HTMLDivElement | null>(null);
   const reviewRef = useRef<HTMLDivElement | null>(null);
   const [activeDiv, setActiveDiv] = useState<ActiveDiv | null>(null);
-  const [isStreamingMessage, setIsStreamingMessage] = useState<boolean>(false);
+  const talkingIncrement = useRef<number>(0);
   const [talkingHeadTop, setTalkingHeadTop] = useState<number>(0);
   const [talkingHeadLeft, setTalkingHeadLeft] = useState<number>(0);
 
@@ -292,7 +292,7 @@ export default function Worker({ studentId, assignmentId }: WorkerProps) {
       setLatestAssistantMsgIndex(chatMessages.length - 1);
 
       setChatLog(chatMessages);
-      console.log(chatMessages[0]);
+      // console.log(chatMessages[0]);
 
       // If the chat is empty, prompt LLM with a greeting
       if (chatMessages.length === 0) {
@@ -335,15 +335,13 @@ export default function Worker({ studentId, assignmentId }: WorkerProps) {
       let left = 0;
       let top = 0;
       if (activeDiv.name === "chat" && chatRef.current) {
-        const chatRect = chatRef.current.getBoundingClientRect();
-
-        left = rect.left - 20; // position to the right of activeDiv
-        top = rect.top + chatRef.current.scrollHeight - 80; // position above activeDiv
+        left = rect.left - 20;
+        top = rect.top - 20;
       } else if (activeDiv.name === "review") {
-        left = rect.left - 48; // position to the right of activeDiv
-        top = rect.top - 32; // position above activeDiv
+        left = rect.left - 48;
+        top = rect.top - 32;
       } else if (activeDiv.name === "popover") {
-        left = rect.left - 48; // position to the right of activeDiv
+        left = rect.left - 48;
         top = rect.top - 32;
       }
 
@@ -362,6 +360,75 @@ export default function Worker({ studentId, assignmentId }: WorkerProps) {
   useEffect(() => {
     setActiveDiv({ name: "chat", ref: latestChatMessageIconRef.current });
   }, [latestChatMessageTop]);
+
+  // useEffect(() => {
+  //   console.log("chatRef useeffect", chatRef.current);
+  //   if (!chatRef.current) return;
+
+  //   const handleResize = (entries: ResizeObserverEntry[]) => {
+  //     console.log("handleResize chatRef");
+  //     for (let entry of entries) {
+  //       if (latestChatMessageIconRef.current) {
+  //         const rect = latestChatMessageIconRef.current.getBoundingClientRect();
+
+  //         if (chatRef.current) {
+  //           const left = rect.left - 20;
+  //           const top = rect.top + chatRef.current.scrollHeight - 80;
+  //           setTalkingHeadLeft(left);
+  //           setTalkingHeadTop(top);
+  //         }
+  //       }
+  //     }
+  //   };
+
+  //   console.log("init observer for chatRef", chatRef.current);
+  //   const mutationObserver = new MutationObserver(handleResize);
+  //   mutationObserver.disconnect();
+  //   mutationObserver.observe(chatRef.current);
+
+  //   // Cleanup: stop observing the previous element when the ref updates or the component unmounts
+  //   return () => {
+  //     resizeObserver.disconnect();
+  //   };
+  // }, [chatRef.current]);
+
+  useEffect(() => {
+    if (!latestChatMessageRef.current) return;
+
+    const handleMutation = (mutationsList: MutationRecord[]) => {
+      for (let mutation of mutationsList) {
+        if (
+          mutation.type === "childList" ||
+          mutation.type === "characterData"
+        ) {
+          requestAnimationFrame(() => {
+            if (latestChatMessageIconRef.current) {
+              const rect =
+                latestChatMessageIconRef.current.getBoundingClientRect();
+
+              if (chatRef.current) {
+                const left = rect.left - 20;
+                const top = rect.top - 20;
+                setTalkingHeadLeft(left);
+                setTalkingHeadTop(top);
+              }
+            }
+          });
+        }
+      }
+    };
+
+    const mutationObserver = new MutationObserver(handleMutation);
+    mutationObserver.observe(latestChatMessageRef.current, {
+      childList: true,
+      characterData: true,
+      subtree: true,
+    });
+
+    return () => {
+      mutationObserver.disconnect();
+    };
+  }, [latestChatMessageRef.current]);
 
   useEffect(() => {}, [currentProblemIndex]);
 
@@ -585,6 +652,7 @@ export default function Worker({ studentId, assignmentId }: WorkerProps) {
       ) {
         const newAssistantMsgIndex = prevChatLog.length;
         setLatestAssistantMsgIndex(newAssistantMsgIndex);
+        console.log("newAssistantMsgIndex", newAssistantMsgIndex);
 
         return [...prevChatLog, { type: "assistant", text: [] }];
       }
@@ -612,7 +680,6 @@ export default function Worker({ studentId, assignmentId }: WorkerProps) {
       }),
     });
     if (response.ok) {
-      setIsStreamingMessage(true);
       const reader = response.body?.getReader();
 
       const processStream = async (reader: ReadableStreamDefaultReader) => {
@@ -622,9 +689,11 @@ export default function Worker({ studentId, assignmentId }: WorkerProps) {
           try {
             const { done, value } = await reader.read();
             const readString = new TextDecoder("utf-8").decode(value);
+            console.log("readString", readString);
+
+            console.log("talkingIncrement", talkingIncrement);
 
             if (done) {
-              setIsStreamingMessage(false);
               break;
             }
 
@@ -649,6 +718,8 @@ export default function Worker({ studentId, assignmentId }: WorkerProps) {
               } else {
                 updateLastResponse(word);
               }
+
+              talkingIncrement.current++;
             });
           } catch (err) {
             console.log("Error reading from stream: ", err);
@@ -667,6 +738,8 @@ export default function Worker({ studentId, assignmentId }: WorkerProps) {
           } else {
             updateLastResponse(currentSentence); // Send any remaining content
           }
+
+          talkingIncrement.current++;
         }
       };
       if (reader) {
@@ -715,7 +788,7 @@ export default function Worker({ studentId, assignmentId }: WorkerProps) {
 
         newChatLog[newChatLog.length - 1] = lastMessage;
       }
-      console.log(newChatLog);
+      console.log(newChatLog[0]);
       return newChatLog;
     });
   }
@@ -922,10 +995,13 @@ export default function Worker({ studentId, assignmentId }: WorkerProps) {
                   <div
                     role="img"
                     aria-label={chatMessage.type}
-                    className="mt-1 text-2xl"
+                    className={`mt-1 text-2xl ${
+                      chatMessage.type === "assistant" && messageIndex === 0
+                        ? "opacity-0"
+                        : ""
+                    }`}
                     ref={
-                      chatMessage.type === "assistant" &&
-                      messageIndex === latestAssistantMsgIndex
+                      chatMessage.type === "assistant" && messageIndex === 0
                         ? latestChatMessageIconRef
                         : null
                     }
@@ -940,7 +1016,7 @@ export default function Worker({ studentId, assignmentId }: WorkerProps) {
 
                   {chatMessage.type === "assistant" && (
                     <div
-                      ref={latestChatMessageRef}
+                      ref={messageIndex === 0 ? latestChatMessageRef : null}
                       className="cursor-pointer rounded-lg border border-matcha-300 bg-matcha-100 px-3 py-2 align-middle text-matcha-900 shadow-lg dark:text-sky-100"
                     >
                       {chatMessage.text.length === 0 && (
@@ -1038,7 +1114,7 @@ export default function Worker({ studentId, assignmentId }: WorkerProps) {
       </div>
 
       <TalkingHead
-        isTalking={isStreamingMessage}
+        talkingIncrement={talkingIncrement.current}
         left={talkingHeadLeft}
         top={talkingHeadTop}
       />
