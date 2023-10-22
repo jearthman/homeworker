@@ -109,8 +109,6 @@ export default function Worker({ studentId, assignmentId }: WorkerProps) {
   const [studentProblemAnswers, setStudentProblemAnswers] = useState<
     StudentProblemAnswer[]
   >([]);
-  const [latestAssistantMsgIndex, setLatestAssistantMsgIndex] = useState(-1);
-
   const popoverRef = useRef<HTMLDivElement | null>(null);
   const latestChatMessageIconRef = useRef<HTMLDivElement | null>(null);
   const latestChatMessageRef = useRef<HTMLDivElement | null>(null);
@@ -121,6 +119,7 @@ export default function Worker({ studentId, assignmentId }: WorkerProps) {
   const talkingIncrement = useRef<number>(0);
   const [talkingHeadTop, setTalkingHeadTop] = useState<number>(0);
   const [talkingHeadLeft, setTalkingHeadLeft] = useState<number>(0);
+  const [initializingChat, setInitializingChat] = useState<boolean>(false);
 
   // eslint-disable-next-line react-hooks/exhaustive-deps
   useEffect(() => {
@@ -214,6 +213,7 @@ export default function Worker({ studentId, assignmentId }: WorkerProps) {
         chatId.current = studentAssignment.chat.id;
         chat = studentAssignment.chat;
       } else {
+        setInitializingChat(true);
         const initChatEndpoint = `${baseUrl}/api/init-chat/`;
         logRequest(initChatEndpoint, { studentId, assignmentId });
         const chatRes = await fetch(initChatEndpoint, {
@@ -289,11 +289,8 @@ export default function Worker({ studentId, assignmentId }: WorkerProps) {
           }
         });
 
-      setLatestAssistantMsgIndex(chatMessages.length - 1);
-
       setChatLog(chatMessages);
-      // console.log(chatMessages[0]);
-
+      setInitializingChat(false);
       // If the chat is empty, prompt LLM with a greeting
       if (chatMessages.length === 0) {
         sendMessage([student?.firstName] || "", "greeting");
@@ -335,14 +332,19 @@ export default function Worker({ studentId, assignmentId }: WorkerProps) {
       let left = 0;
       let top = 0;
       if (activeDiv.name === "chat" && chatRef.current) {
-        left = rect.left - 20;
-        top = rect.top - 20;
+        left = rect.left - 48;
+        top = rect.bottom - 32;
       } else if (activeDiv.name === "review") {
         left = rect.left - 48;
         top = rect.top - 32;
       } else if (activeDiv.name === "popover") {
-        left = rect.left - 48;
-        top = rect.top - 32;
+        if (displayPopoverAbove) {
+          left = rect.left - 48;
+          top = rect.bottom - 32;
+        } else {
+          left = rect.left - 48;
+          top = rect.top - 32;
+        }
       }
 
       setTalkingHeadLeft(left);
@@ -350,85 +352,54 @@ export default function Worker({ studentId, assignmentId }: WorkerProps) {
     }
   }, [activeDiv]);
 
-  useEffect(() => {
-    if (latestChatMessageIconRef.current) {
-      const rect = latestChatMessageIconRef.current.getBoundingClientRect();
-      setLatestChatMessageTop(rect.top);
-    }
-  }, [latestChatMessageIconRef.current]);
+  // useEffect(() => {
+  //   if (latestChatMessageIconRef.current) {
+  //     const rect = latestChatMessageIconRef.current.getBoundingClientRect();
+  //     setLatestChatMessageTop(rect.top);
+  //   }
+  // }, [latestChatMessageIconRef.current]);
 
   useEffect(() => {
-    setActiveDiv({ name: "chat", ref: latestChatMessageIconRef.current });
+    setActiveDiv({ name: "chat", ref: latestChatMessageRef.current });
   }, [latestChatMessageTop]);
 
   // useEffect(() => {
-  //   console.log("chatRef useeffect", chatRef.current);
-  //   if (!chatRef.current) return;
+  //   if (!latestChatMessageRef.current) return;
 
-  //   const handleResize = (entries: ResizeObserverEntry[]) => {
-  //     console.log("handleResize chatRef");
-  //     for (let entry of entries) {
-  //       if (latestChatMessageIconRef.current) {
-  //         const rect = latestChatMessageIconRef.current.getBoundingClientRect();
+  //   const handleMutation = (mutationsList: MutationRecord[]) => {
+  //     for (let mutation of mutationsList) {
+  //       if (
+  //         mutation.type === "childList" ||
+  //         mutation.type === "characterData"
+  //       ) {
+  //         requestAnimationFrame(() => {
+  //           if (latestChatMessageIconRef.current) {
+  //             const rect =
+  //               latestChatMessageIconRef.current.getBoundingClientRect();
 
-  //         if (chatRef.current) {
-  //           const left = rect.left - 20;
-  //           const top = rect.top + chatRef.current.scrollHeight - 80;
-  //           setTalkingHeadLeft(left);
-  //           setTalkingHeadTop(top);
-  //         }
+  //             if (chatRef.current) {
+  //               const left = rect.left - 20;
+  //               const top = rect.top - 20;
+  //               setTalkingHeadLeft(left);
+  //               setTalkingHeadTop(top);
+  //             }
+  //           }
+  //         });
   //       }
   //     }
   //   };
 
-  //   console.log("init observer for chatRef", chatRef.current);
-  //   const mutationObserver = new MutationObserver(handleResize);
-  //   mutationObserver.disconnect();
-  //   mutationObserver.observe(chatRef.current);
+  //   const mutationObserver = new MutationObserver(handleMutation);
+  //   mutationObserver.observe(latestChatMessageRef.current, {
+  //     childList: true,
+  //     characterData: true,
+  //     subtree: true,
+  //   });
 
-  //   // Cleanup: stop observing the previous element when the ref updates or the component unmounts
   //   return () => {
-  //     resizeObserver.disconnect();
+  //     mutationObserver.disconnect();
   //   };
-  // }, [chatRef.current]);
-
-  useEffect(() => {
-    if (!latestChatMessageRef.current) return;
-
-    const handleMutation = (mutationsList: MutationRecord[]) => {
-      for (let mutation of mutationsList) {
-        if (
-          mutation.type === "childList" ||
-          mutation.type === "characterData"
-        ) {
-          requestAnimationFrame(() => {
-            if (latestChatMessageIconRef.current) {
-              const rect =
-                latestChatMessageIconRef.current.getBoundingClientRect();
-
-              if (chatRef.current) {
-                const left = rect.left - 20;
-                const top = rect.top - 20;
-                setTalkingHeadLeft(left);
-                setTalkingHeadTop(top);
-              }
-            }
-          });
-        }
-      }
-    };
-
-    const mutationObserver = new MutationObserver(handleMutation);
-    mutationObserver.observe(latestChatMessageRef.current, {
-      childList: true,
-      characterData: true,
-      subtree: true,
-    });
-
-    return () => {
-      mutationObserver.disconnect();
-    };
-  }, [latestChatMessageRef.current]);
+  // }, [latestChatMessageRef.current]);
 
   useEffect(() => {}, [currentProblemIndex]);
 
@@ -595,7 +566,7 @@ export default function Worker({ studentId, assignmentId }: WorkerProps) {
       setClickedWord(null);
     }
 
-    setActiveDiv({ name: "chat", ref: latestChatMessageIconRef.current });
+    setActiveDiv({ name: "chat", ref: latestChatMessageRef.current });
   }
 
   // Redux
@@ -650,10 +621,6 @@ export default function Worker({ studentId, assignmentId }: WorkerProps) {
           prevChatLog[prevChatLog.length - 1].type === "user") &&
         (interactionType === "greeting" || !interactionType)
       ) {
-        const newAssistantMsgIndex = prevChatLog.length;
-        setLatestAssistantMsgIndex(newAssistantMsgIndex);
-        console.log("newAssistantMsgIndex", newAssistantMsgIndex);
-
         return [...prevChatLog, { type: "assistant", text: [] }];
       }
       return prevChatLog;
@@ -664,7 +631,7 @@ export default function Worker({ studentId, assignmentId }: WorkerProps) {
     } else if (interactionType === "checkAnswer") {
       setActiveDiv({ name: "review", ref: reviewRef.current });
     } else {
-      setActiveDiv({ name: "chat", ref: latestChatMessageIconRef.current });
+      setActiveDiv({ name: "chat", ref: latestChatMessageRef.current });
     }
 
     // Send the input to the server
@@ -689,9 +656,6 @@ export default function Worker({ studentId, assignmentId }: WorkerProps) {
           try {
             const { done, value } = await reader.read();
             const readString = new TextDecoder("utf-8").decode(value);
-            console.log("readString", readString);
-
-            console.log("talkingIncrement", talkingIncrement);
 
             if (done) {
               break;
@@ -788,7 +752,7 @@ export default function Worker({ studentId, assignmentId }: WorkerProps) {
 
         newChatLog[newChatLog.length - 1] = lastMessage;
       }
-      console.log(newChatLog[0]);
+
       return newChatLog;
     });
   }
@@ -870,7 +834,9 @@ export default function Worker({ studentId, assignmentId }: WorkerProps) {
                 className="inline"
                 onClick={() => router.push("/portal")}
               >
-                <span className="material-symbols-rounded">arrow_back</span>
+                <span className="material-symbols-rounded pr-1">
+                  arrow_back
+                </span>
                 Back to Assignments
               </Button>
               {/* <ToggleSwitch
@@ -927,8 +893,16 @@ export default function Worker({ studentId, assignmentId }: WorkerProps) {
               />
             )}
             <div className="mb-8 flex justify-between">
-              <Button size="small" intent="secondary" onClick={checkAnswer}>
-                Check
+              <Button
+                size="small"
+                intent="secondary"
+                onClick={checkAnswer}
+                className="text-center"
+              >
+                <span className="material-symbols-rounded pr-1">
+                  plagiarism
+                </span>
+                Review
               </Button>
               {currentProblem && (
                 <div className="flex gap-2">
@@ -956,16 +930,17 @@ export default function Worker({ studentId, assignmentId }: WorkerProps) {
                 </div>
               )}
               <Button size="small" className="">
+                <span className="material-symbols-rounded pr-1">task</span>
                 Submit
               </Button>
             </div>
             <div
               ref={reviewRef}
-              className="rounded-lg border border-matcha-300 bg-matcha-100 p-3 text-matcha-900 shadow-lg"
+              className="rounded-lg border border-matcha-300 bg-matcha-100 px-3 py-2 text-matcha-900 shadow-lg"
             >
               {!answerReview && !checkingAnswer && (
                 <span className="opacity-50">
-                  Use the &apos;Check&apos; button above to get feedback!
+                  Use the &apos;Review&apos; button above to get feedback!
                 </span>
               )}
               {checkingAnswer ? (
@@ -987,9 +962,17 @@ export default function Worker({ studentId, assignmentId }: WorkerProps) {
               ref={chatRef}
               className="mb-6 flex flex-col-reverse gap-6 overflow-y-auto px-5 pb-5"
             >
-              {chatLog.length === 0 && (
-                <ChatSkeleton className="animate-pulse"></ChatSkeleton>
-              )}
+              {chatLog.length === 0 &&
+                (initializingChat ? (
+                  <div className="w-80 self-center rounded-lg border border-gray-300 bg-white px-3 py-2 text-center shadow-lg dark:border-white dark:bg-black">
+                    <div className="material-symbols-outlined mr-2 animate-spin align-middle">
+                      progress_activity
+                    </div>
+                    Starting up a new Homeworker...
+                  </div>
+                ) : (
+                  <ChatSkeleton className="animate-pulse"></ChatSkeleton>
+                ))}
               {[...chatLog].reverse().map((chatMessage, messageIndex) => (
                 <div key={messageIndex} className="flex gap-4">
                   <div
@@ -1103,7 +1086,7 @@ export default function Worker({ studentId, assignmentId }: WorkerProps) {
                   type="submit"
                   intent="primary"
                   disabled={userMessage === ""}
-                  className="px-1.5"
+                  size="small-icon"
                 >
                   <span className="material-symbols-rounded">send</span>
                 </Button>
@@ -1133,14 +1116,14 @@ export default function Worker({ studentId, assignmentId }: WorkerProps) {
         >
           {loadingPopoverResponseType || popoverResponseContent ? (
             loadingPopoverResponseType ? (
-              <div className="m-2 flex justify-center text-center">
+              <div className="flex w-56 justify-center text-center">
                 <span className="material-symbols-outlined mr-2 animate-spin">
                   progress_activity
                 </span>
                 Getting {loadingPopoverResponseType}...
               </div>
             ) : (
-              <div className="max-w-md px-2">
+              <div className="w-56 px-3 py-2">
                 <Markdown>{popoverResponseContent}</Markdown>
               </div>
             )

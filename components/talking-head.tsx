@@ -55,7 +55,7 @@ const TalkingHead: React.FC<TalkingHeadProps> = ({
       style={{
         ...positioningStyle,
         zIndex: 1000,
-        transition: "top 0.3s ease-in-out, left 0.3s ease-in-out",
+        transition: "top 0.5s ease-in-out, left 0.5s ease-in-out",
       }}
     >
       <Image src={frames[frame]} alt="Talking Head" width={64} height={64} />

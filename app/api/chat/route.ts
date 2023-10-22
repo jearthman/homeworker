@@ -1,13 +1,13 @@
 import OpenAI from "openai";
 import { OpenAIStream, StreamingTextResponse } from "ai";
 import { debugLog } from "../../../utils/server-helpers";
-import { getChat, setChat } from "../../../redis/redis-server-helpers";
-import { findUniqueChat } from "../../../pages/api/get-chat";
+import { setChat } from "../../../redis/redis-server-helpers";
 import { ChatCompletionMessageParam } from "openai/resources";
 import { functions, runFunction } from "./functions";
 import { createMessage } from "../../../pages/api/add-message";
 import { getPromptTemplate } from "../../../utils/prompt-templates";
 import { getChatMessages } from "./helpers";
+import { taskCompleted } from "@reduxjs/toolkit/dist/listenerMiddleware/exceptions";
 
 const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY!,
@@ -54,20 +54,23 @@ export async function POST(req: Request) {
   });
 
   const stream = OpenAIStream(initialResponse, {
-    onCompletion: async (completion) => {
-      //write to redis
-      messages.push({
-        role: "assistant",
-        content: completion,
-      });
-      setChat(chatId, messages);
-      //write to postgres
+    onStart: async () => {
+      //write user message to DB
       await createMessage(
         parseInt(chatId),
         "user",
         content,
         interactionType ? true : false,
       );
+    },
+    onFinal: async (completion) => {
+      //write messages to redis
+      messages.push({
+        role: "assistant",
+        content: completion,
+      });
+      setChat(chatId, messages);
+      //write assistent message to DB
       await createMessage(
         parseInt(chatId),
         "assistant",
@@ -82,6 +85,7 @@ export async function POST(req: Request) {
         name: name,
         content: result,
       });
+      //write function message to DB
       await createMessage(
         chatId,
         "function",
@@ -99,6 +103,5 @@ export async function POST(req: Request) {
     },
   });
 
-  // Respond with the stream
   return new StreamingTextResponse(stream);
 }

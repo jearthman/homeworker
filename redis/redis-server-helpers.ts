@@ -10,6 +10,7 @@ export async function setChat(
     debugLog(
       `Setting chat ${chatId} in Redis: ${JSON.stringify(kvChatClient)}`,
     );
+    kvChatClient.del(chatId);
     return await kvChatClient.set(chatId, chat);
   } catch (error: any) {
     console.error("Error setting chat:", error.message);

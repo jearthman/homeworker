@@ -31,6 +31,11 @@ const buttonStyles = cva(
         large: "px-4 py-2 text-xl",
         xlarge: "px-5 py-2.5 text-2xl",
         xxlarge: "px-6 py-3 text-3xl",
+        "small-icon": "px-1 py-1 text-base",
+        "medium-icon": "px-1.5 py-1.5 text-lg",
+        "large-icon": "px-2 py-2 text-xl",
+        "xlarge-icon": "px-2.5 py-2.5 text-2xl",
+        "xxlarge-icon": "px-3 py-3 text-3xl",
       },
     },
     defaultVariants: {
