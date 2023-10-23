@@ -953,7 +953,6 @@ export default function Worker({ studentId, assignmentId }: WorkerProps) {
                       ref={messageIndex === 0 ? latestChatMessageRef : null}
                       className="cursor-pointer rounded-lg border border-matcha-300 bg-matcha-100 px-3 py-2 align-middle text-matcha-900 shadow-lg dark:text-sky-100"
                     >
-                      <div>{messageIndex}</div>
                       {chatMessage.text.length === 0 && (
                         <div className="material-symbols-outlined animate-spin align-middle">
                           progress_activity
