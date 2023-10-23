@@ -6,6 +6,7 @@ interface TalkingHeadProps {
   left?: number;
   top?: number;
   useAbsolutePositioning?: boolean;
+  hidden?: boolean;
 }
 
 const TalkingHead: React.FC<TalkingHeadProps> = ({
@@ -13,6 +14,7 @@ const TalkingHead: React.FC<TalkingHeadProps> = ({
   left = 0,
   top = 0,
   useAbsolutePositioning = true,
+  hidden = false,
 }) => {
   const positioningStyle = useAbsolutePositioning
     ? {
@@ -56,6 +58,7 @@ const TalkingHead: React.FC<TalkingHeadProps> = ({
         ...positioningStyle,
         zIndex: 1000,
         transition: "top 0.5s ease-in-out, left 0.5s ease-in-out",
+        display: hidden ? "none" : "block",
       }}
     >
       <Image src={frames[frame]} alt="Talking Head" width={64} height={64} />

@@ -1,10 +1,8 @@
-import { useState, useEffect, useRef, FormEvent } from "react";
+import { useState, useEffect, useLayoutEffect, useRef, FormEvent } from "react";
 import { GetServerSidePropsContext } from "next";
 import { useRouter } from "next/router";
-import dynamic from "next/dynamic";
 import Button from "@/components/design-system/button";
 import React from "react";
-import ToggleSwitch from "../components/design-system/toggle-switch";
 import { useDispatch, useSelector } from "react-redux";
 import { toggleTheme } from "../redux/slices/themeSlice";
 import { RootState } from "../redux/store";
@@ -18,7 +16,6 @@ import {
   Assignment,
   StudentAssignment,
   Message,
-  Chat,
   Problem,
   StudentProblemAnswer,
 } from "@prisma/client"; // import { current } from "@reduxjs/toolkit";
@@ -122,6 +119,7 @@ export default function Worker({ studentId, assignmentId }: WorkerProps) {
   const [initializingChat, setInitializingChat] = useState<boolean>(false);
 
   // eslint-disable-next-line react-hooks/exhaustive-deps
+  // init useEffect block
   useEffect(() => {
     if (!studentId || !assignmentId) {
       console.log("studentId or assignmentId is null", studentId, assignmentId);
@@ -134,6 +132,9 @@ export default function Worker({ studentId, assignmentId }: WorkerProps) {
       baseUrl = `${window.location.protocol}//${window.location.host}`;
     }
     setBaseUrl(baseUrl);
+
+    setTalkingHeadLeft(window.innerWidth / 2);
+    setTalkingHeadTop(window.innerHeight);
 
     async function fetchData() {
       const studentEndpoint = `${baseUrl}/api/student-by-id/?studentId=${studentId}`;
@@ -302,12 +303,7 @@ export default function Worker({ studentId, assignmentId }: WorkerProps) {
 
   useEffect(() => {
     // Add event listener when the popover is shown
-    if (showPopover) {
-      document.addEventListener("click", handleClickOutside);
-    } else {
-      document.removeEventListener("click", handleClickOutside);
-    }
-
+    document.addEventListener("click", handleClickOutside);
     // Cleanup on unmount
     return () => {
       document.removeEventListener("click", handleClickOutside);
@@ -352,56 +348,11 @@ export default function Worker({ studentId, assignmentId }: WorkerProps) {
     }
   }, [activeDiv]);
 
-  // useEffect(() => {
-  //   if (latestChatMessageIconRef.current) {
-  //     const rect = latestChatMessageIconRef.current.getBoundingClientRect();
-  //     setLatestChatMessageTop(rect.top);
-  //   }
-  // }, [latestChatMessageIconRef.current]);
-
   useEffect(() => {
-    setActiveDiv({ name: "chat", ref: latestChatMessageRef.current });
-  }, [latestChatMessageTop]);
-
-  // useEffect(() => {
-  //   if (!latestChatMessageRef.current) return;
-
-  //   const handleMutation = (mutationsList: MutationRecord[]) => {
-  //     for (let mutation of mutationsList) {
-  //       if (
-  //         mutation.type === "childList" ||
-  //         mutation.type === "characterData"
-  //       ) {
-  //         requestAnimationFrame(() => {
-  //           if (latestChatMessageIconRef.current) {
-  //             const rect =
-  //               latestChatMessageIconRef.current.getBoundingClientRect();
-
-  //             if (chatRef.current) {
-  //               const left = rect.left - 20;
-  //               const top = rect.top - 20;
-  //               setTalkingHeadLeft(left);
-  //               setTalkingHeadTop(top);
-  //             }
-  //           }
-  //         });
-  //       }
-  //     }
-  //   };
-
-  //   const mutationObserver = new MutationObserver(handleMutation);
-  //   mutationObserver.observe(latestChatMessageRef.current, {
-  //     childList: true,
-  //     characterData: true,
-  //     subtree: true,
-  //   });
-
-  //   return () => {
-  //     mutationObserver.disconnect();
-  //   };
-  // }, [latestChatMessageRef.current]);
-
-  useEffect(() => {}, [currentProblemIndex]);
+    if (latestChatMessageRef) {
+      setActiveDiv({ name: "chat", ref: latestChatMessageRef.current });
+    }
+  }, [chatLog[0]]);
 
   // Utility function to log request details
   const logRequest = (endpoint: string, body: any) => {
@@ -564,9 +515,8 @@ export default function Worker({ studentId, assignmentId }: WorkerProps) {
       setclickedSentenceKey(null);
       setclickedWordKey(null);
       setClickedWord(null);
+      setActiveDiv({ name: "chat", ref: latestChatMessageRef.current });
     }
-
-    setActiveDiv({ name: "chat", ref: latestChatMessageRef.current });
   }
 
   // Redux
@@ -898,6 +848,8 @@ export default function Worker({ studentId, assignmentId }: WorkerProps) {
                 intent="secondary"
                 onClick={checkAnswer}
                 className="text-center"
+                disabled={answer.length === 0 || checkingAnswer}
+                title="Let the homerworker review your answer"
               >
                 <span className="material-symbols-rounded pr-1">
                   plagiarism
@@ -929,7 +881,7 @@ export default function Worker({ studentId, assignmentId }: WorkerProps) {
                   </Button>
                 </div>
               )}
-              <Button size="small" className="">
+              <Button size="small" className="" disabled={answer.length === 0}>
                 <span className="material-symbols-rounded pr-1">task</span>
                 Submit
               </Button>
@@ -996,12 +948,12 @@ export default function Worker({ studentId, assignmentId }: WorkerProps) {
                       {chatMessage.text}
                     </div>
                   )}
-
                   {chatMessage.type === "assistant" && (
                     <div
                       ref={messageIndex === 0 ? latestChatMessageRef : null}
                       className="cursor-pointer rounded-lg border border-matcha-300 bg-matcha-100 px-3 py-2 align-middle text-matcha-900 shadow-lg dark:text-sky-100"
                     >
+                      <div>{messageIndex}</div>
                       {chatMessage.text.length === 0 && (
                         <div className="material-symbols-outlined animate-spin align-middle">
                           progress_activity
@@ -1100,6 +1052,7 @@ export default function Worker({ studentId, assignmentId }: WorkerProps) {
         talkingIncrement={talkingIncrement.current}
         left={talkingHeadLeft}
         top={talkingHeadTop}
+        hidden={chatLog.length === 0}
       />
       {/* popover */}
       {showPopover && (

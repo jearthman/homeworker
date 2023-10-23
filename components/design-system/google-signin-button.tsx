@@ -1,5 +1,4 @@
 import { signIn } from "next-auth/react";
-import Image from "next/image";
 import { Roboto_Flex } from "next/font/google";
 
 const roboto = Roboto_Flex({

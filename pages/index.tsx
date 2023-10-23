@@ -20,19 +20,6 @@ export default function Landing() {
           </div>
           <div></div>
         </div>
-
-        {/* <div className="flex flex-col">
-            <Image
-              src="/img/woman_therapy.jpg"
-              alt="Woman therpist talks with girl."
-              width={500}
-              height={500}
-            ></Image>
-            <p className="text-center text-xs">
-              Image by pch.vector on Freepik
-            </p>
-          </div> */}
-        {/* </div> */}
       </div>
     </>
   );

@@ -11,7 +11,7 @@ export async function setChat(
       `Setting chat ${chatId} in Redis: ${JSON.stringify(kvChatClient)}`,
     );
     kvChatClient.del(chatId);
-    return await kvChatClient.set(chatId, chat);
+    return await kvChatClient.set(`chat:${chatId}`, chat);
   } catch (error: any) {
     console.error("Error setting chat:", error.message);
     return null;
@@ -25,7 +25,7 @@ export async function getChat(
     debugLog(
       `Getting chat ${chatId} from Redis: ${JSON.stringify(kvChatClient)}`,
     );
-    return await kvChatClient.get(chatId);
+    return await kvChatClient.get(`chat:${chatId}`);
   } catch (error: any) {
     console.error("Error getting chat:", error.message);
     return null;
