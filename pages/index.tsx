@@ -1,11 +1,4 @@
-import "material-icons/iconfont/material-icons.css";
-import { Playfair_Display } from "next/font/google";
 import GoogleSignInButton from "@/components/design-system/google-signin-button";
-
-const playfairDisplay = Playfair_Display({
-  subsets: ["latin"],
-  variable: "--font-playfairDisplay",
-});
 
 export default function Landing() {
   return (

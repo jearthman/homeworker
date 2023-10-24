@@ -828,7 +828,7 @@ export default function Worker({ studentId, assignmentId }: WorkerProps) {
             {currentProblem && <div>Problem {currentProblemIndex + 1}</div>}
             {loadingAnswer ? (
               <div className="mb-2 block min-h-[1rem] w-full rounded-lg bg-white p-3 shadow-lg">
-                <span className="material-symbols-outlined mr-2 animate-spin">
+                <span className="material-symbols-rounded mr-2 animate-spin">
                   progress_activity
                 </span>
               </div>
@@ -897,7 +897,7 @@ export default function Worker({ studentId, assignmentId }: WorkerProps) {
               )}
               {checkingAnswer ? (
                 <div className="flex justify-center text-center">
-                  <span className="material-symbols-outlined mr-2 animate-spin">
+                  <span className="material-symbols-rounded mr-2 animate-spin">
                     progress_activity
                   </span>
                   Checking your answer...
@@ -917,7 +917,7 @@ export default function Worker({ studentId, assignmentId }: WorkerProps) {
               {chatLog.length === 0 &&
                 (initializingChat ? (
                   <div className="w-80 self-center rounded-lg border border-gray-300 bg-white px-3 py-2 text-center shadow-lg dark:border-white dark:bg-black">
-                    <div className="material-symbols-outlined mr-2 animate-spin align-middle">
+                    <div className="material-symbols-rounded mr-2 animate-spin align-middle">
                       progress_activity
                     </div>
                     Starting up a new Homeworker...
@@ -954,7 +954,7 @@ export default function Worker({ studentId, assignmentId }: WorkerProps) {
                       className="cursor-pointer rounded-lg border border-matcha-300 bg-matcha-100 px-3 py-2 align-middle text-matcha-900 shadow-lg dark:text-sky-100"
                     >
                       {chatMessage.text.length === 0 && (
-                        <div className="material-symbols-outlined animate-spin align-middle">
+                        <div className="material-symbols-rounded animate-spin align-middle">
                           progress_activity
                         </div>
                       )}
@@ -1069,7 +1069,7 @@ export default function Worker({ studentId, assignmentId }: WorkerProps) {
           {loadingPopoverResponseType || popoverResponseContent ? (
             loadingPopoverResponseType ? (
               <div className="flex w-56 justify-center text-center">
-                <span className="material-symbols-outlined mr-2 animate-spin">
+                <span className="material-symbols-rounded mr-2 animate-spin">
                   progress_activity
                 </span>
                 Getting {loadingPopoverResponseType}...

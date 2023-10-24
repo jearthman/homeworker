@@ -7,7 +7,6 @@ import { functions, runFunction } from "./functions";
 import { createMessage } from "../../../pages/api/add-message";
 import { getPromptTemplate } from "../../../utils/prompt-templates";
 import { getChatMessages } from "./helpers";
-import { taskCompleted } from "@reduxjs/toolkit/dist/listenerMiddleware/exceptions";
 
 const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY!,

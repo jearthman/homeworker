@@ -1,7 +1,5 @@
 import { AppProps } from "next/app";
 import "styles/globals.css";
-import "material-icons/iconfont/material-icons.css";
-import "material-symbols";
 import { Provider } from "react-redux";
 import { store, RootState } from "../redux/store";
 import { useSelector } from "react-redux";
