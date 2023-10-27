@@ -7,6 +7,7 @@ import { functions, runFunction } from "./functions";
 import { createMessage } from "../../../pages/api/add-message";
 import { getPromptTemplate } from "../../../utils/prompt-templates";
 import { getChatMessages } from "./helpers";
+import { APIError } from "openai/error";
 
 const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY!,
@@ -44,63 +45,110 @@ export async function POST(req: Request) {
     content: content,
   });
 
-  const initialResponse = await openai.chat.completions.create({
-    model: "gpt-4-0613",
-    messages,
-    stream: true,
-    functions,
-    function_call: "auto",
-  });
+  try {
+    const initialResponse = await openai.chat.completions.create({
+      model: "gpt-4-0613",
+      messages,
+      stream: true,
+      functions,
+      function_call: "auto",
+    });
 
-  const stream = OpenAIStream(initialResponse, {
-    onStart: async () => {
-      //write user message to DB
-      await createMessage(
-        parseInt(chatId),
-        "user",
-        content,
-        interactionType ? true : false,
-      );
-    },
-    onFinal: async (completion) => {
-      //write messages to redis
-      messages.push({
-        role: "assistant",
-        content: completion,
-      });
-      setChat(chatId, messages);
-      //write assistent message to DB
-      await createMessage(
-        parseInt(chatId),
-        "assistant",
-        completion,
-        interactionType && interactionType !== "greeting" ? true : false,
-      );
-    },
-    experimental_onFunctionCall: async ({ name, arguments: args }) => {
-      const result = await runFunction(name, args);
-      messages.push({
-        role: "function",
-        name: name,
-        content: result,
-      });
-      //write function message to DB
-      await createMessage(
-        chatId,
-        "function",
-        result,
-        interactionType ? true : false,
-        name,
-      );
-      return openai.chat.completions.create({
-        model: "gpt-3.5-turbo-0613",
-        stream: true,
-        messages: messages,
-        functions,
-        function_call: "auto",
-      });
-    },
-  });
+    const stream = OpenAIStream(initialResponse, {
+      onStart: async () => {
+        //write user message to DB
+        await createMessage(
+          parseInt(chatId),
+          "user",
+          content,
+          interactionType ? true : false,
+        );
+      },
+      onFinal: async (completion) => {
+        //write messages to redis
+        messages.push({
+          role: "assistant",
+          content: completion,
+        });
+        setChat(chatId, messages);
+        //write assistant message to DB
+        await createMessage(
+          parseInt(chatId),
+          "assistant",
+          completion,
+          interactionType && interactionType !== "greeting" ? true : false,
+        );
+      },
+      experimental_onFunctionCall: async (
+        { name, arguments: args },
+        createFunctionCallMessages,
+      ) => {
+        const result = await runFunction(name, args);
 
-  return new StreamingTextResponse(stream);
+        const newMessages = await createFunctionCallMessages(result);
+        const assistantMessage = newMessages[0];
+
+        let functionCall;
+        if (
+          typeof assistantMessage.function_call === "object" &&
+          assistantMessage.function_call.arguments !== undefined
+        ) {
+          functionCall = {
+            name: name,
+            arguments: assistantMessage.function_call?.arguments,
+          };
+        }
+        //write assistant message and function call message to redis
+        messages.push({
+          role: "assistant",
+          function_call: functionCall,
+          content: "",
+        });
+
+        messages.push({
+          role: "function",
+          name: name,
+          content: result,
+        });
+        //write function message to DB
+        await createMessage(
+          chatId,
+          "assistant",
+          "",
+          true,
+          JSON.stringify(functionCall),
+        );
+
+        await createMessage(
+          chatId,
+          "function",
+          result,
+          interactionType ? true : false,
+          undefined,
+          name,
+        );
+        return openai.chat.completions.create({
+          model: "gpt-3.5-turbo-0613",
+          stream: true,
+          messages: messages,
+          functions,
+          function_call: "auto",
+        });
+      },
+    });
+    return new StreamingTextResponse(stream);
+  } catch (error: any) {
+    console.log("ERROR WHILE GETTING INITAL RESPONSE: ", error);
+
+    if (error instanceof APIError) {
+      return new Response(`Error: ${error.code}`, {
+        status: error.status,
+        headers: {
+          "X-Error-Code": error.code || "unknown",
+          "Access-Control-Expose-Headers": "X-Error-Code",
+        },
+      });
+    }
+    return new Response("Error creating initial response", { status: 400 });
+  }
 }

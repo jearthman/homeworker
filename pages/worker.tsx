@@ -6,7 +6,6 @@ import React from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { toggleTheme } from "../redux/slices/themeSlice";
 import { RootState } from "../redux/store";
-import styles from "./worker.module.css";
 import { userMessageIsContextual } from "../utils/clientHelpers";
 import ProblemsProgress from "../components/problems-progress";
 import TalkingHead from "@/components/talking-head";
@@ -117,6 +116,7 @@ export default function Worker({ studentId, assignmentId }: WorkerProps) {
   const [talkingHeadTop, setTalkingHeadTop] = useState<number>(0);
   const [talkingHeadLeft, setTalkingHeadLeft] = useState<number>(0);
   const [initializingChat, setInitializingChat] = useState<boolean>(false);
+  const [chatErrorCode, setChatErrorCode] = useState<string | null>(null);
 
   // eslint-disable-next-line react-hooks/exhaustive-deps
   // init useEffect block
@@ -213,88 +213,24 @@ export default function Worker({ studentId, assignmentId }: WorkerProps) {
       if (studentAssignment.chat) {
         chatId.current = studentAssignment.chat.id;
         chat = studentAssignment.chat;
+        // Add the chat messages to the chat log
+        const chatMessages: ChatMessage[] = parseChatMessagesFromMemory(
+          chat.messages,
+        );
+
+        if (chatMessages.length === 0) {
+          sendMessage([student?.firstName] || "", "greeting");
+        }
+
+        setChatLog(chatMessages);
+        setInitializingChat(false);
       } else {
-        setInitializingChat(true);
-        const initChatEndpoint = `${baseUrl}/api/init-chat/`;
-        logRequest(initChatEndpoint, { studentId, assignmentId });
-        const chatRes = await fetch(initChatEndpoint, {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({ studentId, assignmentId }),
-        });
-
-        const chatResJson = await chatRes.json();
-        chat = chatResJson.chat;
-        chatId.current = chat.id;
-      }
-      // Add the chat messages to the chat log
-      const chatMessages: ChatMessage[] = chat.messages
-        .filter((message: Message) => {
-          return (
-            (message.role === "user" || message.role === "assistant") &&
-            !userMessageIsContextual(message.content)
-          );
-        })
-        .map((message: Message) => {
-          if (message.role === "user") {
-            return { type: "user", text: message.content };
-          } else if (message.role === "assistant") {
-            // Split content into segments by newline characters
-            const segments = message.content
-              .split("\n")
-              .map((segment) => segment.trim());
-
-            const allSentences: Sentence[] = [];
-
-            // Process each segment
-            segments.forEach((segment) => {
-              // Split segment by sentence delimiters while preserving them
-              const sentences = segment
-                .split(/(?<=[.!?])\s/)
-                .filter(Boolean)
-                .map((sentence) => {
-                  // Split sentence into words or newlines, preserving spaces after words
-                  const words = [];
-                  let word = "";
-                  for (let i = 0; i < sentence.length; i++) {
-                    const char = sentence[i];
-                    if (
-                      char === " " ||
-                      char === "." ||
-                      char === "?" ||
-                      char === "!"
-                    ) {
-                      word += char;
-                      words.push(word);
-                      word = "";
-                    } else {
-                      word += char;
-                    }
-                  }
-                  if (word) words.push(word);
-                  return {
-                    words: words.filter(Boolean),
-                    text: sentence,
-                  };
-                });
-              allSentences.push(...sentences);
-              allSentences.push({ words: ["\n"], text: "\n" });
-            });
-
-            return { type: "assistant", text: allSentences };
-          } else {
-            console.log("Invalid message role", message.role);
-            throw new Error("Invalid message role");
-          }
-        });
-
-      setChatLog(chatMessages);
-      setInitializingChat(false);
-      // If the chat is empty, prompt LLM with a greeting
-      if (chatMessages.length === 0) {
-        sendMessage([student?.firstName] || "", "greeting");
+        chat = await initializeChat(studentId, assignmentId);
+        if (chat) {
+          sendMessage([student?.firstName] || "", "greeting");
+        } else {
+          setChatErrorCode("chat-not-initialized");
+        }
       }
     }
 
@@ -360,6 +296,90 @@ export default function Worker({ studentId, assignmentId }: WorkerProps) {
       console.log(`Sending request to ${endpoint} with body:`, body);
     }
   };
+
+  async function initializeChat(studentId: string, assignmentId: string) {
+    setInitializingChat(true);
+    const initChatEndpoint = `${baseUrl}/api/init-chat/`;
+    logRequest(initChatEndpoint, { studentId, assignmentId });
+    const chatRes = await fetch(initChatEndpoint, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ studentId, assignmentId }),
+    });
+
+    if (!chatRes.ok) {
+      console.error("Failed to initialize chat");
+      return null;
+    }
+
+    const chat = await chatRes.json();
+    chatId.current = chat.id;
+    return chat;
+  }
+
+  function parseChatMessagesFromMemory(chatMessages: Message[]) {
+    return chatMessages
+      .filter((message: Message) => {
+        return (
+          (message.role === "user" || message.role === "assistant") &&
+          !userMessageIsContextual(message.content)
+        );
+      })
+      .map((message: Message) => {
+        if (message.role === "user") {
+          return { type: "user" as const, text: message.content };
+        } else if (message.role === "assistant") {
+          // Split content into segments by newline characters
+          const segments = message.content
+            .split("\n")
+            .map((segment) => segment.trim());
+
+          const allSentences: Sentence[] = [];
+
+          // Process each segment
+          segments.forEach((segment) => {
+            // Split segment by sentence delimiters while preserving them
+            const sentences = segment
+              .split(/(?<=[.!?])\s/)
+              .filter(Boolean)
+              .map((sentence) => {
+                // Split sentence into words or newlines, preserving spaces after words
+                const words = [];
+                let word = "";
+                for (let i = 0; i < sentence.length; i++) {
+                  const char = sentence[i];
+                  if (
+                    char === " " ||
+                    char === "." ||
+                    char === "?" ||
+                    char === "!"
+                  ) {
+                    word += char;
+                    words.push(word);
+                    word = "";
+                  } else {
+                    word += char;
+                  }
+                }
+                if (word) words.push(word);
+                return {
+                  words: words.filter(Boolean),
+                  text: sentence,
+                };
+              });
+            allSentences.push(...sentences);
+            allSentences.push({ words: ["\n"], text: "\n" });
+          });
+
+          return { type: "assistant" as const, text: allSentences };
+        } else {
+          console.log("Invalid message role", message.role);
+          throw new Error("Invalid message role");
+        }
+      });
+  }
 
   async function updateStudentProblemAnswer() {
     try {
@@ -659,6 +679,18 @@ export default function Worker({ studentId, assignmentId }: WorkerProps) {
       if (reader) {
         processStream(reader);
       }
+    } else {
+      console.error(
+        "Response Error Code: ",
+        response.headers.get("X-Error-Code"),
+      );
+      const openAiErrorCode = response.headers.get("X-Error-Code");
+      if (openAiErrorCode) {
+        setChatErrorCode(response.headers.get("X-Error-Code"));
+      } else {
+        setChatErrorCode(response.statusText);
+      }
+      resetLoadingStates();
     }
   }
 
@@ -770,11 +802,47 @@ export default function Worker({ studentId, assignmentId }: WorkerProps) {
     }
   }
 
+  function resetLoadingStates() {
+    setCheckingAnswer(false);
+    setLoadingAnswer(false);
+    setShowPopover(false);
+    setLoadingPopoverResponseType(null);
+    setActiveDiv({ name: "chat", ref: latestChatMessageRef.current });
+  }
+
+  async function resetChat() {
+    const resetChatEndpoint = `${baseUrl}/api/reset-chat/`;
+    logRequest(resetChatEndpoint, { chatId: chatId.current });
+    const resetResponse = await fetch(resetChatEndpoint, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        studentId,
+        assignmentId,
+      }),
+    });
+
+    if (resetResponse.ok) {
+      setChatLog([]);
+    } else {
+      console.error("Failed to reset chat", resetResponse.statusText);
+    }
+  }
+
   return (
     <>
-      <div className="h-screen w-screen bg-gray-300 dark:bg-gray-800">
+      <div
+        className="h-screen w-screen bg-matcha-300"
+        style={{
+          background: `radial-gradient(circle at 30% 70%, rgba(174, 216, 141, 0.7), rgba(174, 216, 141, 0) 50%),
+                    radial-gradient(circle at 70% 30%, rgba(186, 230, 253, 0.7), rgba(186, 230, 253, 0) 50%),
+                    rgb(229, 231, 235)`,
+        }}
+      >
         <div
-          className={`${styles.shadowSides} flex h-full bg-gray-200 md:max-w-7xl lg:mx-auto`}
+          className={`shadow-sides flex h-full bg-gray-200 md:max-w-7xl lg:mx-auto`}
         >
           <div className="flex flex-col border-r-2 border-gray-300 p-5 md:w-5/12">
             <div className="mb-8 flex w-full">
@@ -782,7 +850,7 @@ export default function Worker({ studentId, assignmentId }: WorkerProps) {
                 size="small"
                 intent="secondary"
                 className="inline"
-                onClick={() => router.push("/portal")}
+                onClick={() => router.back()}
               >
                 <span className="material-symbols-rounded pr-1">
                   arrow_back
@@ -806,7 +874,7 @@ export default function Worker({ studentId, assignmentId }: WorkerProps) {
                   <div className="text-lg font-extrabold underline">
                     {assignment?.title}
                   </div>
-                  <div className="mt-2 opacity-75">
+                  <div className="mt-2 opacity-90">
                     {assignment?.description}
                   </div>
                 </>
@@ -828,7 +896,7 @@ export default function Worker({ studentId, assignmentId }: WorkerProps) {
             {currentProblem && <div>Problem {currentProblemIndex + 1}</div>}
             {loadingAnswer ? (
               <div className="mb-2 block min-h-[1rem] w-full rounded-lg bg-white p-3 shadow-lg">
-                <span className="material-symbols-rounded mr-2 animate-spin">
+                <span className="material-symbols-rounded mr-1 animate-spin">
                   progress_activity
                 </span>
               </div>
@@ -897,7 +965,7 @@ export default function Worker({ studentId, assignmentId }: WorkerProps) {
               )}
               {checkingAnswer ? (
                 <div className="flex justify-center text-center">
-                  <span className="material-symbols-rounded mr-2 animate-spin">
+                  <span className="material-symbols-rounded mr-1 animate-spin">
                     progress_activity
                   </span>
                   Checking your answer...
@@ -917,7 +985,7 @@ export default function Worker({ studentId, assignmentId }: WorkerProps) {
               {chatLog.length === 0 &&
                 (initializingChat ? (
                   <div className="w-80 self-center rounded-lg border border-gray-300 bg-white px-3 py-2 text-center shadow-lg dark:border-white dark:bg-black">
-                    <div className="material-symbols-rounded mr-2 animate-spin align-middle">
+                    <div className="material-symbols-rounded mr-1 animate-spin align-middle">
                       progress_activity
                     </div>
                     Starting up a new Homeworker...
@@ -967,8 +1035,8 @@ export default function Worker({ studentId, assignmentId }: WorkerProps) {
                                 messageIndex,
                                 sentenceIndex,
                               ) === clickedSentenceKey
-                                ? "border-b-green-600 dark:border-b-green-400"
-                                : "hover:border-b-green-600 dark:hover:border-b-green-400"
+                                ? "border-b-matcha-600 dark:border-b-matcha-400"
+                                : "hover:border-b-matcha-600 dark:hover:border-b-matcha-400"
                             }`}
                           >
                             {sentence.words.map(
@@ -991,8 +1059,8 @@ export default function Worker({ studentId, assignmentId }: WorkerProps) {
                                         sentenceIndex,
                                         wordIndex,
                                       ) === clickedWordKey
-                                        ? "text-green-600 dark:text-green-400"
-                                        : "hover:text-green-600 dark:hover:text-green-400"
+                                        ? "text-matcha-600 dark:text-matcha-400"
+                                        : "hover:text-matcha-600 dark:hover:text-matcha-400"
                                     }`}
                                     onClick={(event) =>
                                       handleWordClick(
@@ -1017,31 +1085,60 @@ export default function Worker({ studentId, assignmentId }: WorkerProps) {
                 </div>
               ))}
             </div>
-            <div className="flex flex-col justify-center">
-              <form
-                className="m-5 flex items-center rounded-lg bg-white p-3 shadow-lg"
-                onSubmit={handleChatSubmit}
-              >
-                <textarea
-                  name="userInput"
-                  value={userMessage}
-                  onChange={(event) =>
-                    setUserMessage(event.currentTarget.value)
-                  }
-                  className="h-6 max-h-24 w-full resize-none overflow-y-hidden bg-transparent focus:outline-none"
-                  autoComplete="off"
-                  onKeyDown={(event) => handleEnterKeyPress(event)}
-                  placeholder="Message your Homeworker..."
-                ></textarea>
-                <Button
-                  type="submit"
-                  intent="primary"
-                  disabled={userMessage === ""}
-                  size="small-icon"
+            <div className="flex justify-center">
+              {chatErrorCode ? (
+                <div className="m-5 flex items-center rounded-lg border border-red-500 bg-red-300 p-2 text-red-700 shadow-md">
+                  {chatErrorCode === "context_length_exceeded" ? (
+                    <>
+                      <span>
+                        Context length for the chat has been exceeded!
+                      </span>
+                      <Button
+                        size="small"
+                        intent="danger"
+                        className="ml-2"
+                        onClick={resetChat}
+                      >
+                        Reset Chat
+                      </Button>
+                    </>
+                  ) : (
+                    <>
+                      <span>
+                        Oops, looks like something went wrong on our end!
+                      </span>
+                      <Button size="small" intent="danger" className="ml-2">
+                        Reload Chat
+                      </Button>
+                    </>
+                  )}
+                </div>
+              ) : (
+                <form
+                  className="m-5 flex w-full items-center rounded-lg bg-white p-3 shadow-lg"
+                  onSubmit={handleChatSubmit}
                 >
-                  <span className="material-symbols-rounded">send</span>
-                </Button>
-              </form>
+                  <textarea
+                    name="userInput"
+                    value={userMessage}
+                    onChange={(event) =>
+                      setUserMessage(event.currentTarget.value)
+                    }
+                    className="h-6 max-h-24 w-full resize-none overflow-y-hidden bg-transparent focus:outline-none"
+                    autoComplete="off"
+                    onKeyDown={(event) => handleEnterKeyPress(event)}
+                    placeholder="Message your Homeworker..."
+                  ></textarea>
+                  <Button
+                    type="submit"
+                    intent="primary"
+                    disabled={userMessage === ""}
+                    size="small-icon"
+                  >
+                    <span className="material-symbols-rounded">send</span>
+                  </Button>
+                </form>
+              )}
             </div>
           </div>
         </div>
@@ -1069,7 +1166,7 @@ export default function Worker({ studentId, assignmentId }: WorkerProps) {
           {loadingPopoverResponseType || popoverResponseContent ? (
             loadingPopoverResponseType ? (
               <div className="flex w-56 justify-center text-center">
-                <span className="material-symbols-rounded mr-2 animate-spin">
+                <span className="material-symbols-rounded mr-1 animate-spin">
                   progress_activity
                 </span>
                 Getting {loadingPopoverResponseType}...

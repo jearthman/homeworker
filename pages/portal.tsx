@@ -9,6 +9,7 @@ import {
   StudentProblemAnswer,
 } from "@prisma/client";
 import AssignmentSkeleton from "../components/design-system/assignment-skeleton";
+import Button from "../components/design-system/button";
 
 async function fetchStudent(email: string, baseUrl: string) {
   try {
@@ -95,6 +96,14 @@ export default function Portal({ student }: PortalProps) {
     studentProblemAnswers: StudentProblemAnswer[];
   };
 
+  const today = new Date();
+
+  const dateString = today.toLocaleDateString("en-US", {
+    year: "numeric",
+    month: "long",
+    day: "numeric",
+  });
+
   const router = useRouter();
   const [studentAssignments, setStudentAssignments] = useState<
     StudentAssignmentExtended[]
@@ -108,17 +117,6 @@ export default function Portal({ student }: PortalProps) {
 
     async function loadAssignments() {
       if (student) {
-        // try {
-        //   student = await fetchStudent(email, baseUrl);
-        // } catch (error) {
-        //   throw new Error(String(error));
-        // }
-
-        // if (!student.current) {
-        //   router.push("/register");
-        //   return;
-        // }
-
         fetchAssignments(student.id, baseUrl).then((studentAssignments) => {
           setStudentAssignments(studentAssignments);
         });
@@ -144,18 +142,30 @@ export default function Portal({ student }: PortalProps) {
 
   return (
     <>
-      <div className="h-screen w-screen bg-gray-300">
+      <div
+        className="h-screen w-screen"
+        style={{
+          background: `radial-gradient(circle at 30% 70%, rgba(174, 216, 141, 0.7), rgba(174, 216, 141, 0) 50%),
+                    radial-gradient(circle at 70% 30%, rgba(186, 230, 253, 0.7), rgba(186, 230, 253, 0) 50%),
+                    rgb(229, 231, 235)`,
+        }}
+      >
         {/* <div className=" flex flex-col w-1/5 bg-gray-400"></div> */}
-        <div className="flex h-full flex-col bg-gray-200 md:max-w-6xl lg:mx-auto ">
+        <div className="shadow-sides flex h-full flex-col bg-gray-200 md:max-w-6xl lg:mx-auto">
           <>
-            <div className="my-12 self-center text-5xl font-bold">Welcome!</div>
+            <div className="my-12 self-center text-4xl font-bold">
+              Welcome {student.firstName}!
+            </div>
 
             <div className="mx-4 rounded-xl bg-matcha-300 p-4 shadow-lg">
-              <div className="mb-4 text-center text-2xl font-semibold text-matcha-900">
-                Here are your current Assignments
+              <div className="text-2xl font-semibold text-matcha-950">
+                Here are your current assignments:
+              </div>
+              <div className="mb-4 text-sm text-matcha-950 opacity-75">
+                {dateString}
               </div>
               {/* grid layout of assignments */}
-              <div className="grid grid-cols-3 gap-4">
+              <div className="grid grid-cols-3 items-start gap-4">
                 {studentAssignments.length === 0 ? (
                   <>
                     <AssignmentSkeleton />
@@ -166,10 +176,7 @@ export default function Portal({ student }: PortalProps) {
                   studentAssignments.map((studentAssignment) => (
                     <div
                       key={studentAssignment.assignment.id}
-                      className="cursor-pointer rounded-lg border border-gray-400 bg-gray-50 shadow-lg transition ease-in hover:bg-white hover:shadow-xl"
-                      onClick={() =>
-                        selectAssignment(studentAssignment.assignment)
-                      }
+                      className="rounded-lg border border-gray-400 bg-gray-50 shadow-lg"
                     >
                       <div className="flex h-full flex-col p-4">
                         <div className="flex items-baseline">
@@ -183,13 +190,28 @@ export default function Portal({ student }: PortalProps) {
                         <div className="mt-2 text-sm">
                           {studentAssignment.assignment.description}
                         </div>
-                        {studentAssignment.studentProblemAnswers.length > 0 && (
-                          <div className="mt-auto text-xs text-gray-500">
-                            {numberOfCorrectProblems(studentAssignment)} of{" "}
-                            {studentAssignment.studentProblemAnswers.length}{" "}
-                            problems are complete
-                          </div>
-                        )}
+                        <div className="mt-auto flex pt-2">
+                          {studentAssignment.studentProblemAnswers.length >
+                            0 && (
+                            <div className="mt-auto text-xs text-gray-500">
+                              {numberOfCorrectProblems(studentAssignment)} of{" "}
+                              {studentAssignment.studentProblemAnswers.length}{" "}
+                              problems are complete
+                            </div>
+                          )}
+                          <Button
+                            size="small"
+                            className="ml-auto"
+                            onClick={() =>
+                              selectAssignment(studentAssignment.assignment)
+                            }
+                          >
+                            <span className="material-symbols-rounded mr-1">
+                              start
+                            </span>
+                            Start
+                          </Button>
+                        </div>
                       </div>
                     </div>
                   ))

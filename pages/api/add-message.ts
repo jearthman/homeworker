@@ -2,6 +2,7 @@ import { NextApiRequest, NextApiResponse } from "next";
 import prisma from "../../prisma/prisma";
 import { convertTextFileToMessageString } from "../../utils/server-helpers";
 import { MessageRole } from "@prisma/client";
+import { JsonObject } from "@prisma/client/runtime/library";
 
 export default async function handler(
   req: NextApiRequest,
@@ -27,7 +28,8 @@ export async function createMessage(
   role: MessageRole,
   content: string,
   hiddenFromUser: boolean = false,
-  functionName?: string,
+  functionCall?: string,
+  name?: string,
 ) {
   try {
     const message = await prisma.message.create({
@@ -36,7 +38,8 @@ export async function createMessage(
         role: role,
         content: content,
         hiddenFromUser: hiddenFromUser,
-        functionName: functionName,
+        functionCall: functionCall,
+        name: name,
       },
     });
 

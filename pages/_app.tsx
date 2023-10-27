@@ -1,5 +1,5 @@
 import { AppProps } from "next/app";
-import "styles/globals.css";
+import "../styles/globals.css";
 import { Provider } from "react-redux";
 import { store, RootState } from "../redux/store";
 import { useSelector } from "react-redux";

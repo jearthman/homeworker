@@ -35,7 +35,6 @@ export async function findUniqueChat(
       where: { id: chatId },
       include: {
         messages: {
-          where: { hiddenFromUser: hiddenFromUser },
           orderBy: { timestamp: "asc" },
         },
       },

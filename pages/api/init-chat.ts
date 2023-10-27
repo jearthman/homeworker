@@ -20,6 +20,20 @@ export default async function handler(
   }
 
   //Create Chat and system Message
+  try {
+    const chat = await initializeChat(parsedStudentId, parsedAssignmentId);
+    return res.status(200).json(chat);
+  } catch (error: any) {
+    console.log(error);
+    return res.status(400).json({ error: error.message });
+  }
+}
+
+async function initializeChat(
+  parsedStudentId: number,
+  parsedAssignmentId: number,
+) {
+  //Create Chat and system Message
   let chat = await prisma.chat.create({});
 
   try {
@@ -46,10 +60,6 @@ export default async function handler(
       parsedAssignmentId,
     );
 
-    if (!systemMessageString) {
-      return res.status(400).json({ error: "Error creating system message" });
-    }
-
     const systemMessage = await prisma.message.create({
       data: {
         chatId: chat.id,
@@ -75,10 +85,9 @@ export default async function handler(
       },
     });
 
-    return res.status(200).json({ chat: chat });
+    return chat;
   } catch (error: any) {
-    console.log(error);
-    return res.status(400).json({ error: error.message });
+    throw new Error("Error creating chat");
   }
 }
 
@@ -109,8 +118,7 @@ async function constructSystemMessage(studentId: number, assignmentId: number) {
   });
 
   if (!student || !assignment) {
-    console.log("Student or Assignment not found");
-    return;
+    throw new Error("Student or Assignment not found");
   }
 
   // Build system message using Student and Assignment data

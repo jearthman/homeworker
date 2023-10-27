@@ -1,4 +1,7 @@
 -- CreateEnum
+CREATE TYPE "StudentAssignmentStatus" AS ENUM ('completed', 'in_progress', 'unstarted');
+
+-- CreateEnum
 CREATE TYPE "MessageRole" AS ENUM ('system', 'user', 'assistant', 'function');
 
 -- CreateTable
@@ -68,6 +71,16 @@ CREATE TABLE "Assignment" (
 );
 
 -- CreateTable
+CREATE TABLE "Problem" (
+    "id" SERIAL NOT NULL,
+    "content" TEXT NOT NULL,
+    "answer" TEXT NOT NULL,
+    "assignmentId" INTEGER NOT NULL,
+
+    CONSTRAINT "Problem_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
 CREATE TABLE "StudentAssignment" (
     "studentId" INTEGER NOT NULL,
     "assignmentId" INTEGER NOT NULL,
@@ -76,6 +89,20 @@ CREATE TABLE "StudentAssignment" (
     "grade" INTEGER,
 
     CONSTRAINT "StudentAssignment_pkey" PRIMARY KEY ("studentId","assignmentId")
+);
+
+-- CreateTable
+CREATE TABLE "StudentProblemAnswer" (
+    "id" SERIAL NOT NULL,
+    "studentId" INTEGER NOT NULL,
+    "problemId" INTEGER NOT NULL,
+    "assignmentId" INTEGER NOT NULL,
+    "answer" TEXT NOT NULL,
+    "feedback" TEXT,
+    "isCorrect" BOOLEAN,
+    "timestamp" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+
+    CONSTRAINT "StudentProblemAnswer_pkey" PRIMARY KEY ("id")
 );
 
 -- CreateTable
@@ -91,7 +118,7 @@ CREATE TABLE "Message" (
     "id" SERIAL NOT NULL,
     "role" "MessageRole" NOT NULL,
     "content" TEXT NOT NULL,
-    "functionName" VARCHAR(255),
+    "functionCall" JSON,
     "hiddenFromUser" BOOLEAN NOT NULL DEFAULT false,
     "timestamp" TIMESTAMP(6) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "chatId" INTEGER NOT NULL,
@@ -117,6 +144,9 @@ CREATE UNIQUE INDEX "Student_userId_key" ON "Student"("userId");
 -- CreateIndex
 CREATE UNIQUE INDEX "StudentAssignment_chatId_key" ON "StudentAssignment"("chatId");
 
+-- CreateIndex
+CREATE UNIQUE INDEX "StudentProblemAnswer_studentId_problemId_key" ON "StudentProblemAnswer"("studentId", "problemId");
+
 -- AddForeignKey
 ALTER TABLE "StudentDisability" ADD CONSTRAINT "StudentDisability_disabilityId_fkey" FOREIGN KEY ("disabilityId") REFERENCES "Disability"("id") ON DELETE NO ACTION ON UPDATE NO ACTION;
 
@@ -136,6 +166,9 @@ ALTER TABLE "Student" ADD CONSTRAINT "Student_userId_fkey" FOREIGN KEY ("userId"
 ALTER TABLE "Student" ADD CONSTRAINT "Student_nativeLanguageId_fkey" FOREIGN KEY ("nativeLanguageId") REFERENCES "Language"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
+ALTER TABLE "Problem" ADD CONSTRAINT "Problem_assignmentId_fkey" FOREIGN KEY ("assignmentId") REFERENCES "Assignment"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
 ALTER TABLE "StudentAssignment" ADD CONSTRAINT "StudentAssignment_studentId_fkey" FOREIGN KEY ("studentId") REFERENCES "Student"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
@@ -143,6 +176,15 @@ ALTER TABLE "StudentAssignment" ADD CONSTRAINT "StudentAssignment_assignmentId_f
 
 -- AddForeignKey
 ALTER TABLE "StudentAssignment" ADD CONSTRAINT "StudentAssignment_chatId_fkey" FOREIGN KEY ("chatId") REFERENCES "Chat"("id") ON DELETE SET NULL ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "StudentProblemAnswer" ADD CONSTRAINT "StudentProblemAnswer_studentId_fkey" FOREIGN KEY ("studentId") REFERENCES "Student"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "StudentProblemAnswer" ADD CONSTRAINT "StudentProblemAnswer_problemId_fkey" FOREIGN KEY ("problemId") REFERENCES "Problem"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "StudentProblemAnswer" ADD CONSTRAINT "StudentProblemAnswer_studentId_assignmentId_fkey" FOREIGN KEY ("studentId", "assignmentId") REFERENCES "StudentAssignment"("studentId", "assignmentId") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "Message" ADD CONSTRAINT "Message_chatId_fkey" FOREIGN KEY ("chatId") REFERENCES "Chat"("id") ON DELETE RESTRICT ON UPDATE CASCADE;

@@ -83,6 +83,12 @@ model Problem {
   StudentProblemAnswer StudentProblemAnswer[]
 }
 
+enum StudentAssignmentStatus {
+  completed
+  in_progress
+  unstarted
+}
+
 model StudentAssignment {
   studentId             Int
   assignmentId          Int
@@ -133,7 +139,8 @@ model Message {
   id             Int         @id @default(autoincrement())
   role           MessageRole
   content        String      @db.Text
-  functionName   String?     @db.VarChar(255)
+  functionCall   String?     @db.VarChar(255)
+  name           String?     @db.VarChar(255)
   hiddenFromUser Boolean     @default(false)
   timestamp      DateTime    @default(now()) @db.Timestamp(6)
   chatId         Int

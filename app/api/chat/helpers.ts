@@ -26,7 +26,10 @@ export async function getChatMessages(chatId: string) {
     return {
       role: message.role,
       content: message.content,
-      name: message.functionName ? message.functionName : undefined,
+      name: message.name ? message.name : undefined,
+      function_call: message.functionCall
+        ? JSON.parse(message.functionCall)
+        : undefined,
     };
   });
 

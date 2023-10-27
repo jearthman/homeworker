@@ -4,13 +4,13 @@ import { ChatCompletionMessageParam } from "openai/resources";
 
 export async function setChat(
   chatId: string,
-  chat: ChatCompletionMessageParam[],
+  chat: ChatCompletionMessageParam[] | null,
 ) {
   try {
     debugLog(
       `Setting chat ${chatId} in Redis: ${JSON.stringify(kvChatClient)}`,
     );
-    kvChatClient.del(chatId);
+    kvChatClient.del(`chat:${chatId}`);
     return await kvChatClient.set(`chat:${chatId}`, chat);
   } catch (error: any) {
     console.error("Error setting chat:", error.message);
