@@ -904,7 +904,7 @@ export default function Worker({ studentId, assignmentId }: WorkerProps) {
               <textarea
                 className={`mb-2 block ${
                   currentProblem ? "min-h-[1rem]" : "min-h-[16rem]"
-                } w-full rounded-lg bg-white p-3 shadow-lg focus:outline-none`}
+                } w-full rounded-lg border border-transparent bg-white p-3 shadow-lg focus-within:border-sky-400 focus:outline-none`}
                 value={answer}
                 placeholder="Write your answer here!"
                 onChange={(event) => setAnswer(event.currentTarget.value)}
@@ -1115,7 +1115,7 @@ export default function Worker({ studentId, assignmentId }: WorkerProps) {
                 </div>
               ) : (
                 <form
-                  className="m-5 flex w-full items-center rounded-lg bg-white p-3 shadow-lg"
+                  className="relative m-5 flex w-full items-center rounded-lg border border-transparent bg-white shadow-lg focus-within:border-sky-400"
                   onSubmit={handleChatSubmit}
                 >
                   <textarea
@@ -1124,7 +1124,7 @@ export default function Worker({ studentId, assignmentId }: WorkerProps) {
                     onChange={(event) =>
                       setUserMessage(event.currentTarget.value)
                     }
-                    className="h-6 max-h-24 w-full resize-none overflow-y-hidden bg-transparent focus:outline-none"
+                    className="h-14 max-h-48 w-full resize-none overflow-y-hidden bg-transparent py-4 pl-4 pr-12 focus:outline-none"
                     autoComplete="off"
                     onKeyDown={(event) => handleEnterKeyPress(event)}
                     placeholder="Message your Homeworker..."
@@ -1134,6 +1134,7 @@ export default function Worker({ studentId, assignmentId }: WorkerProps) {
                     intent="primary"
                     disabled={userMessage === ""}
                     size="small-icon"
+                    className="absolute right-3"
                   >
                     <span className="material-symbols-rounded">send</span>
                   </Button>

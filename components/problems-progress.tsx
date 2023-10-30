@@ -49,7 +49,7 @@ export default function ProblemsProgress({
 
   return (
     <span
-      className={`${className} inline-flex gap-1 rounded-full bg-gray-50 p-1`}
+      className={`${className} border-grey-300 inline-flex gap-1 rounded-full border bg-gray-50 p-1`}
     >
       {studentProblemAnswers &&
         studentProblemAnswers.map((studentProblemAnswer, index) =>
