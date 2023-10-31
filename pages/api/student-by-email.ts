@@ -1,5 +1,11 @@
 import prisma from "../../prisma/prisma";
 import { NextApiRequest, NextApiResponse } from "next";
+import {
+  getStudent,
+  setStudent,
+  getUser,
+  setUser,
+} from "../../redis/redis-server-helpers";
 
 export default async function handler(
   req: NextApiRequest,
@@ -15,26 +21,40 @@ export default async function handler(
   }
 
   try {
-    const user = await prisma.user.findUnique({
-      where: {
-        email: email,
-      },
-    });
+    let user = await getUser(email);
 
     if (!user) {
-      res.status(404).json({ message: "User not found" });
-      return;
+      user = await prisma.user.findUnique({
+        where: {
+          email: email,
+        },
+      });
+
+      if (!user) {
+        res.status(404).json({ message: "User not found" });
+        return;
+      }
+
+      setUser(email, user);
     }
 
-    const student = await prisma.student.findUnique({
-      where: {
-        userId: user?.id,
-      },
-    });
+    let student = user?.studentId
+      ? await getStudent(user.studentId.toString())
+      : null;
 
     if (!student) {
-      res.status(404).json({ message: "Student not found" });
-      return;
+      student = await prisma.student.findUnique({
+        where: {
+          userId: user?.id,
+        },
+      });
+
+      if (!student) {
+        res.status(404).json({ message: "Student not found" });
+        return;
+      }
+
+      setStudent(student.id.toString(), student);
     }
 
     res.status(200).json({ student });

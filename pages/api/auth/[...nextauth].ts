@@ -12,16 +12,7 @@ export default NextAuth({
       clientSecret: process.env.GOOGLE_CLIENT_SECRET,
     }),
   ],
-  // callbacks: {
-  //   async session({session, user}) {
-  //     // check if the user email exhist is prisma db
-  //     const userExists = await prisma.user.findUnique({
-  //       where: {
-  //         email: user.email,
-  //       },
-  //     });
-
-  //     return session;
-  //   },
-  // },
+  jwt: {
+    maxAge: 60 * 60 * 2,
+  },
 });

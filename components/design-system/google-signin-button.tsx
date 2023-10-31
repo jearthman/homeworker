@@ -12,15 +12,15 @@ export default function GoogleSignInButton() {
       onClick={() =>
         signIn("google", { callbackUrl: `${window.location.origin}/portal` })
       }
-      className={`${roboto.className} flex items-center justify-center rounded border border-gray-300 bg-white px-2 py-2 shadow hover:bg-gray-100 focus:outline-none focus:ring focus:ring-blue-200 focus:ring-opacity-50`}
+      className={`${roboto.className} flex items-center justify-center rounded border border-gray-300 bg-white px-3 py-[10px] shadow hover:bg-gray-100 focus:outline-none focus:ring focus:ring-blue-200 focus:ring-opacity-50`}
     >
       <svg
-        width="18px"
-        height="18px"
+        width="20px"
+        height="20px"
         viewBox="0 0 18 18"
         version="1.1"
         xmlns="http://www.w3.org/2000/svg"
-        className="mr-6"
+        className=""
       >
         <g>
           <path
@@ -41,7 +41,7 @@ export default function GoogleSignInButton() {
           ></path>
         </g>
       </svg>
-      <span className="opacity-50">SIGN IN WITH GOOGLE</span>
+      <span className="ml-[10px] text-sm">Sign in with Google</span>
     </button>
   );
 }
