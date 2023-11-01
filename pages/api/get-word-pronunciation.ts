@@ -1,19 +1,15 @@
-export function userMessageIsContextual(message: string) {
-  return /^<\w+>/.test(message);
-}
+import { NextApiRequest, NextApiResponse } from "next";
 
 const dictionaryUrl = process.env.SCHOOL_DICTIONARY_URL;
 const dictionaryKey = process.env.SCHOOL_DICTIONARY_KEY;
 const dictionaryAudioUrl = process.env.SCHOOL_DICTIONARY_AUDIO_URL;
 
-type WordPronunciation = {
-  hw: string;
-  audioUrl: string;
-};
+export default async function handler(
+  req: NextApiRequest,
+  res: NextApiResponse,
+) {
+  const { word } = req.query;
 
-export async function getWordPronunciationFromMW(
-  word: string,
-): Promise<WordPronunciation | null> {
   if (!word) {
     return null;
   }
@@ -31,7 +27,12 @@ export async function getWordPronunciationFromMW(
   }
 
   const hw = data[0].hwi.hw;
-  const audioFileName = data[0].hwi.prs[0].sound.audio;
+  let audioFileName = null;
+  if (data[0].hwi?.prs[0]?.sound?.audio) {
+    audioFileName = data[0].hwi.prs[0].sound.audio;
+  } else {
+    return res.status(200).json({ hw, audioUrl: null });
+  }
 
   /*
   if audio begins with "bix", the subdirectory should be "bix",
@@ -59,8 +60,7 @@ export async function getWordPronunciationFromMW(
     throw new Error("Error fetching audio from dictionary API");
   }
 
-  const audioBlob = await audioResponse.blob();
-  const audioUrl = URL.createObjectURL(audioBlob);
-
-  return { hw, audioUrl };
+  const audioBuffer = await audioResponse.arrayBuffer();
+  const base64Audio = Buffer.from(audioBuffer).toString("base64");
+  return res.status(200).json({ hw, base64Audio });
 }

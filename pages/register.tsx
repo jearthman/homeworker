@@ -50,7 +50,14 @@ export default function Register() {
   return (
     <>
       {/* student account registreation form */}
-      <div className="flex h-screen flex-col items-center justify-center bg-gray-200">
+      <div
+        className="flex h-screen flex-col items-center justify-center"
+        style={{
+          background: `radial-gradient(circle at 30% 70%, rgba(174, 216, 141, 0.7), rgba(174, 216, 141, 0) 50%),
+                    radial-gradient(circle at 70% 30%, rgba(186, 230, 253, 0.7), rgba(186, 230, 253, 0) 50%),
+                    rgb(229, 231, 235)`,
+        }}
+      >
         <h1 className="mb-8 text-2xl font-bold ">
           Please create a simple mock student.
         </h1>

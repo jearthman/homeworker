@@ -2,16 +2,16 @@ import { cva, VariantProps } from "cva";
 import React from "react";
 
 const buttonStyles = cva(
-  "flex items-center justify-center rounded-lg border font-medium transition duration-300 active:shadow-none enabled:hover:shadow-md disabled:cursor-not-allowed disabled:opacity-50 disabled:shadow-none",
+  "flex items-center justify-center rounded-lg border font-medium transition duration-300 enabled:hover:shadow-md enabled:active:shadow-none disabled:cursor-not-allowed disabled:opacity-50 disabled:shadow-none",
   {
     variants: {
       intent: {
         primary:
-          "border-sky-600 bg-sky-500 text-sky-50 active:bg-sky-600 enabled:hover:bg-sky-400  enabled:hover:text-white dark:bg-sky-300 dark:text-sky-800 dark:enabled:hover:bg-sky-400",
+          "border-sky-600 bg-sky-500 text-sky-50 enabled:hover:bg-sky-400 enabled:hover:text-white  enabled:active:bg-sky-600 dark:bg-sky-300 dark:text-sky-800 dark:enabled:hover:bg-sky-400",
         secondary:
-          "border-matcha-600 bg-matcha-500 text-matcha-50 active:bg-matcha-600 active:shadow-none enabled:hover:bg-matcha-400 enabled:hover:text-white dark:bg-matcha-300 dark:text-matcha-800 dark:enabled:hover:bg-matcha-400",
+          "border-matcha-600 bg-matcha-500 text-matcha-50 enabled:hover:bg-matcha-400 enabled:hover:text-white enabled:active:bg-matcha-600 enabled:active:shadow-none dark:bg-matcha-300 dark:text-matcha-800 dark:enabled:hover:bg-matcha-400",
         danger:
-          "border-red-600 bg-red-500 text-red-50 active:bg-red-600 active:shadow-none enabled:hover:bg-red-400 enabled:hover:text-white dark:bg-red-300 dark:text-red-800 dark:enabled:hover:bg-red-400",
+          "border-red-600 bg-red-500 text-red-50 enabled:hover:bg-red-400 enabled:hover:text-white enabled:active:bg-red-600 enabled:active:shadow-none dark:bg-red-300 dark:text-red-800 dark:enabled:hover:bg-red-400",
         neutral: "bg-gray-400 text-gray-900 enabled:hover:bg-gray-400",
         link: "bg-transparent text-matcha-600 shadow-none enabled:hover:bg-transparent",
         "primary-outline":

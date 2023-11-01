@@ -20,6 +20,7 @@ import {
 } from "@prisma/client"; // import { current } from "@reduxjs/toolkit";
 import Markdown from "react-markdown";
 import ChatSkeleton from "../components/design-system/chat-skeleton";
+import { getWordPronunciationFromMW } from "../utils/clientHelpers";
 
 const chatWithMessages = Prisma.validator<Prisma.ChatDefaultArgs>()({
   include: { messages: true },
@@ -95,6 +96,9 @@ export default function Worker({ studentId, assignmentId }: WorkerProps) {
   const [clickedSentence, setClickedSentence] = useState<string | null>(null);
   const [clickedWord, setClickedWord] = useState<string | null>(null);
   const [popoverResponseContent, setPopoverResponseContent] = useState<
+    string | null
+  >(null);
+  const [pronunciationAudioBuffer, setPronunciationAudioBuffer] = useState<
     string | null
   >(null);
   const [loadingPopoverResponseType, setLoadingPopoverResponseType] = useState<
@@ -530,6 +534,7 @@ export default function Worker({ studentId, assignmentId }: WorkerProps) {
       popoverRef.current &&
       !popoverRef.current.contains(event.target as Node)
     ) {
+      setPopoverResponseContent(null);
       setShowPopover(false);
       // reset the clicked sentence key and clicked word key
       setclickedSentenceKey(null);
@@ -762,7 +767,7 @@ export default function Worker({ studentId, assignmentId }: WorkerProps) {
     );
   }
 
-  function getWordsDefinition() {
+  function getWordDefinition() {
     setLoadingPopoverResponseType("definition");
 
     if (!clickedWord || !clickedSentence) {
@@ -770,6 +775,49 @@ export default function Worker({ studentId, assignmentId }: WorkerProps) {
     }
 
     sendMessage([clickedWord, clickedSentence], "definition");
+  }
+
+  async function getWordPronunciation() {
+    setLoadingPopoverResponseType("pronunciation");
+
+    if (!clickedWord) {
+      return;
+    }
+
+    const response = await fetch(
+      `${baseUrl}/api/get-word-pronunciation/?word=${clickedWord}`,
+      {
+        method: "GET",
+        headers: {
+          "Content-Type": "application/json",
+        },
+      },
+    );
+
+    const wordPronunciation = await response.json();
+
+    if (wordPronunciation) {
+      setPopoverResponseContent(wordPronunciation.hw);
+      setPronunciationAudioBuffer(
+        wordPronunciation.base64Audio ? wordPronunciation.base64Audio : null,
+      );
+    } else {
+      setPopoverResponseContent("Pronunciation not found...");
+    }
+  }
+
+  function playPronunciationAudio() {
+    if (pronunciationAudioBuffer) {
+      const audioBuffer = Uint8Array.from(atob(pronunciationAudioBuffer), (c) =>
+        c.charCodeAt(0),
+      );
+      const audioBlob = new Blob([audioBuffer], {
+        type: "audio/mpeg",
+      });
+      const audioUrl = URL.createObjectURL(audioBlob);
+      const audio = new Audio(audioUrl);
+      audio.play().catch((e) => console.error("Error playing sound:", e));
+    }
   }
 
   function checkAnswer() {
@@ -834,7 +882,7 @@ export default function Worker({ studentId, assignmentId }: WorkerProps) {
   return (
     <>
       <div
-        className="h-screen w-screen bg-matcha-300"
+        className="h-screen w-screen"
         style={{
           background: `radial-gradient(circle at 30% 70%, rgba(174, 216, 141, 0.7), rgba(174, 216, 141, 0) 50%),
                     radial-gradient(circle at 70% 30%, rgba(186, 230, 253, 0.7), rgba(186, 230, 253, 0) 50%),
@@ -971,7 +1019,7 @@ export default function Worker({ studentId, assignmentId }: WorkerProps) {
                   Checking your answer...
                 </div>
               ) : (
-                <Markdown>{answerReview}</Markdown>
+                <span>{answerReview}</span>
               )}
             </div>
           </div>
@@ -1164,17 +1212,35 @@ export default function Worker({ studentId, assignmentId }: WorkerProps) {
           }}
           onClick={(e) => e.stopPropagation()}
         >
-          {loadingPopoverResponseType || popoverResponseContent ? (
+          {popoverResponseContent ? (
             loadingPopoverResponseType ? (
+              <>
+                {loadingPopoverResponseType === "definition" && (
+                  <div className="w-56 px-3 py-2">{popoverResponseContent}</div>
+                )}
+                {loadingPopoverResponseType === "pronunciation" && (
+                  <div className="flex items-center px-2 py-1.5">
+                    <span className="text-lg">{popoverResponseContent}</span>
+                    {pronunciationAudioBuffer && (
+                      <Button
+                        size="medium-icon"
+                        onClick={playPronunciationAudio}
+                        className="ml-2"
+                      >
+                        <span className="material-symbols-rounded">
+                          volume_up
+                        </span>
+                      </Button>
+                    )}
+                  </div>
+                )}
+              </>
+            ) : (
               <div className="flex w-56 justify-center text-center">
                 <span className="material-symbols-rounded mr-1 animate-spin">
                   progress_activity
                 </span>
                 Getting {loadingPopoverResponseType}...
-              </div>
-            ) : (
-              <div className="w-56 px-3 py-2">
-                <Markdown>{popoverResponseContent}</Markdown>
               </div>
             )
           ) : (
@@ -1187,11 +1253,14 @@ export default function Worker({ studentId, assignmentId }: WorkerProps) {
                 </div> */}
               <span
                 className=" p-2 hover:bg-gray-100 dark:border-white dark:text-white dark:hover:bg-gray-900"
-                onClick={getWordsDefinition}
+                onClick={getWordDefinition}
               >
                 Define
               </span>
-              <span className=" p-2 hover:bg-gray-100 dark:border-white dark:text-white dark:hover:bg-gray-900">
+              <span
+                className=" p-2 hover:bg-gray-100 dark:border-white dark:text-white dark:hover:bg-gray-900"
+                onClick={getWordPronunciation}
+              >
                 Pronunciation
               </span>
               <span className=" p-2 hover:bg-gray-100 dark:border-white dark:text-white dark:hover:bg-gray-900">
