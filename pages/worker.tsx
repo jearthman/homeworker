@@ -1104,7 +1104,18 @@ export default function Worker({ studentId, assignmentId }: WorkerProps) {
             </div>
           </div>
           {/* desktop worker col */}
-          <div className="flex h-full flex-grow flex-col justify-end md:w-7/12">
+          <div className="relative flex h-full flex-grow flex-col justify-end md:w-7/12">
+            <div
+              className={`absolute left-0 right-0 top-1/2 m-auto -translate-y-1/2 transform text-center text-lg transition-opacity duration-1000 ${
+                chatLog.length === 1
+                  ? "pointer-events-auto opacity-50"
+                  : "pointer-events-none opacity-0"
+              }`}
+            >
+              Your homeworker speaks in selective text, <br />
+              try clicking on a word to get more information!
+            </div>
+
             {/* chat */}
             <div
               ref={chatRef}
