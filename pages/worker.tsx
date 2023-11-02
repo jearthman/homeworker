@@ -116,11 +116,12 @@ export default function Worker({ studentId, assignmentId }: WorkerProps) {
   const chatRef = useRef<HTMLDivElement | null>(null);
   const reviewRef = useRef<HTMLDivElement | null>(null);
   const [activeDiv, setActiveDiv] = useState<ActiveDiv | null>(null);
-  const talkingIncrement = useRef<number>(0);
+  const [talkingIncrement, setTalkingIncrement] = useState<number>(0);
   const [talkingHeadTop, setTalkingHeadTop] = useState<number>(0);
   const [talkingHeadLeft, setTalkingHeadLeft] = useState<number>(0);
   const [initializingChat, setInitializingChat] = useState<boolean>(false);
   const [chatErrorCode, setChatErrorCode] = useState<string | null>(null);
+  const pronunciationTextRef = useRef<HTMLDivElement | null>(null);
 
   // eslint-disable-next-line react-hooks/exhaustive-deps
   // init useEffect block
@@ -502,6 +503,7 @@ export default function Worker({ studentId, assignmentId }: WorkerProps) {
     event.stopPropagation(); // stop the event from bubbling up to the document
     // get the position of the clicked word
     setPopoverResponseContent(null);
+    setLoadingPopoverResponseType(null);
     setClickedWord(word);
     setClickedSentence(sentence);
     const wordPosition = event.currentTarget.getBoundingClientRect();
@@ -535,8 +537,8 @@ export default function Worker({ studentId, assignmentId }: WorkerProps) {
       !popoverRef.current.contains(event.target as Node)
     ) {
       setPopoverResponseContent(null);
+      setLoadingPopoverResponseType(null);
       setShowPopover(false);
-      // reset the clicked sentence key and clicked word key
       setclickedSentenceKey(null);
       setclickedWordKey(null);
       setClickedWord(null);
@@ -601,7 +603,13 @@ export default function Worker({ studentId, assignmentId }: WorkerProps) {
       return prevChatLog;
     });
 
-    if (interactionType === "definition") {
+    const isPopoverInteraction =
+      interactionType === "definition" ||
+      interactionType === "synonyms" ||
+      interactionType === "etymology";
+
+    if (isPopoverInteraction) {
+      message[0] = message[0].replace(/[^a-zA-Z0-9]/g, "");
       setActiveDiv({ name: "popover", ref: popoverRef.current });
     } else if (interactionType === "checkAnswer") {
       setActiveDiv({ name: "review", ref: reviewRef.current });
@@ -643,9 +651,7 @@ export default function Worker({ studentId, assignmentId }: WorkerProps) {
             currentSentence = words.pop() || ""; // Keep the last unfinished word or space
 
             words.forEach((word) => {
-              if (interactionType === "definition") {
-                setLoadingPopoverResponseType(null);
-
+              if (isPopoverInteraction) {
                 setPopoverResponseContent((prevContent) =>
                   prevContent ? prevContent + word : word,
                 );
@@ -658,7 +664,9 @@ export default function Worker({ studentId, assignmentId }: WorkerProps) {
                 updateLastResponse(word);
               }
 
-              talkingIncrement.current++;
+              setTalkingIncrement(
+                (prevTalkingIncrement) => prevTalkingIncrement + 1,
+              );
             });
           } catch (err) {
             console.log("Error reading from stream: ", err);
@@ -666,7 +674,7 @@ export default function Worker({ studentId, assignmentId }: WorkerProps) {
           }
         }
         if (currentSentence) {
-          if (interactionType === "definition") {
+          if (isPopoverInteraction) {
             setPopoverResponseContent((prevContent) =>
               prevContent ? prevContent + currentSentence : currentSentence,
             );
@@ -678,7 +686,9 @@ export default function Worker({ studentId, assignmentId }: WorkerProps) {
             updateLastResponse(currentSentence); // Send any remaining content
           }
 
-          talkingIncrement.current++;
+          setTalkingIncrement(
+            (prevTalkingIncrement) => prevTalkingIncrement + 1,
+          );
         }
       };
       if (reader) {
@@ -804,6 +814,8 @@ export default function Worker({ studentId, assignmentId }: WorkerProps) {
     } else {
       setPopoverResponseContent("Pronunciation not found...");
     }
+
+    setActiveDiv({ name: "popover", ref: popoverRef.current });
   }
 
   function playPronunciationAudio() {
@@ -816,8 +828,75 @@ export default function Worker({ studentId, assignmentId }: WorkerProps) {
       });
       const audioUrl = URL.createObjectURL(audioBlob);
       const audio = new Audio(audioUrl);
-      audio.play().catch((e) => console.error("Error playing sound:", e));
+      const syllableCount = popoverResponseContent?.split("*").length || 1;
+      // Wait for audio metadata to load
+      audio.onloadedmetadata = () => {
+        startTextTransition(audio.duration);
+
+        audio
+          .play()
+          .then(() => {
+            audio.addEventListener("ended", resetColorTransition);
+          })
+          .catch((e) => console.error("Error playing pronunciation sound:", e));
+
+        //increment talking head based on syllable count and audio duration
+        const syllableDuration = (audio.duration * 1000) / syllableCount; // Duration per syllable in milliseconds
+
+        setTalkingIncrement((prevTalkingIncrement) => prevTalkingIncrement + 1);
+        for (let i = 1; i < syllableCount; i++) {
+          setTimeout(() => {
+            setTalkingIncrement(
+              (prevTalkingIncrement) => prevTalkingIncrement + 1,
+            );
+          }, i * syllableDuration);
+          console.log("Talking increment:", talkingIncrement);
+        }
+      };
+
+      // Fallback in case metadata does not load
+      setTimeout(() => {
+        if (isNaN(audio.duration)) {
+          console.error("Audio duration is not available.");
+          audio.play().catch((e) => {
+            console.error("Error playing pronunciation sound:", e);
+          });
+        }
+      }, 3000);
     }
+  }
+
+  function startTextTransition(duration: number) {
+    if (pronunciationTextRef.current) {
+      pronunciationTextRef.current.style.animationDuration = `${duration}s`;
+      pronunciationTextRef.current.classList.add("animated-text");
+    }
+  }
+
+  function resetColorTransition() {
+    if (pronunciationTextRef.current) {
+      pronunciationTextRef.current.classList.remove("animated-text");
+    }
+  }
+
+  function getWordSynonyms() {
+    setLoadingPopoverResponseType("synonyms");
+
+    if (!clickedWord) {
+      return;
+    }
+
+    sendMessage([clickedWord], "synonyms");
+  }
+
+  function getWordEtymology() {
+    setLoadingPopoverResponseType("etymology");
+
+    if (!clickedWord) {
+      return;
+    }
+
+    sendMessage([clickedWord], "etymology");
   }
 
   function checkAnswer() {
@@ -855,6 +934,7 @@ export default function Worker({ studentId, assignmentId }: WorkerProps) {
     setLoadingAnswer(false);
     setShowPopover(false);
     setLoadingPopoverResponseType(null);
+    setPopoverResponseContent(null);
     setActiveDiv({ name: "chat", ref: latestChatMessageRef.current });
   }
 
@@ -1194,7 +1274,7 @@ export default function Worker({ studentId, assignmentId }: WorkerProps) {
       </div>
 
       <TalkingHead
-        talkingIncrement={talkingIncrement.current}
+        talkingIncrement={talkingIncrement}
         left={talkingHeadLeft}
         top={talkingHeadTop}
         hidden={chatLog.length === 0}
@@ -1212,26 +1292,52 @@ export default function Worker({ studentId, assignmentId }: WorkerProps) {
           }}
           onClick={(e) => e.stopPropagation()}
         >
-          {popoverResponseContent ? (
-            loadingPopoverResponseType ? (
+          {loadingPopoverResponseType ? (
+            popoverResponseContent ? (
               <>
-                {loadingPopoverResponseType === "definition" && (
-                  <div className="w-56 px-3 py-2">{popoverResponseContent}</div>
+                {(loadingPopoverResponseType === "definition" ||
+                  loadingPopoverResponseType === "synonyms" ||
+                  loadingPopoverResponseType === "etymology") && (
+                  <div className="w-56 px-3 py-2">
+                    <div className="mb-1 text-xs opacity-50">
+                      {loadingPopoverResponseType.charAt(0).toUpperCase() +
+                        loadingPopoverResponseType.slice(1)}
+                    </div>
+                    <div>{popoverResponseContent}</div>
+                  </div>
                 )}
                 {loadingPopoverResponseType === "pronunciation" && (
-                  <div className="flex items-center px-2 py-1.5">
-                    <span className="text-lg">{popoverResponseContent}</span>
-                    {pronunciationAudioBuffer && (
+                  <div className="px-2 py-1.5">
+                    <div className="mb-1 text-xs opacity-50">
+                      {loadingPopoverResponseType.charAt(0).toUpperCase() +
+                        loadingPopoverResponseType.slice(1)}
+                    </div>
+                    <div className="flex items-center ">
+                      <span className="text-lg" ref={pronunciationTextRef}>
+                        {popoverResponseContent}
+                      </span>
                       <Button
                         size="medium-icon"
                         onClick={playPronunciationAudio}
                         className="ml-2"
+                        disabled={!pronunciationAudioBuffer}
+                        title={
+                          pronunciationAudioBuffer
+                            ? "Play pronunciation audio"
+                            : "No pronunciation audio available"
+                        }
                       >
-                        <span className="material-symbols-rounded">
-                          volume_up
-                        </span>
+                        {pronunciationAudioBuffer ? (
+                          <span className="material-symbols-rounded">
+                            volume_up
+                          </span>
+                        ) : (
+                          <span className="material-symbols-rounded">
+                            volume_off
+                          </span>
+                        )}
                       </Button>
-                    )}
+                    </div>
                   </div>
                 )}
               </>
@@ -1263,10 +1369,16 @@ export default function Worker({ studentId, assignmentId }: WorkerProps) {
               >
                 Pronunciation
               </span>
-              <span className=" p-2 hover:bg-gray-100 dark:border-white dark:text-white dark:hover:bg-gray-900">
+              <span
+                className=" p-2 hover:bg-gray-100 dark:border-white dark:text-white dark:hover:bg-gray-900"
+                onClick={getWordSynonyms}
+              >
                 Synonym
               </span>
-              <span className="p-2 hover:bg-gray-100 dark:text-white dark:hover:bg-gray-900">
+              <span
+                className="p-2 hover:bg-gray-100 dark:text-white dark:hover:bg-gray-900"
+                onClick={getWordEtymology}
+              >
                 Etymology
               </span>
             </div>

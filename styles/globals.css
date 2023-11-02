@@ -11,3 +11,22 @@
     30px 0 40px rgb(0 0 0 / 0.1),
     -30px 0 40px rgb(0 0 0 / 0.1);
 }
+
+@keyframes colorChange {
+  from {
+    background-position: 100% 0;
+  }
+  to {
+    background-position: 0% 0;
+  }
+}
+
+.animated-text {
+  background-image: linear-gradient(to right, rgb(2, 132, 199) 49%, black 51%);
+  background-clip: text;
+  -webkit-background-clip: text;
+  color: transparent;
+  background-size: 200% 100%;
+  background-position: 100% 0;
+  animation: colorChange linear 1s;
+}

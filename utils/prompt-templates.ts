@@ -17,35 +17,33 @@ export function getPromptTemplate(
       return checkAnswerTemplate.format({ answer: content[0] });
     case "greeting":
       return greetingTemplate.format({ studentName: content[0] });
-    // case "example":
-    //   return shorthand ? EXAMPLE_INSTRUCTION_SHORTHAND.replace("<WORD>", word) : EXAMPLE_INSTRUCTION.replace("<WORD>", word);
-    // case "synonym":
-    //   return shorthand ? SYNONYM_INSTRUCTION_SHORTHAND.replace("<WORD>", word) : SYNONYM_INSTRUCTION.replace("<WORD>", word);
-    // case "antonym":
-    //   return shorthand ? ANTONYM_INSTRUCTION_SHORTHAND.replace("<WORD>", word) : ANTONYM_INSTRUCTION.replace("<WORD>", word);
-    // case "rhyme":
-    //   return shorthand ? RHYME_INSTRUCTION_SHORTHAND.replace("<WORD>", word) : RHYME_INSTRUCTION.replace("<WORD>", word);
-    // case "partOfSpeech":
-    //   return shorthand ? PART_OF_SPEECH_INSTRUCTION_SHORTHAND.replace("<WORD>", word) : PART_OF_SPEECH_INSTRUCTION.replace("<WORD>", word);
-    // case "sentence":
-    //   return shorthand ? SENTENCE_INSTRUCTION_SHORTHAND.replace("<WORD>", word) : SENTENCE_INSTRUCTION.replace("<WORD>", word);
-    // case "word":
-    //   return shorthand ? WORD_INSTRUCTION_SHORTHAND : WORD_INSTRUCTION;
+    case "synonyms":
+      return synonymsTemplate.format({ word: content[0] });
+    case "etymology":
+      return etymologyTemplate.format({ word: content[0] });
     default:
       return "";
   }
 }
 
-export const definitionTemplate = PromptTemplate.fromTemplate(
-  "<<APP>>Define '{word}' from the sentence: '{sentence}'. Review each definition of the word and only provide one definition that you think makes the most sense based on your review our conversation and my current assignment. Only responed with the word, functional label, and definition without any extra text or explanation, like this example: 'apple (noun) : the fleshy, usually rounded red, yellow, or green edible pome fruit of a usually cultivated tree (genus Malus) of the rose family'. If no definition was found, say 'No definitions found. Word is either a name or does not exist in the Merriam-Webster Dictionary.'<</APP>>",
+const definitionTemplate = PromptTemplate.fromTemplate(
+  "Define '{word}' from the sentence: '{sentence}'. Review each definition of the word and only provide one definition that you think makes the most sense based on your review our conversation and my current assignment. Only responed with the word, functional label, and definition without any extra text or explanation, like this example: 'apple (noun) : the fleshy, usually rounded red, yellow, or green edible pome fruit of a usually cultivated tree (genus Malus) of the rose family'. If no definition was found, say 'No definitions found. Word is either a name or does not exist in the Merriam-Webster Dictionary.'",
 );
-export const definitionTemplateShorthand =
+const definitionTemplateShorthand =
   PromptTemplate.fromTemplate("Define {word}.");
 
-export const checkAnswerTemplate = PromptTemplate.fromTemplate(
+const checkAnswerTemplate = PromptTemplate.fromTemplate(
   "<<APP>>Please check my answer so far. Do not ask any follow-up questions. Only provide feedback.\n\n{answer}<</APP>>",
 );
 
-export const greetingTemplate = PromptTemplate.fromTemplate(
+const greetingTemplate = PromptTemplate.fromTemplate(
   "<<APP>>Please greet {studentName}.<</APP>>",
+);
+
+const synonymsTemplate = PromptTemplate.fromTemplate(
+  "Please provide up to five synonyms for '{word}'. Just list the synonyms separated by commas. For example, 'big, large, huge'.",
+);
+
+const etymologyTemplate = PromptTemplate.fromTemplate(
+  "Please provide the etymology of '{word}' in one sentence.",
 );

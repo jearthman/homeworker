@@ -28,13 +28,20 @@ export async function POST(req: Request) {
     `Request is good! chatId: ${chatId}, content: ${content}, interactionType: ${interactionType}`,
   );
 
+  let messages: ChatCompletionMessageParam[] = [];
+
   if (interactionType) {
     content = await getPromptTemplate(interactionType, content);
   } else {
     content = content[0];
   }
 
-  let messages: ChatCompletionMessageParam[] = await getChatMessages(chatId);
+  const messageIsOutOfContext =
+    interactionType && interactionType !== "checkAnswer";
+
+  if (!messageIsOutOfContext) {
+    messages = await getChatMessages(chatId);
+  }
 
   if (!messages) {
     return new Response("Error getting chat messages", { status: 400 });
@@ -57,27 +64,31 @@ export async function POST(req: Request) {
     const stream = OpenAIStream(initialResponse, {
       onStart: async () => {
         //write user message to DB
-        await createMessage(
-          parseInt(chatId),
-          "user",
-          content,
-          interactionType ? true : false,
-        );
+        if (!messageIsOutOfContext) {
+          await createMessage(
+            parseInt(chatId),
+            "user",
+            content,
+            interactionType ? true : false,
+          );
+        }
       },
       onFinal: async (completion) => {
         //write messages to redis
-        messages.push({
-          role: "assistant",
-          content: completion,
-        });
-        setChat(chatId, messages);
-        //write assistant message to DB
-        await createMessage(
-          parseInt(chatId),
-          "assistant",
-          completion,
-          interactionType && interactionType !== "greeting" ? true : false,
-        );
+        if (!messageIsOutOfContext) {
+          messages.push({
+            role: "assistant",
+            content: completion,
+          });
+          setChat(chatId, messages);
+          //write assistant message to DB
+          await createMessage(
+            parseInt(chatId),
+            "assistant",
+            completion,
+            interactionType && interactionType !== "greeting" ? true : false,
+          );
+        }
       },
       experimental_onFunctionCall: async (
         { name, arguments: args },
@@ -111,22 +122,24 @@ export async function POST(req: Request) {
           content: result,
         });
         //write function message to DB
-        await createMessage(
-          chatId,
-          "assistant",
-          "",
-          true,
-          JSON.stringify(functionCall),
-        );
+        if (!messageIsOutOfContext) {
+          await createMessage(
+            chatId,
+            "assistant",
+            "",
+            true,
+            JSON.stringify(functionCall),
+          );
 
-        await createMessage(
-          chatId,
-          "function",
-          result,
-          interactionType ? true : false,
-          undefined,
-          name,
-        );
+          await createMessage(
+            chatId,
+            "function",
+            result,
+            interactionType ? true : false,
+            undefined,
+            name,
+          );
+        }
         return openai.chat.completions.create({
           model: "gpt-3.5-turbo-0613",
           stream: true,

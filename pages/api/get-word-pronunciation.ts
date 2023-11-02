@@ -8,11 +8,18 @@ export default async function handler(
   req: NextApiRequest,
   res: NextApiResponse,
 ) {
-  const { word } = req.query;
+  let { word } = req.query;
+
+  if (Array.isArray(word)) {
+    word = word[0];
+  }
 
   if (!word) {
     return null;
   }
+
+  //remove non-alphanumeric characters from word
+  word = word.replace(/[^a-zA-Z0-9]/g, "");
 
   const response = await fetch(`${dictionaryUrl}${word}?key=${dictionaryKey}`);
 
