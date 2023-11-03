@@ -45,5 +45,5 @@ const synonymsTemplate = PromptTemplate.fromTemplate(
 );
 
 const etymologyTemplate = PromptTemplate.fromTemplate(
-  "Please provide the etymology of '{word}' in one sentence.",
+  "Please provide the etymology of '{word}' in one concise sentence.",
 );

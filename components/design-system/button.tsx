@@ -2,7 +2,7 @@ import { cva, VariantProps } from "cva";
 import React from "react";
 
 const buttonStyles = cva(
-  "flex items-center justify-center rounded-lg border font-medium transition duration-300 enabled:hover:shadow-md enabled:active:shadow-none disabled:cursor-not-allowed disabled:opacity-50 disabled:shadow-none",
+  "flex items-center justify-center rounded-lg border font-medium font-medium transition duration-300 enabled:hover:shadow-md enabled:active:shadow-none disabled:cursor-not-allowed disabled:opacity-50 disabled:shadow-none",
   {
     variants: {
       intent: {

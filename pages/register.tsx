@@ -3,19 +3,42 @@ import Input from "@/components/design-system/input";
 import Select from "@/components/design-system/select";
 import { useState } from "react";
 import Button from "@/components/design-system/button";
-import { useSession } from "next-auth/react";
+import { useSession, getSession } from "next-auth/react";
 import { useRouter } from "next/router";
+import { GetServerSidePropsContext } from "next";
 
-export default function Register() {
+export async function getServerSideProps(context: GetServerSidePropsContext) {
+  const session = await getSession({ req: context.req });
+
+  if (!session) {
+    return {
+      redirect: {
+        destination: "/",
+        permanent: false,
+      },
+    };
+  }
+
+  return {
+    props: { session },
+  };
+}
+
+type RegisterProps = {
+  session: ReturnType<typeof useSession>["data"];
+};
+
+export default function Register({ session }: RegisterProps) {
   const [firstName, setFirstName] = useState("");
   const [gradeLevel, setGradeLevel] = useState("2");
   const [nativeLanguage, setNativeLanguage] = useState("");
+  const [registering, setRegistering] = useState(false);
 
-  const { data: session } = useSession();
   const router = useRouter();
 
   function registerStudent() {
     return async (event: React.FormEvent<HTMLFormElement>) => {
+      setRegistering(true);
       event.preventDefault();
       console.log(firstName, gradeLevel, nativeLanguage);
 
@@ -85,8 +108,13 @@ export default function Register() {
             value={nativeLanguage}
             onChange={(event) => setNativeLanguage(event.currentTarget.value)}
           ></Input>
-          <Button formAction="submit" className="mt-4">
+          <Button formAction="submit" className="mt-4" disabled={registering}>
             Create Student
+            {registering && (
+              <span className="material-symbols-rounded ml-1 animate-spin">
+                progress_activity
+              </span>
+            )}
           </Button>
         </form>
       </div>

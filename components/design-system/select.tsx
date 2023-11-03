@@ -2,7 +2,7 @@ import { cva, VariantProps } from "cva";
 import React from "react";
 
 const selectStyles = cva(
-  " focus:shadow-outline rounded-lg bg-white leading-tight shadow-lg focus:outline-none",
+  " focus:shadow-outline rounded-lg border border-transparent bg-white leading-tight shadow-lg focus:border-blue-600 focus:outline-none dark:border-white dark:bg-black dark:text-white",
   {
     variants: {
       sizeVariant: {
