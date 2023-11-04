@@ -14,10 +14,14 @@ export default function Landing() {
         <div className="flex h-4/5 flex-col place-content-center content-center gap-14">
           <div className="text-center text-5xl font-bold">
             homeworkers
-            <span className="ml-8">🤖🤝🧑‍🎓</span>
+            <div className="mt-1">🤖🤝🧑‍🎓</div>
           </div>
           <div className="flex justify-center gap-8">
             <GoogleSignInButton />
+          </div>
+          <div className="mx-4 text-center opacity-50">
+            Mobile layout not implemented yet, please try homeworkers at your PC
+            😅
           </div>
         </div>
       </div>
