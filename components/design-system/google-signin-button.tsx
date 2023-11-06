@@ -1,5 +1,6 @@
 import { signIn } from "next-auth/react";
 import { Roboto_Flex } from "next/font/google";
+import { useState } from "react";
 
 const roboto = Roboto_Flex({
   subsets: ["latin"],
@@ -7,12 +8,16 @@ const roboto = Roboto_Flex({
 });
 
 export default function GoogleSignInButton() {
+  const [signingIn, setSigningIn] = useState(false);
+
+  async function handleSignIn() {
+    await signIn("google", { callbackUrl: `${window.location.origin}/portal` });
+    setSigningIn(true);
+  }
   return (
     <button
-      onClick={() =>
-        signIn("google", { callbackUrl: `${window.location.origin}/portal` })
-      }
-      className={`${roboto.className} flex items-center justify-center rounded border border-gray-300 bg-white px-3 py-[10px] shadow hover:bg-gray-100 focus:outline-none focus:ring focus:ring-blue-200 focus:ring-opacity-50`}
+      onClick={handleSignIn}
+      className={`${roboto.className} relative flex items-center justify-center rounded border border-gray-300 bg-white px-3 py-[10px] shadow focus:outline-none focus:ring focus:ring-blue-200 focus:ring-opacity-50 enabled:hover:bg-gray-100 disabled:cursor-not-allowed disabled:opacity-50 disabled:shadow-none`}
     >
       <svg
         width="20px"
@@ -42,6 +47,11 @@ export default function GoogleSignInButton() {
         </g>
       </svg>
       <span className="ml-[10px] text-sm">Sign in with Google</span>
+      {signingIn && (
+        <span className="material-symbols-rounded absolute left-full ml-2 animate-spin opacity-50">
+          progress_activity
+        </span>
+      )}
     </button>
   );
 }
