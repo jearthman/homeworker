@@ -2,7 +2,7 @@ import { cva, VariantProps } from "cva";
 import React from "react";
 
 const buttonStyles = cva(
-  "flex items-center justify-center rounded-lg border font-medium font-medium transition duration-300 enabled:hover:shadow-md enabled:active:shadow-none disabled:cursor-not-allowed disabled:opacity-50 disabled:shadow-none",
+  "flex items-center justify-center rounded-lg border font-medium font-medium transition duration-150 enabled:active:shadow-none disabled:cursor-not-allowed disabled:opacity-50 disabled:shadow-none",
   {
     variants: {
       intent: {
@@ -14,11 +14,11 @@ const buttonStyles = cva(
           "border-red-600 bg-red-500 text-red-50 enabled:hover:bg-red-400 enabled:hover:text-white enabled:active:bg-red-600 enabled:active:shadow-none dark:bg-red-300 dark:text-red-800 dark:enabled:hover:bg-red-400",
         neutral: "bg-gray-400 text-gray-900 enabled:hover:bg-gray-400",
         link: "bg-transparent text-matcha-600 shadow-none enabled:hover:bg-transparent",
-        "primary-outline":
-          "bg-transparent text-peach-300 enabled:hover:bg-peach-300 enabled:hover:bg-opacity-10",
-        "secondary-outline":
+        "primary-inset":
+          "border-none bg-transparent text-sky-500 shadow-none enabled:hover:bg-sky-50",
+        "secondary-inset":
           "bg-transparent text-matcha-300 enabled:hover:bg-matcha-300 enabled:hover:bg-opacity-10",
-        "neutral-outline":
+        "neutral-inset":
           "bg-transparent text-white enabled:hover:bg-gray-300 enabled:hover:bg-opacity-10",
         "inner-form":
           "bg-white text-green-600 enabled:hover:text-green-700 dark:border-gray-600 dark:bg-black dark:text-green-400 dark:enabled:hover:text-green-500",
@@ -27,16 +27,16 @@ const buttonStyles = cva(
         true: "w-full",
       },
       size: {
-        small: "px-2 py-1 text-base",
-        medium: "px-3 py-1.5 text-lg",
-        large: "px-4 py-2 text-xl",
-        xlarge: "px-5 py-2.5 text-2xl",
-        xxlarge: "px-6 py-3 text-3xl",
-        "small-icon": "px-1 py-1 text-base",
-        "medium-icon": "px-1.5 py-1.5 text-lg",
-        "large-icon": "px-2 py-2 text-xl",
-        "xlarge-icon": "px-2.5 py-2.5 text-2xl",
-        "xxlarge-icon": "px-3 py-3 text-3xl",
+        small: "px-2 py-1 text-base enabled:hover:shadow-md",
+        medium: "px-3 py-1.5 text-lg enabled:hover:shadow-md",
+        large: "px-4 py-2 text-xl enabled:hover:shadow-md",
+        xlarge: "px-5 py-2.5 text-2xl enabled:hover:shadow-lg",
+        xxlarge: "px-6 py-3 text-3xl enabled:hover:shadow-lg",
+        "small-icon": "px-1 py-1 text-base enabled:hover:shadow-sm",
+        "medium-icon": "px-1.5 py-1.5 text-lg enabled:hover:shadow-md",
+        "large-icon": "px-2 py-2 text-xl enabled:hover:shadow-md",
+        "xlarge-icon": "px-2.5 py-2.5 text-2xl enabled:hover:shadow-lg",
+        "xxlarge-icon": "px-3 py-3 text-3xl enabled:hover:shadow-lg",
       },
     },
     defaultVariants: {

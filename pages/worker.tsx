@@ -1,6 +1,7 @@
 import { useState, useEffect, useLayoutEffect, useRef, FormEvent } from "react";
 import { GetServerSidePropsContext } from "next";
 import { useRouter } from "next/router";
+import dynamic from "next/dynamic";
 import Button from "@/components/design-system/button";
 import React from "react";
 import { useDispatch, useSelector } from "react-redux";
@@ -21,10 +22,18 @@ import {
 import Markdown from "react-markdown";
 import ChatSkeleton from "../components/design-system/chat-skeleton";
 import { getWordPronunciationFromMW } from "../utils/clientHelpers";
+import { WYSIWYGProps } from "../components/wysiwyg-editor";
 
 const chatWithMessages = Prisma.validator<Prisma.ChatDefaultArgs>()({
   include: { messages: true },
 });
+
+const WYSIWYGEditor = dynamic<WYSIWYGProps>(
+  () => import("../components/wysiwyg-editor"),
+  {
+    ssr: false,
+  },
+);
 
 type ChatWithMessages = Prisma.ChatGetPayload<typeof chatWithMessages>;
 
@@ -98,9 +107,8 @@ export default function Worker({ studentId, assignmentId }: WorkerProps) {
   const [popoverResponseContent, setPopoverResponseContent] = useState<
     string | null
   >(null);
-  const [pronunciationAudioBuffer, setPronunciationAudioBuffer] = useState<
-    string | null
-  >(null);
+  const [pronunciationAudio, setPronunciationAudio] =
+    useState<HTMLAudioElement | null>(null);
   const [loadingPopoverResponseType, setLoadingPopoverResponseType] = useState<
     string | null
   >(null);
@@ -711,16 +719,25 @@ export default function Worker({ studentId, assignmentId }: WorkerProps) {
 
   function updateLastResponse(word: string) {
     setChatLog((prevChatLog) => {
-      let newChatLog = [...prevChatLog];
+      console.log("Updating last response", prevChatLog);
+      let newChatLog: ChatMessage[] = [];
+      if (prevChatLog.length === 0) {
+        newChatLog = [{ type: "assistant", text: [] }];
+      } else {
+        newChatLog = [...prevChatLog];
+      }
       let lastMessage = newChatLog[newChatLog.length - 1];
 
       // Type guard to ensure lastMessage is of type assistant
-      if (!lastMessage || lastMessage.type === "assistant") {
-        let lastSentence = lastMessage.text[lastMessage.text.length - 1];
+      if (lastMessage.type === "assistant") {
+        let lastSentence = lastMessage?.text[lastMessage.text.length - 1];
 
         if (!lastSentence) {
           lastSentence = { words: [], text: "" };
-          lastMessage.text.push(lastSentence);
+          lastMessage = {
+            type: "assistant",
+            text: [lastSentence],
+          };
         }
 
         // If the word is just a space or is punctuation and the last word doesn't end with a space, append it to the last word.
@@ -808,9 +825,17 @@ export default function Worker({ studentId, assignmentId }: WorkerProps) {
 
     if (wordPronunciation) {
       setPopoverResponseContent(wordPronunciation.hw);
-      setPronunciationAudioBuffer(
-        wordPronunciation.base64Audio ? wordPronunciation.base64Audio : null,
-      );
+      if (wordPronunciation.base64Audio) {
+        const audioBuffer = Uint8Array.from(
+          atob(wordPronunciation.base64Audio),
+          (c) => c.charCodeAt(0),
+        );
+        const audioBlob = new Blob([audioBuffer], {
+          type: "audio/mpeg",
+        });
+        const audioUrl = URL.createObjectURL(audioBlob);
+        setPronunciationAudio(new Audio(audioUrl));
+      }
     } else {
       setPopoverResponseContent("Pronunciation not found...");
     }
@@ -819,46 +844,37 @@ export default function Worker({ studentId, assignmentId }: WorkerProps) {
   }
 
   function playPronunciationAudio() {
-    if (pronunciationAudioBuffer) {
-      const audioBuffer = Uint8Array.from(atob(pronunciationAudioBuffer), (c) =>
-        c.charCodeAt(0),
-      );
-      const audioBlob = new Blob([audioBuffer], {
-        type: "audio/mpeg",
-      });
-      const audioUrl = URL.createObjectURL(audioBlob);
-      const audio = new Audio(audioUrl);
+    if (pronunciationAudio) {
       const syllableCount = popoverResponseContent?.split("*").length || 1;
       // Wait for audio metadata to load
-      audio.onloadedmetadata = () => {
-        startTextTransition(audio.duration);
 
-        audio
-          .play()
-          .then(() => {
-            audio.addEventListener("ended", resetColorTransition);
-          })
-          .catch((e) => console.error("Error playing pronunciation sound:", e));
+      startTextTransition(pronunciationAudio.duration);
 
-        //increment talking head based on syllable count and audio duration
-        const syllableDuration = (audio.duration * 1000) / syllableCount; // Duration per syllable in milliseconds
+      pronunciationAudio
+        .play()
+        .then(() => {
+          pronunciationAudio.addEventListener("ended", resetColorTransition);
+        })
+        .catch((e) => console.error("Error playing pronunciation sound:", e));
 
-        setTalkingIncrement((prevTalkingIncrement) => prevTalkingIncrement + 1);
-        for (let i = 1; i < syllableCount; i++) {
-          setTimeout(() => {
-            setTalkingIncrement(
-              (prevTalkingIncrement) => prevTalkingIncrement + 1,
-            );
-          }, i * syllableDuration);
-          console.log("Talking increment:", talkingIncrement);
-        }
-      };
+      //increment talking head based on syllable count and audio duration
+      const syllableDuration =
+        (pronunciationAudio.duration * 1000) / syllableCount; // Duration per syllable in milliseconds
 
+      setTalkingIncrement((prevTalkingIncrement) => prevTalkingIncrement + 1);
+      for (let i = 1; i < syllableCount; i++) {
+        setTimeout(() => {
+          setTalkingIncrement(
+            (prevTalkingIncrement) => prevTalkingIncrement + 1,
+          );
+        }, i * syllableDuration);
+        console.log("Talking increment:", talkingIncrement);
+      }
       // Fallback in case metadata does not load
       setTimeout(() => {
-        if (isNaN(audio.duration)) {
+        if (isNaN(pronunciationAudio.duration)) {
           console.error("Audio duration is not available.");
-          audio.play().catch((e) => {
+          pronunciationAudio.play().catch((e) => {
             console.error("Error playing pronunciation sound:", e);
           });
         }
@@ -1029,14 +1045,10 @@ export default function Worker({ studentId, assignmentId }: WorkerProps) {
                 </span>
               </div>
             ) : (
-              <textarea
-                className={`mb-2 block ${
-                  currentProblem ? "min-h-[1rem]" : "min-h-[16rem]"
-                } w-full rounded-lg border border-transparent bg-white p-3 shadow-lg focus-within:border-sky-400 focus:outline-none`}
-                value={answer}
-                placeholder="Write your answer here!"
-                onChange={(event) => setAnswer(event.currentTarget.value)}
-              />
+              <WYSIWYGEditor
+                className="mb-2"
+                onEditorStateChange={(markdown) => setAnswer(markdown)}
+              ></WYSIWYGEditor>
             )}
             <div className="mb-8 flex justify-between">
               <Button
@@ -1331,14 +1343,14 @@ export default function Worker({ studentId, assignmentId }: WorkerProps) {
                         size="medium-icon"
                         onClick={playPronunciationAudio}
                         className="ml-2"
-                        disabled={!pronunciationAudioBuffer}
+                        disabled={!pronunciationAudio}
                         title={
-                          pronunciationAudioBuffer
+                          pronunciationAudio
                             ? "Play pronunciation audio"
                             : "No pronunciation audio available"
                         }
                       >
-                        {pronunciationAudioBuffer ? (
+                        {pronunciationAudio ? (
                           <span className="material-symbols-rounded">
                             volume_up
                           </span>

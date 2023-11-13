@@ -37,7 +37,9 @@ export async function POST(req: Request) {
   }
 
   const messageIsOutOfContext =
-    interactionType && interactionType !== "checkAnswer";
+    interactionType &&
+    interactionType !== "checkAnswer" &&
+    interactionType !== "greeting";
 
   if (!messageIsOutOfContext) {
     messages = await getChatMessages(chatId);

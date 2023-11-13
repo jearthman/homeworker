@@ -5,10 +5,11 @@ import { store, RootState } from "../redux/store";
 import { useSelector } from "react-redux";
 import { SessionProvider } from "next-auth/react";
 import { Nunito } from "next/font/google";
+import { LexicalComposerContext } from "@lexical/react/LexicalComposerContext";
 
 const nunito = Nunito({
   subsets: ["latin"],
-  weight: ["500"],
+  weight: ["400"],
 });
 interface ThemeProviderProps {
   children: React.ReactNode;
