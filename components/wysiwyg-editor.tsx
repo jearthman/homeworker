@@ -11,8 +11,15 @@ import {
   UNDO_COMMAND,
   REDO_COMMAND,
 } from "lexical";
+import {
+  INSERT_ORDERED_LIST_COMMAND,
+  INSERT_UNORDERED_LIST_COMMAND,
+  ListItemNode,
+  ListNode,
+} from "@lexical/list";
 import { LexicalComposer } from "@lexical/react/LexicalComposer";
 import { HistoryPlugin } from "@lexical/react/LexicalHistoryPlugin";
+import { ListPlugin } from "@lexical/react/LexicalListPlugin";
 import { RichTextPlugin } from "@lexical/react/LexicalRichTextPlugin";
 import { OnChangePlugin } from "@lexical/react/LexicalOnChangePlugin";
 import { ContentEditable } from "@lexical/react/LexicalContentEditable";
@@ -23,14 +30,7 @@ import {
   TRANSFORMERS,
 } from "@lexical/markdown";
 import { useLexicalComposerContext } from "@lexical/react/LexicalComposerContext";
-import Button from "./design-system/button";
 import ToolbarButton from "./design-system/toolbar-button";
-
-const theme = {
-  text: {
-    bold: "font-extrabold",
-  },
-};
 
 function onError(error: Error) {
   console.error(error);
@@ -143,12 +143,26 @@ function FormattingButtonsPlugin(): JSX.Element {
 }
 
 function ListButtonsPlugin(): JSX.Element {
+  const [editor] = useLexicalComposerContext();
+
   return (
     <div className="flex gap-1">
-      <ToolbarButton size="small" intent="primary">
+      <ToolbarButton
+        size="small"
+        intent="primary"
+        onClick={() => {
+          editor.dispatchCommand(INSERT_UNORDERED_LIST_COMMAND, undefined);
+        }}
+      >
         <span className="material-symbols-rounded">format_list_bulleted</span>
       </ToolbarButton>
-      <ToolbarButton size="small" intent="primary">
+      <ToolbarButton
+        size="small"
+        intent="primary"
+        onClick={() => {
+          editor.dispatchCommand(INSERT_ORDERED_LIST_COMMAND, undefined);
+        }}
+      >
         <span className="material-symbols-rounded">format_list_numbered</span>
       </ToolbarButton>
     </div>
@@ -173,6 +187,21 @@ export type WYSIWYGProps = {
   markdownContent?: string;
 };
 
+const theme = {
+  text: {
+    bold: "font-extrabold",
+    underline: "underline",
+  },
+  list: {
+    ol: "list-decimal",
+    ul: "list-disc",
+    listitem: "ml-4",
+    nested: {
+      listitem: "ml-8",
+    },
+  },
+};
+
 export default function WYSIWYGEditor({
   className,
   onEditorStateChange,
@@ -182,6 +211,7 @@ export default function WYSIWYGEditor({
     namespace: "WYSIWYGEditor",
     theme,
     onError,
+    nodes: [ListNode, ListItemNode],
   };
 
   const initialClassName =
@@ -200,6 +230,7 @@ export default function WYSIWYGEditor({
     <div className="relative">
       <LexicalComposer initialConfig={initialConfig}>
         <ToolbarPlugin />
+        <ListPlugin />
         <RichTextPlugin
           contentEditable={
             <ContentEditable className={computedClassNames}></ContentEditable>
