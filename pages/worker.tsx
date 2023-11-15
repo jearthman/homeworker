@@ -1046,7 +1046,7 @@ export default function Worker({ studentId, assignmentId }: WorkerProps) {
               </div>
             ) : (
               <WYSIWYGEditor
-                className="mb-2"
+                className=""
                 onEditorStateChange={(markdown) => setAnswer(markdown)}
               ></WYSIWYGEditor>
             )}

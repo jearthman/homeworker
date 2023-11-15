@@ -214,7 +214,7 @@ export default function WYSIWYGEditor({
     nodes: [ListNode, ListItemNode],
   };
 
-  const initialClassName = "focus:outline-none";
+  const initialClassName = "focus:outline-none h-full";
 
   const computedClassNames = `${initialClassName} ${className}`.trim();
 
