@@ -1050,7 +1050,7 @@ export default function Worker({ studentId, assignmentId }: WorkerProps) {
                 onEditorStateChange={(markdown) => setAnswer(markdown)}
               ></WYSIWYGEditor>
             )}
-            <div className="mb-8 flex justify-between">
+            <div className="mb-8 mt-2 flex justify-between">
               <Button
                 size="small"
                 intent="secondary"

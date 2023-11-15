@@ -214,8 +214,7 @@ export default function WYSIWYGEditor({
     nodes: [ListNode, ListItemNode],
   };
 
-  const initialClassName =
-    "w-full rounded-bl-lg rounded-br-lg border border-transparent bg-white p-3 shadow-lg focus:outline-none";
+  const initialClassName = "focus:outline-none";
 
   const computedClassNames = `${initialClassName} ${className}`.trim();
 
@@ -227,25 +226,31 @@ export default function WYSIWYGEditor({
   }
 
   return (
-    <div className="relative">
-      <LexicalComposer initialConfig={initialConfig}>
-        <ToolbarPlugin />
-        <ListPlugin />
+    <LexicalComposer initialConfig={initialConfig}>
+      <ToolbarPlugin />
+      <ListPlugin />
+      <div className="relative">
         <RichTextPlugin
           contentEditable={
-            <ContentEditable className={computedClassNames}></ContentEditable>
+            <div className="relative z-0 flex max-h-[500px] min-h-[50px] w-full resize-y overflow-auto rounded-bl-lg rounded-br-lg border-none bg-white p-3 shadow-lg">
+              <div className="relative -z-10 flex-auto">
+                <ContentEditable
+                  className={computedClassNames}
+                ></ContentEditable>
+              </div>
+            </div>
           }
           placeholder={
-            <div className="pointer-events-none absolute bottom-2 cursor-text p-3 opacity-50">
+            <div className="pointer-events-none absolute top-0 cursor-text p-3 opacity-50">
               Begin writing here...
             </div>
           }
           ErrorBoundary={LexicalErrorBoundary}
         />
-        <HistoryPlugin />
-        <OnChangePlugin onChange={onChange} />
-        <MarkdownParserPlugin markdownContent={markdownContent} />
-      </LexicalComposer>
-    </div>
+      </div>
+      <HistoryPlugin />
+      <OnChangePlugin onChange={onChange} />
+      <MarkdownParserPlugin markdownContent={markdownContent} />
+    </LexicalComposer>
   );
 }
