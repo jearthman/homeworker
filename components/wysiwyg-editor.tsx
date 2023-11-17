@@ -46,16 +46,7 @@ function MarkdownParserPlugin({ markdownContent }: MarkdownParserPluginProps) {
   useEffect(() => {
     if (editor && markdownContent) {
       editor.update(() => {
-        const nodes = $convertFromMarkdownString(markdownContent, TRANSFORMERS);
-
-        const root = $getRoot();
-        root.clear();
-
-        if (Array.isArray(nodes)) {
-          nodes.forEach((node) => {
-            root.append(node);
-          });
-        }
+        $convertFromMarkdownString(markdownContent, TRANSFORMERS);
       });
     }
   }, [markdownContent, editor]);

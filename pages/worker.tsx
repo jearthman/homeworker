@@ -1048,6 +1048,7 @@ export default function Worker({ studentId, assignmentId }: WorkerProps) {
               <WYSIWYGEditor
                 className=""
                 onEditorStateChange={(markdown) => setAnswer(markdown)}
+                markdownContent={answer}
               ></WYSIWYGEditor>
             )}
             <div className="mb-8 mt-2 flex justify-between">
