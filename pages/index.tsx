@@ -1,5 +1,11 @@
 import GoogleSignInButton from "@/components/design-system/google-signin-button";
 
+export async function getServerSideProps() {
+  return {
+    props: {},
+  };
+}
+
 export default function Landing() {
   return (
     <>
