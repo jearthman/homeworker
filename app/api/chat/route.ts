@@ -2,7 +2,10 @@ import OpenAI from "openai";
 import { OpenAIStream, StreamingTextResponse } from "ai";
 import { debugLog } from "../../../utils/server-helpers";
 import { setChat } from "../../../redis/redis-server-helpers";
-import { ChatCompletionMessageParam } from "openai/resources";
+import {
+  ChatCompletionAssistantMessageParam,
+  ChatCompletionMessageParam,
+} from "openai/resources";
 import { functions, runFunction } from "./functions";
 import { createMessage } from "../../../pages/api/add-message";
 import { getPromptTemplate } from "../../../utils/prompt-templates";
