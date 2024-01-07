@@ -6,6 +6,7 @@ import { useSelector } from "react-redux";
 import { SessionProvider } from "next-auth/react";
 import { Nunito } from "next/font/google";
 import { LexicalComposerContext } from "@lexical/react/LexicalComposerContext";
+import { SpeedInsights } from "@vercel/speed-insights/next";
 
 const nunito = Nunito({
   subsets: ["latin"],
@@ -24,6 +25,7 @@ function MyApp({ Component, pageProps }: AppProps) {
   return (
     <SessionProvider session={pageProps.session}>
       <Provider store={store}>
+        <SpeedInsights />
         <ThemeProvider>
           <div className={nunito.className}>
             <Component {...pageProps} />
