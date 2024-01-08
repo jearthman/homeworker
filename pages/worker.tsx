@@ -806,6 +806,7 @@ export default function Worker({ studentId, assignmentId }: WorkerProps) {
 
   async function getWordPronunciation() {
     setLoadingPopoverResponseType("pronunciation");
+    setPronunciationAudio(null);
 
     if (!clickedWord) {
       return;
