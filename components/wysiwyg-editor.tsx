@@ -230,7 +230,7 @@ export default function WYSIWYGEditor({
       <div className="relative">
         <RichTextPlugin
           contentEditable={
-            <div className="relative z-0 flex max-h-[500px] min-h-[50px] w-full resize-y overflow-auto rounded-bl-lg rounded-br-lg border-none bg-white p-3 shadow-lg">
+            <div className="relative z-0 flex max-h-[500px] min-h-[200px] w-full resize-y overflow-auto rounded-bl-lg rounded-br-lg border-none bg-white p-3 shadow-lg">
               <div className="relative -z-10 flex-auto">
                 <ContentEditable
                   className={computedClassNames}
