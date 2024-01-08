@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import {
   EditorState,
   $getRoot,
@@ -43,12 +43,19 @@ type MarkdownParserPluginProps = {
 function MarkdownParserPlugin({ markdownContent }: MarkdownParserPluginProps) {
   const [editor] = useLexicalComposerContext();
 
+  // const prevMarkdownContent = useRef<string>("");
+
   useEffect(() => {
-    // if (editor && markdownContent) {
-    //   editor.update(() => {
-    //     $convertFromMarkdownString(markdownContent, TRANSFORMERS);
-    //   });
-    // }
+    if (
+      editor &&
+      markdownContent
+      // && markdownContent !== prevMarkdownContent.current
+    ) {
+      editor.update(() => {
+        $convertFromMarkdownString(markdownContent, TRANSFORMERS);
+      });
+      // prevMarkdownContent.current = markdownContent;
+    }
   }, [markdownContent, editor]);
 
   return null;
