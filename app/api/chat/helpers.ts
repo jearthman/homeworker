@@ -47,6 +47,8 @@ export async function getChatMessages(chatId: string) {
           content: message.content,
         } as ChatCompletionSystemMessageParam);
         break;
+      case "function":
+        break;
       default:
         throw new Error(`Unhandled message role: ${message.role}`);
     }
