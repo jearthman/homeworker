@@ -43,13 +43,13 @@ type MarkdownParserPluginProps = {
 function MarkdownParserPlugin({ markdownContent }: MarkdownParserPluginProps) {
   const [editor] = useLexicalComposerContext();
 
-  useEffect(() => {
-    if (editor && markdownContent) {
-      editor.update(() => {
-        $convertFromMarkdownString(markdownContent, TRANSFORMERS);
-      });
-    }
-  }, [markdownContent, editor]);
+  // useEffect(() => {
+  //   if (editor && markdownContent) {
+  //     editor.update(() => {
+  //       $convertFromMarkdownString(markdownContent, TRANSFORMERS);
+  //     });
+  //   }
+  // }, [markdownContent, editor]);
 
   return null;
 }
